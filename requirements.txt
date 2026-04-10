@@ -1,0 +1,12 @@
+pandas
+numpy
+requests
+beautifulsoup4
+trafilatura
+sentence-transformers
+scikit-learn
+umap-learn
+hdbscan
+keybert
+faiss-cpu
+PyPDF2

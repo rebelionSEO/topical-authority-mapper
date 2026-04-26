@@ -165,19 +165,49 @@ def _score_competitive(out: str) -> Optional[Subscore]:
     ]
     if not gap_files:
         return None
-    total_topics = 0
-    target_present = 0
+    # De-dupe across competitors — a topic shared by 3 competitors should count as ONE topic,
+    # not three. Build a set of unique (topic_lower, status_class) per topic.
+    topic_status: dict = {}
     for path in gap_files:
         df = _read_csv(path)
-        if df is None or df.empty or "status" not in df.columns:
+        if df is None or df.empty or "status" not in df.columns or "keyword" not in df.columns:
             continue
-        total_topics += len(df)
-        target_present += df["status"].str.upper().str.contains("ADVANTAGE|SHARED|COVER", na=False).sum()
+        for _, row in df.iterrows():
+            topic = str(row.get("keyword", "")).strip().lower()
+            status = str(row.get("status", "")).upper()
+            if not topic:
+                continue
+            # Classify each row into one of: target_only / shared / gap_only.
+            # Match on word boundaries to avoid the "competitor covers" → matches COVER bug.
+            import re as _re
+            is_advantage = bool(_re.search(r"\bADVANTAGE\b", status))
+            is_shared = bool(_re.search(r"\bSHARED\b", status)) or "BOTH COVER" in status
+            is_gap = bool(_re.search(r"\bGAP\b", status))
+            if is_shared:
+                cls = "shared"
+            elif is_advantage:
+                cls = "advantage"
+            elif is_gap:
+                cls = "gap"
+            else:
+                continue
+            # Promote "shared" or "advantage" over "gap" if a topic appears in multiple gap files
+            # with different verdicts (target presence is global, not per-competitor).
+            prev = topic_status.get(topic)
+            if prev != "shared" and cls == "shared":
+                topic_status[topic] = "shared"
+            elif prev not in ("shared", "advantage") and cls == "advantage":
+                topic_status[topic] = "advantage"
+            elif prev is None:
+                topic_status[topic] = cls
+
+    total_topics = len(topic_status)
     if total_topics == 0:
         return None
+    target_present = sum(1 for v in topic_status.values() if v in ("advantage", "shared"))
     pct = target_present / total_topics
     s = _clamp(pct * 100)
-    return Subscore(score=s, label=_label(s), detail=f"covers {target_present} of {total_topics} topics across competitors")
+    return Subscore(score=s, label=_label(s), detail=f"covers {target_present} of {total_topics} unique topics vs competitors")
 
 
 # ---------------------------------------------------------------------------

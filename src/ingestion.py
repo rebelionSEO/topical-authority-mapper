@@ -14,7 +14,7 @@ from src.config import (
     CHUNK_SIZE_WORDS,
     MAX_CHARS_PER_PAGE,
     MIN_WORDS_THRESHOLD,
-    SKIP_URL_PATTERNS,
+    resolved_skip_patterns,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,9 +76,9 @@ def parse_sitemap(sitemap_url: str) -> list[str]:
 
 
 def should_skip_url(url: str) -> bool:
-    """Check if URL matches patterns that should be skipped."""
+    """Check if URL matches patterns that should be skipped (default + per-site extras)."""
     url_lower = url.lower()
-    return any(pattern in url_lower for pattern in SKIP_URL_PATTERNS)
+    return any(pattern in url_lower for pattern in resolved_skip_patterns())
 
 
 def fetch_page(url: str, timeout: int = 15) -> Optional[str]:

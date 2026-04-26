@@ -5,7 +5,7 @@ import os
 
 import pandas as pd
 
-from src.config import CANNIBALIZATION_URL_THRESHOLD, OUTPUT_DIR
+from src.config import CANNIBALIZATION_URL_THRESHOLD, output_dir
 
 logger = logging.getLogger(__name__)
 
@@ -59,32 +59,33 @@ def export_all(
     recommendations: pd.DataFrame | None = None,
 ):
     """Export all output CSVs."""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    OUT = output_dir()
+    os.makedirs(OUT, exist_ok=True)
 
     # 1. clusters.csv
-    cluster_path = os.path.join(OUTPUT_DIR, "clusters.csv")
+    cluster_path = os.path.join(OUT, "clusters.csv")
     cluster_info.to_csv(cluster_path, index=False)
     logger.info("Exported clusters to %s", cluster_path)
 
     # 2. url_mapping.csv
-    url_path = os.path.join(OUTPUT_DIR, "url_mapping.csv")
+    url_path = os.path.join(OUT, "url_mapping.csv")
     url_mapping.to_csv(url_path, index=False)
     logger.info("Exported URL mapping to %s", url_path)
 
     # 3. cannibalization.csv
-    cannib_path = os.path.join(OUTPUT_DIR, "cannibalization.csv")
+    cannib_path = os.path.join(OUT, "cannibalization.csv")
     cannibalization.to_csv(cannib_path, index=False)
     logger.info("Exported cannibalization report to %s", cannib_path)
 
     # 4. recommendations.csv (if brand voice is available)
     if recommendations is not None and not recommendations.empty:
-        rec_path = os.path.join(OUTPUT_DIR, "recommendations.csv")
+        rec_path = os.path.join(OUT, "recommendations.csv")
         recommendations.to_csv(rec_path, index=False)
         logger.info("Exported content recommendations to %s", rec_path)
 
     # 5. skipped_urls.csv
     if skipped_urls:
-        skipped_path = os.path.join(OUTPUT_DIR, "skipped_urls.csv")
+        skipped_path = os.path.join(OUT, "skipped_urls.csv")
         skipped_df = pd.DataFrame(skipped_urls, columns=["details"])
         parts = skipped_df["details"].str.split(" \\| ", n=1, expand=True)
         skipped_df["url"] = parts[0].str.strip()
@@ -93,4 +94,4 @@ def export_all(
         skipped_df.to_csv(skipped_path, index=False)
         logger.info("Exported skipped URLs to %s", skipped_path)
 
-    logger.info("All outputs exported to %s/", OUTPUT_DIR)
+    logger.info("All outputs exported to %s/", OUT)

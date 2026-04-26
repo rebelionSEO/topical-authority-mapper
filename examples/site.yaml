@@ -1,0 +1,48 @@
+# Example site configuration for the Topical Authority Mapper.
+# Run with: python -m src.main --config examples/site.yaml
+#
+# Every section is optional. CLI args override anything set here.
+
+site:
+  name: "Acme Inc"          # Display label used in titles/footers
+  domain: "acme.com"        # Bare hostname, no protocol, no trailing slash
+  industry: "b2b-saas"      # Optional: hint for narrative + heuristics
+
+input:
+  # Either a sitemap URL OR a local urls_file (one URL per line). Pick one.
+  sitemap: "https://acme.com/sitemap.xml"
+  # urls_file: "urls.txt"
+
+  # Extra sitemaps used for content-freshness scoring (in addition to the main sitemap above).
+  additional_sitemaps:
+    - "https://acme.com/blog/sitemap.xml"
+    - "https://acme.com/docs/sitemap.xml"
+
+output:
+  # Per-site output isolation. Defaults to ./output if omitted.
+  output_dir: "./runs/acme"
+  # Per-site cache (embeddings + brand profile + site config). Defaults to ./cache.
+  cache_dir: "./runs/acme/cache"
+  # Optional brand voice PDF. Distilled into cache_dir/brand_profile.json on first run.
+  brand_voice: "./examples/brand_voice.pdf"
+
+# Auto-crawled and gap-analyzed. Each item can be a domain or a sitemap URL.
+competitors:
+  - "competitor-one.com"
+  - "competitor-two.com"
+  - "https://competitor-three.com/sitemap.xml"
+
+# Cap URLs ingested per competitor (default 100). Bigger = more accurate, slower, costlier.
+max_urls_per_competitor: 100
+
+# Extra URL substrings to skip during ingestion (merged with built-in defaults).
+skip_patterns:
+  - "/changelog/"
+  - "/release-notes/"
+  - "/legal/"
+
+# Regex patterns for URLs that are intentionally thin (hubs, archives, listing pages).
+# Pages matching these are excluded from "thin content" alerts.
+listing_patterns:
+  - "^https?://[^/]+/customers/?$"
+  - "^https?://[^/]+/integrations/?$"

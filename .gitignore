@@ -11,3 +11,15 @@ output/
 
 # Environment
 .env
+
+# Local archive (old client runs quarantined out of source)
+.archive/
+
+# GitHub Pages staging dir (built fresh by scripts/build_pages_index.py during CI)
+public/
+
+# Per-run artifacts uploaded by GitHub Actions matrix jobs
+artifacts/
+
+# Local claude-flow session state
+.claude-flow/

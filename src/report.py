@@ -1,38 +1,66 @@
-"""Generate a professional PDF report matching the technical SEO audit style."""
+"""Generate a professional PDF report from the topical authority analysis."""
 
 import logging
 import os
+import re
 from datetime import datetime
 
 import pandas as pd
 
-from src.config import OUTPUT_DIR
+from src.config import SiteConfig, load_site_config, output_dir
 
 logger = logging.getLogger(__name__)
 
 
-def _classify_thin(url):
+_TOOL_HINTS = ("/tools/", "/tool/", "tool-review", "/marketing-tools/", "/ai-tools/")
+_LOCAL_HINTS = ("/locations/", "/cities/", "-near-me", "/areas/")
+_LOCAL_PATH_HINTS = ("services-for-", "services-in-", "marketing-for-", "design-for-", "agency-in-")
+
+
+def _classify_thin(url: str) -> str:
     u = url.lower()
-    if any(p in u for p in ["content-marketing-tools/", "marketing-tools/", "ai-tool"]):
+    if any(h in u for h in _TOOL_HINTS):
         return "Tool Review"
-    if any(p in u for p in ["seo-services", "digital-marketing", "web-design", "los-angeles",
-                             "orange-county", "california", "beach", "irvine", "corona",
-                             "fullerton", "cerritos", "ontario", "riverside", "brea",
-                             "costa-mesa", "huntington", "aliso-viejo", "anaheim"]):
+    if any(h in u for h in _LOCAL_HINTS) or any(h in u for h in _LOCAL_PATH_HINTS):
         return "Local Landing Page"
     return "Other"
 
 
-def generate_pdf():
+def _slugify(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") or "site"
+
+
+def _discover_competitor_csvs() -> list[tuple[str, pd.DataFrame]]:
+    results = []
+    out = output_dir()
+    if not os.path.isdir(out):
+        return results
+    for fname in sorted(os.listdir(out)):
+        if fname.startswith("competitor_gap_") and fname.endswith(".csv"):
+            stem = fname[len("competitor_gap_"):-len(".csv")]
+            display_name = stem.replace("_", " ").title()
+            df = pd.read_csv(os.path.join(out, fname))
+            if not df.empty:
+                results.append((display_name, df))
+    return results
+
+
+def generate_pdf(site_config: SiteConfig | None = None):
     """Generate the topical authority audit PDF report."""
-    clusters = pd.read_csv(os.path.join(OUTPUT_DIR, "clusters.csv"))
-    url_map = pd.read_csv(os.path.join(OUTPUT_DIR, "url_mapping.csv"))
-    cannib = pd.read_csv(os.path.join(OUTPUT_DIR, "cannibalization.csv"))
-    skipped = pd.read_csv(os.path.join(OUTPUT_DIR, "skipped_urls.csv"))
-    recs_path = os.path.join(OUTPUT_DIR, "recommendations.csv")
+    if site_config is None:
+        site_config = load_site_config() or SiteConfig(name="Site", domain="")
+
+    site_name = site_config.name
+    site_domain = site_config.domain or "(unknown domain)"
+
+    out = output_dir()
+    clusters = pd.read_csv(os.path.join(out, "clusters.csv"))
+    url_map = pd.read_csv(os.path.join(out, "url_mapping.csv"))
+    cannib = pd.read_csv(os.path.join(out, "cannibalization.csv"))
+    skipped = pd.read_csv(os.path.join(out, "skipped_urls.csv"))
+    recs_path = os.path.join(out, "recommendations.csv")
     recs = pd.read_csv(recs_path) if os.path.exists(recs_path) else pd.DataFrame()
 
-    # Compute data
     cluster_sizes = url_map[url_map["main_cluster"] != -1].groupby("main_cluster").size().reset_index(name="url_count")
     cluster_sizes = cluster_sizes.merge(clusters, left_on="main_cluster", right_on="cluster_id", how="inner")
     cluster_sizes = cluster_sizes.sort_values("url_count", ascending=False)
@@ -59,7 +87,18 @@ def generate_pdf():
     critical_cannib = cannib_full[cannib_full["url_count"] >= 10]
     high_cannib = cannib_full[(cannib_full["url_count"] >= 6) & (cannib_full["url_count"] < 10)]
 
-    # Build HTML for PDF
+    today = datetime.now().strftime("%B %Y")
+
+    # Worst offenders summary text
+    if not cannib_full.empty:
+        worst_offenders = ", ".join(
+            f"{row['cluster_name']} ({int(row['url_count'])})"
+            for _, row in cannib_full.head(3).iterrows()
+        )
+    else:
+        worst_offenders = "none detected"
+
+    # Build HTML
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>
@@ -67,8 +106,6 @@ def generate_pdf():
 @media print {{ .page-break {{ page-break-before: always; }} }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
        color: #1f2937; font-size: 11px; line-height: 1.6; }}
-
-/* Cover */
 .cover {{ text-align: center; padding: 120px 0 60px; }}
 .cover h1 {{ font-size: 32px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }}
 .cover .sub {{ font-size: 16px; color: #4A7BF7; font-weight: 500; margin-top: 4px; }}
@@ -76,28 +113,20 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial,
 .cover-line {{ height: 3px; width: 80px; background: #4A7BF7; margin: 30px auto; }}
 .cover .meta {{ font-size: 12px; color: #9ca3af; margin-top: 20px; line-height: 1.8; }}
 .cover .conf {{ font-size: 11px; color: #9ca3af; font-style: italic; margin-top: 40px; }}
-
-/* Section headers */
 h2 {{ font-size: 18px; font-weight: 700; color: #111827; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #4A7BF7; }}
 h3 {{ font-size: 14px; font-weight: 700; color: #4A7BF7; margin: 20px 0 8px; }}
 h4 {{ font-size: 12px; font-weight: 600; color: #374151; margin: 14px 0 6px; }}
 p {{ margin: 6px 0; }}
-
-/* Tables */
 table {{ width: 100%; border-collapse: collapse; font-size: 10.5px; margin: 10px 0 16px; }}
 th {{ text-align: left; padding: 8px 10px; background: #f3f4f6; font-weight: 600; color: #374151;
      border-bottom: 2px solid #e5e7eb; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }}
 td {{ padding: 7px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }}
 tr:nth-child(even) td {{ background: #fafafa; }}
-
-/* Status labels */
 .status {{ font-weight: 700; font-size: 10px; }}
 .critical {{ color: #dc2626; }}
 .warning {{ color: #d97706; }}
 .ok {{ color: #16a34a; }}
 .info {{ color: #4A7BF7; }}
-
-/* Key numbers */
 .key-numbers {{ display: flex; gap: 16px; margin: 16px 0 20px; }}
 .key-num {{ flex: 1; text-align: center; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px 8px; }}
 .key-num .val {{ font-size: 24px; font-weight: 800; }}
@@ -106,42 +135,27 @@ tr:nth-child(even) td {{ background: #fafafa; }}
 .key-num .val.blue {{ color: #4A7BF7; }}
 .key-num .val.gray {{ color: #6b7280; }}
 .key-num .lbl {{ font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }}
-
-/* Issue blocks */
 .issue {{ margin: 16px 0; padding: 14px 16px; background: #fafafa; border-left: 3px solid #4A7BF7; border-radius: 0 6px 6px 0; }}
 .issue.critical-issue {{ border-left-color: #dc2626; }}
 .issue.warning-issue {{ border-left-color: #d97706; }}
 .issue h4 {{ margin: 0 0 6px; color: #111827; }}
 .issue p {{ margin: 4px 0; font-size: 11px; }}
 .issue .label {{ font-size: 10px; font-weight: 600; color: #6b7280; }}
-
-/* URL list */
 .url-list {{ font-size: 10px; color: #4A7BF7; margin: 4px 0; }}
 .url-list span {{ display: block; padding: 2px 0; color: #374151; }}
-
-/* Recommendation box */
 .rec-box {{ background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px 14px; margin: 10px 0; }}
 .rec-box p {{ font-size: 11px; margin: 3px 0; }}
 .rec-box strong {{ color: #1e40af; }}
-
-/* Action items */
-.action {{ margin: 8px 0; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; }}
-.action p {{ margin: 3px 0; font-size: 11px; }}
-.action .priority {{ font-size: 10px; font-weight: 700; }}
-.action .priority.p1 {{ color: #dc2626; }}
-.action .priority.p2 {{ color: #d97706; }}
-.action .priority.p3 {{ color: #4A7BF7; }}
 </style></head><body>
 
-<!-- COVER PAGE -->
 <div class="cover">
   <h1>TOPICAL AUTHORITY AUDIT</h1>
   <div class="sub">EXECUTIVE SUMMARY</div>
-  <div class="domain">azariangrowthagency.com</div>
+  <div class="domain">{site_domain}</div>
   <div class="cover-line"></div>
   <div class="meta">
-    Prepared by: Azarian Growth Agency<br>
-    Date: April 2026<br>
+    Site: {site_name}<br>
+    Date: {today}<br>
     Source: Topical Authority Mapper | {total_urls} Pages Analyzed
   </div>
   <div class="conf">CONFIDENTIAL</div>
@@ -149,29 +163,28 @@ tr:nth-child(even) td {{ background: #fafafa; }}
 
 <div class="page-break"></div>
 
-<!-- EXECUTIVE OVERVIEW -->
 <h2>Executive Overview</h2>
-<p>This audit analyzed <strong>{total_urls} pages</strong> on azariangrowthagency.com using AI-powered semantic
-analysis (sentence-transformer embeddings + UMAP/HDBSCAN clustering). The site has strong topical breadth across
-core verticals aligned with Azarian's 8 ICPs. However, <strong>significant content cannibalization</strong> and
-<strong>thin content issues</strong> are actively diluting ranking potential, wasting crawl budget, and splitting
-authority across competing pages.</p>
+<p>This audit analyzed <strong>{total_urls} pages</strong> on {site_domain} using AI-powered semantic
+analysis (sentence-transformer embeddings + UMAP/HDBSCAN clustering). The pipeline mapped every page
+into one of <strong>{total_clusters} topic clusters</strong>, then layered on cannibalization detection,
+intent classification, freshness scoring, brand voice alignment, and competitor topic gap analysis.</p>
 
-<!-- SCORECARD -->
+<p>The headline findings: <strong>{total_cannib} clusters show content cannibalization</strong>
+(multiple URLs competing for the same keywords), <strong>{total_skipped} pages</strong> are flagged
+as thin or non-rankable, and <strong>{noise_count} pages</strong> do not semantically attach to any topic.
+Top cannibalization offenders: {worst_offenders}.</p>
+
 <h3>Audit Scorecard</h3>
 <table>
   <thead><tr><th>Area</th><th>Status</th><th>Issues</th><th>Impact Level</th></tr></thead>
   <tbody>
-    <tr><td>Topic Coverage (Breadth)</td><td><span class="status ok">Strong</span></td><td>{total_clusters} clusters</td><td>Good coverage across core verticals and ICPs</td></tr>
-    <tr><td>Content Cannibalization</td><td><span class="status critical">Critical</span></td><td>{total_cannib} clusters</td><td>Diluted ranking signals, split authority</td></tr>
-    <tr><td>Thin Content</td><td><span class="status warning">Needs Fix</span></td><td>{total_skipped} pages</td><td>Wasted crawl budget, no ranking potential</td></tr>
-    <tr><td>Unclustered / Orphan Pages</td><td><span class="status warning">Needs Fix</span></td><td>{noise_count} pages</td><td>Off-topic or isolated content</td></tr>
-    <tr><td>Content Type Balance</td><td><span class="status info">Review</span></td><td>69% educational</td><td>Low on comparison and how-to content</td></tr>
-    <tr><td>ICP Alignment</td><td><span class="status ok">Strong</span></td><td>8 verticals active</td><td>Legal, PE, Fintech, SaaS, Home Services aligned</td></tr>
+    <tr><td>Topic Coverage (Breadth)</td><td><span class="status {'ok' if total_clusters >= 20 else 'warning'}">{'Strong' if total_clusters >= 20 else 'Limited'}</span></td><td>{total_clusters} clusters</td><td>Site-wide topical breadth</td></tr>
+    <tr><td>Content Cannibalization</td><td><span class="status {'critical' if total_cannib >= 10 else 'warning' if total_cannib > 0 else 'ok'}">{'Critical' if total_cannib >= 10 else 'Needs Fix' if total_cannib > 0 else 'Clean'}</span></td><td>{total_cannib} clusters</td><td>Diluted ranking signals, split authority</td></tr>
+    <tr><td>Thin Content</td><td><span class="status {'warning' if total_skipped > 10 else 'ok'}">{'Needs Fix' if total_skipped > 10 else 'Acceptable'}</span></td><td>{total_skipped} pages</td><td>Wasted crawl budget, no ranking potential</td></tr>
+    <tr><td>Unclustered / Orphan Pages</td><td><span class="status {'warning' if noise_count > 5 else 'ok'}">{'Needs Fix' if noise_count > 5 else 'Acceptable'}</span></td><td>{noise_count} pages</td><td>Off-topic or isolated content</td></tr>
   </tbody>
 </table>
 
-<!-- KEY NUMBERS -->
 <h3>Key Numbers</h3>
 <div class="key-numbers">
   <div class="key-num"><div class="val blue">{total_clusters}</div><div class="lbl">Topic Clusters</div></div>
@@ -182,12 +195,11 @@ authority across competing pages.</p>
 
 <div class="page-break"></div>
 
-<!-- CRITICAL ISSUES -->
 <h2>Critical Issues &mdash; Direct Ranking Impact</h2>
 <p>These issues are actively degrading search performance and topical authority. Prioritize immediate resolution.</p>
 
 <div class="issue critical-issue">
-  <h4>C-001: Severe Content Cannibalization ({total_cannib} clusters affected)</h4>
+  <h4>C-001: Content Cannibalization ({total_cannib} clusters affected)</h4>
   <p><span class="label">Problem:</span> {total_cannib} of {total_clusters} topic clusters have multiple URLs competing
   for the same keywords. {len(critical_cannib)} clusters have 10+ competing pages. The top offenders:</p>
   <table>
@@ -200,38 +212,36 @@ authority across competing pages.</p>
         html += f"""
       <tr><td>{row['cluster_name']}</td><td>{int(row['url_count'])}</td><td><span class="status {sclass}">{severity}</span></td></tr>"""
 
-    html += f"""
+    html += """
     </tbody>
   </table>
   <p><span class="label">Fix:</span> Audit each cannibalized cluster. For each, identify the strongest performing URL
   (by traffic, backlinks, conversions) and consolidate the rest via 301 redirects or content merges.
   Differentiate remaining pages with unique angles, keywords, and search intent.</p>
   <p><span class="label">Growth Impact:</span> Consolidated authority on pillar pages improves rankings, reduces
-  crawl waste, and concentrates link equity. Expected 10-25% ranking improvement on affected keywords.</p>
+  crawl waste, and concentrates link equity.</p>
   <p><span class="label">Effort:</span> High | 4-6 weeks (phased by cluster priority)</p>
 </div>
 
 <div class="issue critical-issue">
-  <h4>C-002: Thin Content Pages ({len(thin)} pages under 300 words)</h4>
-  <p><span class="label">Problem:</span> {len(thin)} pages have insufficient content to rank or contribute to topical authority:</p>
+  <h4>C-002: Thin Content Pages (""" + str(len(thin)) + """ pages under 300 words)</h4>
+  <p><span class="label">Problem:</span> """ + str(len(thin)) + """ pages have insufficient content to rank or contribute to topical authority:</p>
   <table>
     <thead><tr><th>Category</th><th>Count</th><th>Avg Words</th><th>Issue</th></tr></thead>
     <tbody>
-      <tr><td>Tool Review Pages</td><td>{len(thin_tools)}</td><td>{int(thin_tools['word_count'].mean()) if len(thin_tools) > 0 else 0}</td><td>Short descriptions, no depth</td></tr>
-      <tr><td>Local/City Landing Pages</td><td>{len(thin_local)}</td><td>{int(thin_local['word_count'].mean()) if len(thin_local) > 0 else 0}</td><td>Stubs with no unique content</td></tr>
-      <tr><td>Other (Case Studies, Hubs)</td><td>{len(thin_other)}</td><td>{int(thin_other['word_count'].mean()) if len(thin_other) > 0 else 0}</td><td>Missing substantive content</td></tr>
+      <tr><td>Tool Review Pages</td><td>""" + str(len(thin_tools)) + """</td><td>""" + str(int(thin_tools['word_count'].mean()) if len(thin_tools) > 0 else 0) + """</td><td>Short descriptions, no depth</td></tr>
+      <tr><td>Local/Location Landing Pages</td><td>""" + str(len(thin_local)) + """</td><td>""" + str(int(thin_local['word_count'].mean()) if len(thin_local) > 0 else 0) + """</td><td>Stubs with no unique content</td></tr>
+      <tr><td>Other (Case Studies, Hubs)</td><td>""" + str(len(thin_other)) + """</td><td>""" + str(int(thin_other['word_count'].mean()) if len(thin_other) > 0 else 0) + """</td><td>Missing substantive content</td></tr>
     </tbody>
   </table>
   <p><span class="label">Fix:</span> Expand high-value thin pages to 500+ words with unique content. For low-value pages,
-  either noindex or consolidate into parent topics. Prioritize local landing pages that serve geo-targeting.</p>
-  <p><span class="label">Growth Impact:</span> Removes crawl budget waste. Expanded pages gain ranking eligibility.
-  Improved topical depth signals for Google and AI search engines.</p>
+  either noindex or consolidate into parent topics.</p>
   <p><span class="label">Effort:</span> Medium | 3-4 weeks</p>
 </div>
 
 <div class="issue warning-issue">
-  <h4>C-003: Orphan / Unclustered Pages ({noise_count} pages)</h4>
-  <p><span class="label">Problem:</span> {noise_count} pages don't semantically cluster with any topic on the site.
+  <h4>C-003: Orphan / Unclustered Pages (""" + str(noise_count) + """ pages)</h4>
+  <p><span class="label">Problem:</span> """ + str(noise_count) + """ pages don't semantically cluster with any topic on the site.
   These are either off-topic, too unique to support with surrounding content, or mixed-intent pages that
   confuse clustering algorithms &mdash; and likely confuse Google too.</p>
   <p><span class="label">Fix:</span> Review each orphan page. Either: (a) create supporting content to build a cluster around it,
@@ -241,7 +251,6 @@ authority across competing pages.</p>
 
 <div class="page-break"></div>
 
-<!-- TOP CLUSTERS -->
 <h2>Top 25 Topic Clusters</h2>
 <p>Clusters ranked by number of pages. Larger clusters indicate areas of topical investment.</p>
 <table>
@@ -260,10 +269,8 @@ authority across competing pages.</p>
   </tbody>
 </table>
 
-<div class="page-break"></div>"""
+<div class="page-break"></div>
 
-    # CANNIBALIZATION DETAIL
-    html += """
 <h2>Cannibalization Detail &mdash; Affected URLs</h2>
 <p>Each cannibalized cluster with all competing URLs listed. Sorted by severity.</p>"""
 
@@ -276,7 +283,7 @@ authority across competing pages.</p>
   <h4>{row['cluster_name']} &mdash; {int(row['url_count'])} competing URLs <span class="status {'critical' if severity=='Critical' else 'warning'}">[{severity}]</span></h4>
   <div class="url-list">"""
         for u in urls:
-            slug = u.replace("https://azariangrowthagency.com/", "/")
+            slug = site_config.strip_url(u)
             html += f"""<span>{slug}</span>"""
         html += f"""</div>
   <p style="font-size:10px;color:#6b7280;margin-top:6px"><em>{row['recommendation']}</em></p>
@@ -284,12 +291,15 @@ authority across competing pages.</p>
 
     html += '<div class="page-break"></div>'
 
-    # THIN CONTENT DETAIL
     html += """
 <h2>Thin Content &mdash; Pages Needing Action</h2>
 <p>All pages under 300 words, grouped by category with specific recommendations.</p>"""
 
-    for cat_name, cat_df in [("Tool Review Pages", thin_tools), ("Local/City Landing Pages", thin_local), ("Other Thin Pages", thin_other)]:
+    for cat_name, cat_df in [
+        ("Tool Review Pages", thin_tools),
+        ("Local/Location Landing Pages", thin_local),
+        ("Other Thin Pages", thin_other),
+    ]:
         if len(cat_df) == 0:
             continue
         html += f"""
@@ -298,10 +308,10 @@ authority across competing pages.</p>
   <thead><tr><th>URL</th><th>Words</th><th>Recommendation</th></tr></thead>
   <tbody>"""
         for _, r in cat_df.iterrows():
-            slug = r["url"].replace("https://azariangrowthagency.com/", "/")
+            slug = site_config.strip_url(r["url"])
             if cat_name == "Tool Review Pages":
                 rec = "Expand to 500+ words: use cases, pricing, pros/cons, comparison"
-            elif cat_name == "Local/City Landing Pages":
+            elif cat_name.startswith("Local"):
                 rec = "Add local case studies, testimonials, service area content"
             else:
                 if "case-stud" in r["url"]:
@@ -322,7 +332,6 @@ authority across competing pages.</p>
 
     html += '<div class="page-break"></div>'
 
-    # CONTENT TYPE DISTRIBUTION
     html += """
 <h2>Content Type Distribution</h2>
 <p>Recommended content formats based on cluster keyword analysis and brand voice alignment.</p>
@@ -330,27 +339,21 @@ authority across competing pages.</p>
   <thead><tr><th>Content Type</th><th>Clusters</th><th>% of Total</th></tr></thead>
   <tbody>"""
     for ct, count in content_types.items():
-        pct = round(count / total_clusters * 100, 1)
+        pct = round(count / total_clusters * 100, 1) if total_clusters else 0
         html += f"""
     <tr><td>{ct}</td><td>{count}</td><td>{pct}%</td></tr>"""
     html += """
   </tbody>
-</table>
-
-<div class="rec-box">
-  <p><strong>Gap Identified:</strong> Only 1 comparison page and 3 how-to guides across 195 clusters.
-  These content types dominate featured snippets and AI answer citations. Recommend creating
-  comparison and how-to content for top 10 revenue-driving clusters.</p>
-</div>"""
+</table>"""
 
     html += '<div class="page-break"></div>'
 
-    # Load enhancement CSVs
+    # Enhancement CSVs
     def _load_enh(name):
-        p = os.path.join(OUTPUT_DIR, name)
+        p = os.path.join(out, name)
         return pd.read_csv(p) if os.path.exists(p) else pd.DataFrame()
 
-    comp_df = _load_enh("competitor_topic_comparison.csv")
+    competitor_dfs = _discover_competitor_csvs()
     sim_df = _load_enh("similarity_scores.csv")
     if not sim_df.empty:
         sim_df = sim_df[sim_df["similarity"] >= 0.80].sort_values("similarity", ascending=False).head(25)
@@ -360,44 +363,32 @@ authority across competing pages.</p>
     if not merge_enh.empty:
         merge_enh = merge_enh.head(20)
 
-    # COMPETITOR GAP ANALYSIS
-    if not comp_df.empty:
-        gaps = comp_df[comp_df["status"] == "GAP"]
-        advs = comp_df[comp_df["status"] == "Azarian advantage"]
-        shared = comp_df[comp_df["status"].str.contains("cover|overlap", na=False)]
+    # Competitor gap analysis: stats only — actionable briefs live in the Content Ideas section
+    if competitor_dfs:
+        comp_label = ", ".join(name for name, _ in competitor_dfs)
         html += f"""
 <h2>Competitor Gap Analysis</h2>
-<p>Topic cluster comparison between Azarian Growth Agency, NoGood.io, and SingleGrain.com.
-Analysis based on crawl data from both competitor sites mapped into topic clusters.</p>
+<p>Per-competitor topic coverage between {site_name} and {comp_label}. The actual gap topics
+are turned into ready-to-execute content briefs in the <em>Content Ideas</em> section below
+&mdash; this table is the summary view.</p>
 
 <table>
-  <thead><tr><th>Metric</th><th>Count</th><th>Impact</th></tr></thead>
-  <tbody>
-    <tr><td>Azarian-only topics</td><td><span class="status ok">{len(advs)}</span></td><td>Strong competitive moat — protect and deepen these</td></tr>
-    <tr><td>Shared topics (all cover)</td><td><span class="status info">{len(shared)}</span></td><td>Table stakes — ensure superior depth and quality</td></tr>
-    <tr><td>Content gaps (competitors cover, Azarian doesn't)</td><td><span class="status critical">{len(gaps)}</span></td><td>Missing opportunities — evaluate for strategic fit</td></tr>
-  </tbody>
-</table>
-
-<h3>Key Content Gaps</h3>
-<table>
-  <thead><tr><th>Topic</th><th>Covered By</th></tr></thead>
+  <thead><tr><th>Competitor</th><th>{site_name} advantages</th><th>Shared topics</th><th>Gaps ({site_name} missing)</th></tr></thead>
   <tbody>"""
-        for _, r in gaps.head(20).iterrows():
-            covered = []
-            if r.get("nogood") == "Y": covered.append("NoGood")
-            if r.get("singlegrain") == "Y": covered.append("SingleGrain")
+        for comp_name, comp_df in competitor_dfs:
+            gaps = comp_df[comp_df["status"].str.contains("GAP", case=False, na=False)]
+            advs = comp_df[comp_df["status"].str.contains("ADVANTAGE", case=False, na=False)]
+            shared = comp_df[comp_df["status"].str.contains("SHARED|cover", case=False, na=False)]
             html += f"""
-    <tr><td>{r['topic']}</td><td>{', '.join(covered)}</td></tr>"""
+    <tr>
+      <td><strong>{comp_name}</strong></td>
+      <td><span class="status ok">{len(advs)}</span></td>
+      <td><span class="status info">{len(shared)}</span></td>
+      <td><span class="status critical">{len(gaps)}</span></td>
+    </tr>"""
         html += """
   </tbody>
-</table>
-
-<div class="rec-box">
-  <p><strong>Priority Gaps to Address:</strong> YouTube/video marketing, Instagram/TikTok content,
-  healthcare vertical, enterprise ABM/SEO, influencer marketing, and Reddit/community strategies.
-  These represent high-search-volume topics where competitors are capturing traffic Azarian is not.</p>
-</div>"""
+</table>"""
         html += '<div class="page-break"></div>'
 
     # NEAR-DUPLICATE PAGES
@@ -410,8 +401,8 @@ These pages are competing against each other and should be merged or differentia
   <thead><tr><th>URL A</th><th>URL B</th><th>Similarity</th><th>Action</th></tr></thead>
   <tbody>"""
         for _, r in sim_df.iterrows():
-            slug_a = r["url_a"].replace("https://azariangrowthagency.com/", "/")
-            slug_b = r["url_b"].replace("https://azariangrowthagency.com/", "/")
+            slug_a = site_config.strip_url(r["url_a"])
+            slug_b = site_config.strip_url(r["url_b"])
             color = "critical" if r["similarity"] >= 0.92 else "warning"
             html += f"""
     <tr><td style="font-size:10px;color:#4A7BF7">{slug_a}</td>
@@ -445,9 +436,8 @@ These pages are competing against each other and should be merged or differentia
   </tbody>
 </table>
 <div class="rec-box">
-  <p><strong>Critical Finding:</strong> {stale_pct}% of content is 6+ months old. Content decay directly impacts
-  rankings as Google favors freshness signals. Establish a quarterly content refresh cadence targeting
-  highest-traffic stale pages first.</p>
+  <p><strong>Finding:</strong> {stale_pct}% of content is 6+ months old. Content decay impacts rankings as
+  Google favors freshness signals. Establish a quarterly refresh cadence targeting highest-traffic stale pages first.</p>
 </div>"""
 
     # BRAND VOICE
@@ -456,7 +446,7 @@ These pages are competing against each other and should be merged or differentia
         avg_score = round(brand_enh["brand_score"].mean(), 1)
         html += f"""
 <h3>Brand Voice Alignment</h3>
-<p>Each page scored against Azarian's brand voice profile (tone, style, do/don't rules). Average score: <strong>{avg_score}/100</strong>.</p>
+<p>Each page scored against {site_name}'s brand voice profile (tone, style, do/don't rules). Average score: <strong>{avg_score}/100</strong>.</p>
 <table>
   <thead><tr><th>Rating</th><th>Pages</th><th>% of Total</th></tr></thead>
   <tbody>"""
@@ -468,6 +458,62 @@ These pages are competing against each other and should be merged or differentia
         html += """
   </tbody>
 </table>"""
+
+    # CONTENT IDEAS (from gap analysis)
+    ideas_df = _load_enh("content_ideas.csv")
+    if not ideas_df.empty:
+        html += '<div class="page-break"></div>'
+        p1 = int((ideas_df["priority"] == "P1").sum())
+        p2 = int((ideas_df["priority"] == "P2").sum())
+        p3 = int((ideas_df["priority"] == "P3").sum())
+        html += f"""
+<h2>Content Ideas &mdash; Ready to Brief</h2>
+<p>Each row below is a content brief derived from competitor gap analysis: a topic
+that one or more competitors cover that {site_name} does not. Priority reflects how
+many competitors validate the topic ({p1} P1, {p2} P2, {p3} P3).</p>
+
+<table>
+  <thead><tr><th>Pri</th><th>Title</th><th>Type</th><th>Words</th><th>Validated by</th></tr></thead>
+  <tbody>"""
+        for _, r in ideas_df.head(30).iterrows():
+            pcls = "critical" if r["priority"] == "P1" else "warning" if r["priority"] == "P2" else "info"
+            html += f"""
+    <tr>
+      <td><span class="status {pcls}">{r['priority']}</span></td>
+      <td><strong>{r['title']}</strong>
+          <div style="font-size:9.5px;color:#6b7280;margin-top:2px">Gap topic: <em>{r['gap_topic']}</em> &middot; Audience: {r['target_audience']}</div>
+      </td>
+      <td style="font-size:10px">{r['content_type']}</td>
+      <td style="text-align:center;font-weight:600">{int(r['est_word_count'])}</td>
+      <td style="font-size:10px;color:#6b7280">{r['covered_by']}</td>
+    </tr>"""
+        html += """
+  </tbody>
+</table>"""
+
+        # Detailed briefs for top 10 (full key questions + keywords)
+        html += """
+<h3>Top 10 briefs in detail</h3>
+<p>Hand these to the content team as-is. Each brief includes target keywords and the
+core questions a strong piece must answer.</p>"""
+        for _, r in ideas_df.head(10).iterrows():
+            pcls = "critical-issue" if r["priority"] == "P1" else "warning-issue" if r["priority"] == "P2" else ""
+            kws = " | ".join(str(r["suggested_keywords"]).split("|"))
+            questions = str(r["key_questions"]).split("|")
+            q_html = "".join(f"<li>{q.strip()}</li>" for q in questions if q.strip())
+            html += f"""
+<div class="issue {pcls}">
+  <h4>[{r['priority']}] {r['title']}</h4>
+  <p><span class="label">Format:</span> {r['content_type']} &middot;
+     <span class="label">Length:</span> ~{int(r['est_word_count'])} words &middot;
+     <span class="label">Audience:</span> {r['target_audience']}</p>
+  <p><span class="label">Gap topic:</span> <em>{r['gap_topic']}</em> &middot;
+     <span class="label">Validated by:</span> {r['covered_by']}</p>
+  <p><span class="label">Target keywords:</span> {kws}</p>
+  <p><span class="label">Key questions to answer:</span></p>
+  <ul style="margin:4px 0 0 20px;font-size:10.5px;line-height:1.6">{q_html}</ul>
+</div>"""
+        html += '<div class="page-break"></div>'
 
     # CLUSTER MERGES
     if not merge_enh.empty:
@@ -489,132 +535,43 @@ These pages are competing against each other and should be merged or differentia
 
     html += '<div class="page-break"></div>'
 
-    # CAMPAIGN BRIEFS
-    html += """
-<h2>Campaign Briefs &mdash; Growth Opportunities</h2>
-<p>The following campaigns are derived directly from audit findings where fixes unlock measurable growth.</p>
-
-<h3>Campaign 1: Cannibalization Consolidation Sprint</h3>
-<table>
-  <thead><tr><th>Field</th><th>Detail</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Objective</strong></td><td>Consolidate competing pages into authoritative pillar content for each topic cluster</td></tr>
-    <tr><td><strong>Trigger</strong></td><td>C-001: """ + str(total_cannib) + """ clusters with multiple URLs competing for the same keywords</td></tr>
-    <tr><td><strong>Scope</strong></td><td>Phase 1: """ + str(len(critical_cannib)) + """ critical clusters (10+ URLs). Phase 2: """ + str(len(high_cannib)) + """ high-priority clusters (6-9 URLs). Phase 3: Remaining moderate clusters.</td></tr>
-    <tr><td><strong>Execution</strong></td><td>For each cluster: identify strongest URL by traffic + backlinks. Merge content from weaker pages. 301 redirect merged pages. Update internal links. Differentiate any pages kept with unique search intent.</td></tr>
-    <tr><td><strong>Success Metrics</strong></td><td>Zero duplicate-intent pages per cluster. Improved avg position for target keywords. Increased organic CTR on consolidated pages.</td></tr>
-    <tr><td><strong>Growth Forecast</strong></td><td>10-25% ranking improvement on affected keywords. Concentrated link equity. Cleaner crawl signals. Improved AI citation rates.</td></tr>
-    <tr><td><strong>Timeline</strong></td><td>4-6 weeks. Phase 1 in Week 1-2 (highest ROI). Phase 2 in Week 3-4. Phase 3 ongoing.</td></tr>
-  </tbody>
-</table>
-
-<h3>Campaign 2: Thin Content Expansion & Cleanup</h3>
-<table>
-  <thead><tr><th>Field</th><th>Detail</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Objective</strong></td><td>Expand high-value thin pages to ranking eligibility or remove low-value pages from the index</td></tr>
-    <tr><td><strong>Trigger</strong></td><td>C-002: """ + str(len(thin)) + """ pages under 300 words consuming crawl budget without ranking</td></tr>
-    <tr><td><strong>Scope</strong></td><td>Phase 1: """ + str(len(thin_local)) + """ local landing pages (geo-targeting value). Phase 2: """ + str(len(thin_tools)) + """ tool review pages. Phase 3: """ + str(len(thin_other)) + """ hub/guide pages.</td></tr>
-    <tr><td><strong>Execution</strong></td><td>Phase 1: Expand local pages with city-specific content, testimonials, service details (500+ words each). Phase 2: Enrich tool pages with use cases, pricing, comparisons. Phase 3: Build out case studies and industry hubs. Noindex pages that cannot be expanded.</td></tr>
-    <tr><td><strong>Success Metrics</strong></td><td>Zero pages under 300 words in the index. Local pages ranking for geo-modified keywords. Tool pages capturing comparison search intent.</td></tr>
-    <tr><td><strong>Growth Forecast</strong></td><td>Recovered crawl budget. New ranking eligibility for 100+ pages. Improved topical depth signals across all clusters.</td></tr>
-    <tr><td><strong>Timeline</strong></td><td>3-4 weeks. Phase 1 in Week 1 (highest geo-targeting ROI). Phase 2 in Week 2-3. Phase 3 in Week 3-4.</td></tr>
-  </tbody>
-</table>
-
-<h3>Campaign 3: Content Type Diversification</h3>
-<table>
-  <thead><tr><th>Field</th><th>Detail</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Objective</strong></td><td>Create comparison pages and how-to guides for top revenue clusters to capture featured snippets and AI citations</td></tr>
-    <tr><td><strong>Trigger</strong></td><td>Content type gap: 69% educational content, only 1 comparison page and 3 how-to guides</td></tr>
-    <tr><td><strong>Scope</strong></td><td>10 comparison pages + 10 how-to guides targeting top clusters (PPC, SaaS, Fintech, Legal, CRO, Growth Marketing, Facebook Ads, Link Building, Email Marketing, Local SEO)</td></tr>
-    <tr><td><strong>Execution</strong></td><td>Research SERP features for each cluster's top keywords. Create content matching the dominant SERP format. Optimize for featured snippets (tables, lists, step-by-step). Structure for AI parsability (schema, clear headings, concise answers).</td></tr>
-    <tr><td><strong>Success Metrics</strong></td><td>Featured snippet capture for 5+ target keywords. AI citation appearances in ChatGPT/Perplexity for core service queries.</td></tr>
-    <tr><td><strong>Growth Forecast</strong></td><td>Featured snippets drive 2-3x CTR vs standard results. AI citations build brand authority in zero-click environments.</td></tr>
-    <tr><td><strong>Timeline</strong></td><td>4 weeks. 5 pieces per week.</td></tr>
-  </tbody>
-</table>"""
-
-    html += '<div class="page-break"></div>'
-
-    # ACTION ITEMS
-    html += """
-<h2>Recommended Execution Order</h2>
-<p>Based on growth impact relative to effort, here is the recommended sequence:</p>
-<table>
-  <thead><tr><th>Order</th><th>Action</th><th>Campaign</th><th>Effort</th><th>Timeline</th><th>Impact</th></tr></thead>
-  <tbody>
-    <tr><td>1</td><td>Consolidate top 10 cannibalized clusters (10+ URLs each)</td><td>Campaign 1 P1</td><td>High</td><td>2 weeks</td><td><span class="status critical">High</span></td></tr>
-    <tr><td>2</td><td>Expand local/city landing pages (geo-targeting)</td><td>Campaign 2 P1</td><td>Medium</td><td>1 week</td><td><span class="status critical">High</span></td></tr>
-    <tr><td>3</td><td>Create 10 comparison pages for top clusters</td><td>Campaign 3 P1</td><td>Medium</td><td>2 weeks</td><td><span class="status critical">High</span></td></tr>
-    <tr><td>4</td><td>Consolidate remaining cannibalized clusters (6-9 URLs)</td><td>Campaign 1 P2</td><td>Medium</td><td>2 weeks</td><td><span class="status warning">Medium</span></td></tr>
-    <tr><td>5</td><td>Expand tool review pages to 500+ words</td><td>Campaign 2 P2</td><td>Medium</td><td>2 weeks</td><td><span class="status warning">Medium</span></td></tr>
-    <tr><td>6</td><td>Create 10 how-to guides for top clusters</td><td>Campaign 3 P2</td><td>Medium</td><td>2 weeks</td><td><span class="status warning">Medium</span></td></tr>
-    <tr><td>7</td><td>Review and resolve orphan pages</td><td>Maintenance</td><td>Low</td><td>1 week</td><td><span class="status info">Low</span></td></tr>
-    <tr><td>8</td><td>Build out case study and industry hub pages</td><td>Campaign 2 P3</td><td>Medium</td><td>2 weeks</td><td><span class="status warning">Medium</span></td></tr>
-  </tbody>
-</table>
-<p>Steps 1-3 represent the highest ROI actions and should be executed in the first 4 weeks.</p>"""
-
-    html += '<div class="page-break"></div>'
-
-    # CONCLUSIONS
+    # CONCLUSIONS — generic, data-driven, no hardcoded narrative
+    has_critical_cannib = total_cannib >= 10
+    has_thin = len(thin) > 10
     html += f"""
-<h2>Conclusions</h2>
-<p>The topical foundation of azariangrowthagency.com is <strong>strong in breadth but fragmented in depth</strong>.
-With {total_clusters} topic clusters across {total_urls} pages, the site covers its core verticals well &mdash;
-Legal, Private Equity, Fintech, SaaS, Home Services, and Growth Marketing all have meaningful content presence
-aligned with Azarian's 8 ICPs.</p>
+<h2>Conclusions &amp; Recommended Execution Order</h2>
 
-<p>However, three structural issues are actively limiting organic performance:</p>
+<p>{site_name}'s topical map covers <strong>{total_clusters} clusters across {total_urls} pages</strong>.
+The structural issues that most directly impact rankings, in priority order:</p>
 
-<p><strong>1. Content Cannibalization is the #1 priority.</strong> {total_cannib} clusters have multiple pages fighting
-for the same keywords. The worst cases (Facebook Ads: 31 pages, Link Building: 29, Content Marketing: 24) are
-splitting authority so broadly that no single page can rank effectively. Consolidation into pillar pages will
-produce the fastest ranking improvements.</p>
+<ol style="margin:8px 0 12px 20px;font-size:11px;line-height:1.8;">
+  <li><strong>Cannibalization &mdash; {total_cannib} clusters</strong>{' (priority #1: this is the biggest lever).' if has_critical_cannib else '.'} Consolidate competing pages into single pillars per topic. Largest gains come from clusters with 10+ competing URLs.</li>
+  <li><strong>Thin content &mdash; {len(thin)} pages</strong>{' (significant crawl waste).' if has_thin else '.'} Expand to 500+ words or noindex.</li>
+  <li><strong>Orphan pages &mdash; {noise_count} pages</strong> with no semantic cluster. Either build supporting content, merge, or noindex.</li>
+</ol>
 
-<p><strong>2. Thin content is wasting crawl budget.</strong> {len(thin)} pages with under 300 words are being
-crawled and indexed but have zero chance of ranking. The {len(thin_local)} local landing pages represent a missed
-geo-targeting opportunity &mdash; expanding them is a quick win for local search visibility.</p>
-
-<p><strong>3. Content type diversity is too narrow.</strong> 69% of content is educational/conversion hybrid.
-The near-absence of comparison pages and how-to guides means Azarian is missing featured snippets, People Also Ask
-results, and AI citation opportunities that competitors are capturing.</p>
-
-<h3>What This Means for Growth</h3>
-<p>Executing all three campaigns over the next 8-10 weeks will produce:</p>
-<ul style="margin:8px 0 8px 20px;">
-  <li><strong>Consolidated authority</strong> on pillar pages that rank higher and earn more backlinks</li>
-  <li><strong>Recovered crawl budget</strong> from removing thin content waste</li>
-  <li><strong>New ranking eligibility</strong> for 100+ expanded pages</li>
-  <li><strong>Featured snippet capture</strong> through comparison and how-to content</li>
-  <li><strong>Improved AI visibility</strong> (GEO/AEO) through cleaner topic signals and structured content</li>
-</ul>
-
-<p>The result is a site that <strong>ranks more clearly, earns more traffic per page, and is more visible</strong>
-to the AI-powered search interfaces (ChatGPT, Perplexity, Gemini) that are increasingly driving discovery
-for Azarian's PE, VC, and enterprise audience.</p>
-
-<div class="rec-box" style="margin-top:20px;">
-  <p><strong>Next Steps:</strong></p>
-  <p>1. Review the interactive dashboard (dashboard.html) for drill-down into each cluster and URL</p>
-  <p>2. Begin Campaign 1 Phase 1: audit and consolidate the top 10 cannibalized clusters</p>
-  <p>3. Begin Campaign 2 Phase 1: expand local/city landing pages with unique content</p>
-  <p>4. Schedule follow-up analysis in 8 weeks to measure consolidation impact</p>
+<div class="rec-box">
+  <p><strong>Suggested 30-day plan:</strong></p>
+  <p>1. Week 1-2: tackle the top {min(10, len(critical_cannib))} cannibalized clusters with 10+ competing URLs (highest ROI).</p>
+  <p>2. Week 2-3: expand the {len(thin_local) if len(thin_local) > 0 else 0} location/local landing pages and the {len(thin_tools) if len(thin_tools) > 0 else 0} tool review pages.</p>
+  <p>3. Week 3-4: review orphan pages and ship internal linking improvements for the largest clusters.</p>
+  <p>4. Re-run the analysis after week 4 to measure consolidation impact.</p>
 </div>
+
+<p style="margin-top:16px;font-size:10px;color:#9ca3af">Open <code>output/dashboard.html</code> for an interactive
+drill-down into every cluster, URL, and recommendation.</p>
 
 </body></html>"""
 
     # Save HTML
-    html_path = os.path.join(OUTPUT_DIR, "report.html")
+    html_path = os.path.join(out, "report.html")
     with open(html_path, "w") as f:
         f.write(html)
 
-    # Convert to PDF using weasyprint or wkhtmltopdf
-    pdf_path = os.path.join(OUTPUT_DIR, "Topical_Authority_Audit_AGA_April_2026.pdf")
+    # Convert to PDF
+    pdf_filename = f"Topical_Authority_Audit_{_slugify(site_name)}_{datetime.now().strftime('%Y_%m')}.pdf"
+    pdf_path = os.path.join(out, pdf_filename)
 
-    # Try wkhtmltopdf first (common on macOS)
     import subprocess
     try:
         result = subprocess.run(
@@ -622,7 +579,7 @@ for Azarian's PE, VC, and enterprise audience.</p>
              "--margin-top", "15mm", "--margin-bottom", "15mm",
              "--margin-left", "12mm", "--margin-right", "12mm",
              html_path, pdf_path],
-            capture_output=True, text=True, timeout=60
+            capture_output=True, text=True, timeout=60,
         )
         if result.returncode == 0:
             logger.info("PDF generated with wkhtmltopdf: %s", pdf_path)
@@ -630,17 +587,18 @@ for Azarian's PE, VC, and enterprise audience.</p>
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
-    # Fallback: try Chrome headless
-    for chrome in ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-                   "/Applications/Chromium.app/Contents/MacOS/Chromium"]:
+    for chrome in [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ]:
         if os.path.exists(chrome):
             try:
-                result = subprocess.run(
+                subprocess.run(
                     [chrome, "--headless", "--disable-gpu",
                      f"--print-to-pdf={pdf_path}",
                      "--no-margins",
                      f"file://{html_path}"],
-                    capture_output=True, text=True, timeout=30
+                    capture_output=True, text=True, timeout=30,
                 )
                 if os.path.exists(pdf_path):
                     logger.info("PDF generated with Chrome headless: %s", pdf_path)

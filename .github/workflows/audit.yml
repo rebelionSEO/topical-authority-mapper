@@ -1,0 +1,187 @@
+name: Weekly Audit
+
+# Runs the topical authority pipeline against every site in examples/sites/*.yaml,
+# commits the run snapshot back to the repo, and publishes the dashboards to GitHub Pages.
+#
+# Setup: Settings → Pages → Source = "GitHub Actions"
+# Trigger: weekly cron (Mondays 06:00 UTC), or manually via "Run workflow"
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      site:
+        description: 'Specific site config to run (filename in examples/sites/, no .yaml). Empty = all sites.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write   # to commit run snapshots back to the repo
+  pages: write
+  id-token: write
+
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: Discover site configs
+    runs-on: ubuntu-latest
+    outputs:
+      sites: ${{ steps.list.outputs.sites }}
+      count: ${{ steps.list.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.site }}" ]; then
+            sites="[\"${{ github.event.inputs.site }}\"]"
+            count=1
+          else
+            shopt -s nullglob
+            files=(examples/sites/*.yaml examples/sites/*.yml)
+            real=()
+            for f in "${files[@]}"; do
+              base="$(basename "$f")"
+              # Skip files starting with _ or named "example.yaml" (templates)
+              [[ "$base" == _* ]] && continue
+              [[ "$base" == "example.yaml" || "$base" == "example.yml" ]] && continue
+              real+=("\"$(basename "$f" .yaml)\"")
+            done
+            if [ ${#real[@]} -eq 0 ]; then
+              sites="[]"
+              count=0
+            else
+              sites="[$(IFS=,; echo "${real[*]}")]"
+              count=${#real[@]}
+            fi
+          fi
+          echo "sites=$sites" >> "$GITHUB_OUTPUT"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Discovered $count site(s): $sites"
+
+  audit:
+    name: Audit ${{ matrix.site }}
+    needs: discover
+    if: needs.discover.outputs.count != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        site: ${{ fromJSON(needs.discover.outputs.sites) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: Cache HuggingFace model (sentence-transformers)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-${{ runner.os }}-all-MiniLM-L6-v2
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run audit
+        run: |
+          mkdir -p runs
+          python -m src.main \
+            --config "examples/sites/${{ matrix.site }}.yaml" \
+            --output-dir "output" \
+            --runs-root "runs"
+
+      - name: Upload audit outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-${{ matrix.site }}
+          path: |
+            runs/
+            output/
+          retention-days: 14
+
+  publish:
+    name: Publish to GitHub Pages
+    needs: audit
+    if: ${{ always() && needs.audit.result == 'success' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed for committing back
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download all audit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Merge artifacts into runs/
+        shell: bash
+        run: |
+          mkdir -p runs
+          # Each artifact dir contains its own runs/ (and output/), copy runs/ into top-level
+          for d in artifacts/*/; do
+            if [ -d "${d}runs" ]; then
+              cp -rn "${d}runs/." runs/ 2>/dev/null || true
+              # Use cp -r with merge: the per-site dirs don't conflict
+              rsync -a "${d}runs/" runs/ || cp -r "${d}runs/." runs/
+            fi
+          done
+          ls -la runs/ || echo "(runs/ empty)"
+
+      - name: Build Pages index
+        run: python scripts/build_pages_index.py runs/ public/
+
+      - name: Commit snapshots back to repo
+        shell: bash
+        run: |
+          git config user.name "audit-bot"
+          git config user.email "audit-bot@users.noreply.github.com"
+          git add runs/
+          if git diff --cached --quiet; then
+            echo "No new snapshot changes to commit."
+          else
+            git commit -m "chore(audit): run snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+      - name: Deploy to Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+  notify-empty:
+    name: No site configs found
+    needs: discover
+    if: needs.discover.outputs.count == '0'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "No site configs found in examples/sites/."
+          echo "Add a YAML file (see examples/sites/_README.md) to run audits."

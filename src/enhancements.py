@@ -13,7 +13,7 @@ import faiss
 import numpy as np
 import pandas as pd
 
-from src.config import CACHE_DIR, OUTPUT_DIR
+from src.config import cache_dir, extra_listing_patterns, output_dir
 
 
 # ---------------------------------------------------------------------------
@@ -26,7 +26,6 @@ LISTING_PAGE_PATTERNS = [
     r"^https?://[^/]+/webinars/?$",
     r"^https?://[^/]+/case-studies/?$",
     r"^https?://[^/]+/podcasts?/?$",
-    r"^https?://[^/]+/a-growth-ventures-podcast/?$",
     r"^https?://[^/]+/featured-podcasts/?$",
     r"^https?://[^/]+/careers/?$",
     r"^https?://[^/]+/about-us/?$",
@@ -91,7 +90,17 @@ def classify_page_type(url: str) -> str:
 
 
 def is_intentionally_thin(url: str) -> bool:
-    """Check if a page is expected to be thin (listing, hub, archive, etc.)."""
+    """Check if a page is expected to be thin (listing, hub, archive, etc.).
+
+    Combines built-in patterns + page-type classifier + per-site custom regexes from
+    SiteConfig.listing_patterns.
+    """
+    for pattern in extra_listing_patterns():
+        try:
+            if re.match(pattern, url, re.IGNORECASE):
+                return True
+        except re.error:
+            continue
     ptype = classify_page_type(url)
     return ptype in ("listing", "industry-hub", "homepage")
 
@@ -174,7 +183,7 @@ def compute_similarity_scores(chunks_df: pd.DataFrame, embeddings: np.ndarray) -
         df = df.sort_values(["conversion_risk", "similarity"], ascending=[False, False])
 
     # Save
-    out_path = os.path.join(OUTPUT_DIR, "similarity_scores.csv")
+    out_path = os.path.join(output_dir(), "similarity_scores.csv")
     df.to_csv(out_path, index=False)
     logger.info("Saved %d similarity pairs to %s", len(df), out_path)
     return df
@@ -268,7 +277,7 @@ def classify_search_intent(chunks_df: pd.DataFrame) -> pd.DataFrame:
 
     df = pd.DataFrame(url_intents)
 
-    out_path = os.path.join(OUTPUT_DIR, "search_intent.csv")
+    out_path = os.path.join(output_dir(), "search_intent.csv")
     df.to_csv(out_path, index=False)
     logger.info("Saved search intent for %d URLs to %s", len(df), out_path)
     return df
@@ -313,10 +322,10 @@ def analyze_internal_links(internal_csv_path: str, url_map: pd.DataFrame, cluste
     ).round(1).sort_values("avg_inlinks", ascending=True)
 
     # Save
-    out_path = os.path.join(OUTPUT_DIR, "internal_linking.csv")
+    out_path = os.path.join(output_dir(), "internal_linking.csv")
     merged.to_csv(out_path, index=False)
 
-    cluster_link_path = os.path.join(OUTPUT_DIR, "cluster_link_health.csv")
+    cluster_link_path = os.path.join(output_dir(), "cluster_link_health.csv")
     cluster_link_health.to_csv(cluster_link_path)
 
     logger.info("Saved internal linking data to %s", out_path)
@@ -371,7 +380,7 @@ def detect_cluster_merges(clusters: pd.DataFrame, chunks_df: pd.DataFrame, embed
 
     df = pd.DataFrame(results).sort_values("similarity", ascending=False) if results else pd.DataFrame()
 
-    out_path = os.path.join(OUTPUT_DIR, "cluster_merge_suggestions.csv")
+    out_path = os.path.join(output_dir(), "cluster_merge_suggestions.csv")
     df.to_csv(out_path, index=False)
     logger.info("Found %d potential cluster merges", len(df))
     return df
@@ -381,24 +390,30 @@ def detect_cluster_merges(clusters: pd.DataFrame, chunks_df: pd.DataFrame, embed
 # #7 — Content freshness scoring
 # ---------------------------------------------------------------------------
 
-def score_content_freshness(sitemap_urls: list[str]) -> pd.DataFrame:
+def score_content_freshness(sitemap_urls: list[str] | None = None) -> pd.DataFrame:
     """
-    Extract lastmod from sitemap and score freshness.
-    Falls back to checking page headers if sitemap doesn't have lastmod.
+    Extract lastmod from sitemap(s) and score freshness.
+
+    sitemap_urls: explicit list of sitemap URLs to crawl. If omitted, falls back
+    to the sitemaps recorded in the cached SiteConfig (cache/site_config.json).
     """
     import xml.etree.ElementTree as ET
     import requests
 
+    from src.config import load_site_config
+
     logger.info("Scoring content freshness from sitemaps...")
 
-    SITEMAPS = [
-        "https://azariangrowthagency.com/post-sitemap.xml",
-        "https://azariangrowthagency.com/page-sitemap.xml",
-        "https://azariangrowthagency.com/service-sitemap.xml",
-    ]
+    if not sitemap_urls:
+        site = load_site_config()
+        sitemap_urls = list(site.sitemaps) if site else []
+
+    if not sitemap_urls:
+        logger.warning("No sitemap URLs provided and none in SiteConfig — skipping freshness scoring")
+        return pd.DataFrame()
 
     url_dates = {}
-    for sm_url in SITEMAPS:
+    for sm_url in sitemap_urls:
         try:
             resp = requests.get(sm_url, timeout=15)
             root = ET.fromstring(resp.content)
@@ -438,7 +453,7 @@ def score_content_freshness(sitemap_urls: list[str]) -> pd.DataFrame:
 
     df = pd.DataFrame(results).sort_values("age_days", ascending=False)
 
-    out_path = os.path.join(OUTPUT_DIR, "content_freshness.csv")
+    out_path = os.path.join(output_dir(), "content_freshness.csv")
     df.to_csv(out_path, index=False)
     logger.info("Scored freshness for %d URLs", len(df))
     return df
@@ -465,7 +480,7 @@ def score_brand_voice(chunks_df: pd.DataFrame) -> pd.DataFrame:
     Score each URL's content against the brand voice profile.
     Checks tone alignment, do/don't adherence, and writing style match.
     """
-    profile_path = os.path.join(CACHE_DIR, "brand_profile.json")
+    profile_path = os.path.join(cache_dir(), "brand_profile.json")
     if not os.path.exists(profile_path):
         logger.warning("No brand profile found at %s — skipping brand voice scoring", profile_path)
         return pd.DataFrame()
@@ -480,15 +495,9 @@ def score_brand_voice(chunks_df: pd.DataFrame) -> pd.DataFrame:
     dont_phrases = [d.lower() for d in profile.get("dont", [])]
     example_phrases = [e.lower() for e in profile.get("example_phrases", [])]
 
-    # Words associated with brand tone
-    tone_lexicon = {
-        "strategic": ["strategy", "strategic", "framework", "roadmap", "funnel", "pipeline"],
-        "decisive": ["clear", "focused", "confident", "definitive", "proven", "exactly"],
-        "confident": ["we deliver", "we drive", "results", "performance", "growth engine"],
-        "direct": ["no fluff", "cut through", "bottom line", "straight", "actionable"],
-        "experimental": ["test", "experiment", "iterate", "launch", "sprint", "hypothesis"],
-        "technical": ["data-driven", "analytics", "metrics", "cac", "roas", "ltv", "cvr"],
-    }
+    # Tone-word lexicon. Generic, industry-agnostic defaults that the brand profile can
+    # override or extend by adding a "tone_lexicon" dict to brand_profile.json.
+    tone_lexicon = _resolve_tone_lexicon(profile)
 
     results = []
     for url, group in chunks_df.groupby("url"):
@@ -549,10 +558,44 @@ def score_brand_voice(chunks_df: pd.DataFrame) -> pd.DataFrame:
 
     df = pd.DataFrame(results).sort_values("brand_score", ascending=True)
 
-    out_path = os.path.join(OUTPUT_DIR, "brand_voice_scores.csv")
+    out_path = os.path.join(output_dir(), "brand_voice_scores.csv")
     df.to_csv(out_path, index=False)
     logger.info("Saved brand voice scores to %s", out_path)
     return df
+
+
+DEFAULT_TONE_LEXICON = {
+    # Generic, industry-agnostic tone words. Anything more specific (e.g. growth metrics
+    # like CAC/ROAS/LTV) should be added to the brand profile's tone_lexicon override.
+    "professional": ["expertise", "experience", "industry", "best practices", "standards"],
+    "casual": ["honestly", "kind of", "yeah", "stuff", "just"],
+    "technical": ["specification", "architecture", "implementation", "system", "process"],
+    "friendly": ["welcome", "happy", "love", "enjoy", "appreciate"],
+    "authoritative": ["proven", "established", "leading", "definitive", "comprehensive"],
+    "playful": ["fun", "exciting", "amazing", "cool", "delightful"],
+    "concise": ["clear", "simple", "direct", "straightforward", "essential"],
+    "data-driven": ["data", "metrics", "research", "study", "measure", "evidence"],
+    "innovative": ["new", "novel", "breakthrough", "innovative", "pioneering"],
+    "trustworthy": ["transparent", "honest", "reliable", "trusted", "accountable"],
+    "strategic": ["strategy", "framework", "roadmap", "approach", "plan"],
+    "decisive": ["clear", "focused", "confident", "definitive"],
+    "confident": ["deliver", "drive", "results", "performance"],
+    "direct": ["straight", "actionable", "no fluff", "to the point"],
+    "experimental": ["test", "experiment", "iterate", "launch", "sprint"],
+    "warm": ["thoughtful", "caring", "support", "together", "human"],
+    "bold": ["challenge", "rethink", "disrupt", "bold", "unflinching"],
+}
+
+
+def _resolve_tone_lexicon(profile: dict) -> dict:
+    """Merge the brand-profile-provided lexicon (if any) on top of the generic defaults."""
+    lex = {k: list(v) for k, v in DEFAULT_TONE_LEXICON.items()}
+    override = profile.get("tone_lexicon") or {}
+    if isinstance(override, dict):
+        for tone, words in override.items():
+            if isinstance(words, list):
+                lex[tone.lower()] = [str(w).lower() for w in words]
+    return lex
 
 
 def _brand_rating(score: float) -> str:
@@ -579,15 +622,25 @@ GENERIC_STOPWORDS = {
 
 
 def competitor_gap_analysis(
-    azarian_clusters: pd.DataFrame,
+    target_clusters: pd.DataFrame,
     competitor_clusters: pd.DataFrame,
     competitor_name: str,
+    target_name: str | None = None,
 ) -> pd.DataFrame:
     """
-    Compare at cluster-name level (not raw keywords) between Azarian and a competitor.
+    Compare cluster topics between the target site and a competitor.
     Filters out single-word generic terms. Only keeps multi-word, intent-bearing topics.
+
+    target_name: display label for the target site in the status column. If omitted,
+    falls back to the cached SiteConfig name, then to "TARGET".
     """
-    logger.info("Running competitor gap analysis: Azarian vs %s", competitor_name)
+    if target_name is None:
+        from src.config import load_site_config
+
+        site = load_site_config()
+        target_name = site.name if site else "TARGET"
+
+    logger.info("Running competitor gap analysis: %s vs %s", target_name, competitor_name)
 
     def _extract_topics(clusters_df):
         """Extract meaningful multi-word keyphrases from cluster keywords."""
@@ -613,42 +666,40 @@ def competitor_gap_analysis(
                 topics.add(kw)
         return topics
 
-    az_topics = _extract_topics(azarian_clusters)
+    target_topics = _extract_topics(target_clusters)
     comp_topics = _extract_topics(competitor_clusters)
 
     # Fuzzy matching: consider topics as matching if one contains the other
-    # Build a set of matched pairs
-    az_matched = set()
+    target_matched = set()
     comp_matched = set()
     shared_pairs = []
 
-    for az_t in az_topics:
-        for comp_t in comp_topics:
-            # Exact match or high substring overlap
-            if az_t == comp_t or (len(az_t) > 5 and az_t in comp_t) or (len(comp_t) > 5 and comp_t in az_t):
-                az_matched.add(az_t)
-                comp_matched.add(comp_t)
-                if az_t == comp_t:
-                    shared_pairs.append(az_t)
+    for tt in target_topics:
+        for ct in comp_topics:
+            if tt == ct or (len(tt) > 5 and tt in ct) or (len(ct) > 5 and ct in tt):
+                target_matched.add(tt)
+                comp_matched.add(ct)
+                if tt == ct:
+                    shared_pairs.append(tt)
                 else:
-                    shared_pairs.append(f"{az_t} / {comp_t}")
+                    shared_pairs.append(f"{tt} / {ct}")
 
-    az_only = az_topics - az_matched
+    target_only = target_topics - target_matched
     comp_only = comp_topics - comp_matched
     shared = set(shared_pairs)
 
     results = []
     for kw in sorted(comp_only):
         results.append({"keyword": kw, "status": "GAP: competitor covers, you don't", "competitor": competitor_name})
-    for kw in sorted(az_only):
+    for kw in sorted(target_only):
         results.append({"keyword": kw, "status": "ADVANTAGE: you cover, competitor doesn't", "competitor": competitor_name})
     for kw in sorted(shared):
         results.append({"keyword": kw, "status": "SHARED: both cover", "competitor": competitor_name})
 
     df = pd.DataFrame(results)
 
-    out_path = os.path.join(OUTPUT_DIR, f"competitor_gap_{competitor_name.lower().replace(' ', '_')}.csv")
+    out_path = os.path.join(output_dir(), f"competitor_gap_{competitor_name.lower().replace(' ', '_')}.csv")
     df.to_csv(out_path, index=False)
     logger.info("Gap analysis: %d gaps, %d advantages, %d shared topics (filtered to multi-word intent-bearing terms)",
-                len(comp_only), len(az_only), len(shared))
+                len(comp_only), len(target_only), len(shared))
     return df

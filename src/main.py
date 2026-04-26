@@ -1,20 +1,39 @@
 """
 Topical Authority Mapper - Main orchestrator.
 
-Usage:
-    python -m src.main --input urls.txt [--brand-voice brand.pdf] [--debug]
+Quick start:
+    python -m src.main --sitemap https://example.com/sitemap.xml --site-name "Example Inc"
+
+With a config file (recommended for repeatable runs):
+    python -m src.main --config examples/site.yaml
+
+With competitors (auto-discovers each competitor's sitemap and runs gap analysis):
+    python -m src.main --sitemap https://example.com/sitemap.xml --site-name "Example" \\
+      --competitor competitor1.com --competitor competitor2.com
+
+CLI args always override values loaded from --config.
 """
 
 import argparse
 import logging
 import os
 import sys
+import time
+from typing import Optional
 
 import pandas as pd
 
 from src.brand_voice import generate_content_recommendation, load_or_create_brand_profile
 from src.clustering import assign_url_clusters, cluster_embeddings, extract_cluster_keywords, reduce_dimensions
-from src.config import CACHE_DIR, DEBUG_URL_LIMIT, OUTPUT_DIR
+from src.config import (
+    DEBUG_URL_LIMIT,
+    SiteConfig,
+    cache_dir,
+    domain_from_url,
+    output_dir,
+    save_site_config,
+    set_runtime_cache_dir,
+)
 from src.embedding import build_faiss_index, compute_embeddings
 from src.ingestion import ingest_urls, parse_sitemap
 from src.output import detect_cannibalization, export_all
@@ -30,21 +49,84 @@ def setup_logging(debug: bool = False):
 
 
 def load_urls(filepath: str) -> list[str]:
-    """Load URLs from a text file (one per line)."""
+    """Load URLs from a text file (one per line). Lines starting with # are comments."""
     with open(filepath, "r") as f:
         urls = [line.strip() for line in f if line.strip() and not line.startswith("#")]
     return urls
 
 
+def _derive_domain(urls: list[str], explicit_domain: Optional[str]) -> str:
+    """Pick the most common host from the URL list, unless explicitly given."""
+    if explicit_domain:
+        return explicit_domain.replace("https://", "").replace("http://", "").rstrip("/")
+    if not urls:
+        return "unknown"
+    from collections import Counter
+    hosts = [domain_from_url(u) for u in urls if u]
+    counts = Counter(h for h in hosts if h)
+    return counts.most_common(1)[0][0] if counts else "unknown"
+
+
+def _load_yaml_config(path: str) -> dict:
+    """Load a YAML config file. Returns flat dict ready to merge with CLI args."""
+    try:
+        import yaml
+    except ImportError:
+        print("ERROR: --config requires PyYAML. Install with: pip install pyyaml", file=sys.stderr)
+        sys.exit(2)
+
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+
+    # YAML schema (all sections optional):
+    #   site:       name, domain, industry
+    #   input:      sitemap, urls_file, additional_sitemaps[]
+    #   output:     output_dir, cache_dir, brand_voice
+    #   competitors: [list]
+    #   skip_patterns: [list]
+    #   listing_patterns: [list]
+    site = data.get("site", {}) or {}
+    inp = data.get("input", {}) or {}
+    out = data.get("output", {}) or {}
+
+    return {
+        "site_name": site.get("name"),
+        "site_domain": site.get("domain"),
+        "industry": site.get("industry"),
+        "sitemap": inp.get("sitemap"),
+        "input": inp.get("urls_file"),
+        "additional_sitemaps": list(inp.get("additional_sitemaps", []) or []),
+        "output_dir": out.get("output_dir"),
+        "cache_dir": out.get("cache_dir"),
+        "brand_voice": out.get("brand_voice"),
+        "competitors": list(data.get("competitors", []) or []),
+        "skip_patterns": list(data.get("skip_patterns", []) or []),
+        "listing_patterns": list(data.get("listing_patterns", []) or []),
+        "max_urls_per_competitor": int(data.get("max_urls_per_competitor", 100)),
+    }
+
+
 def run(
-    input_file: str | None = None,
-    sitemap_url: str | None = None,
-    brand_voice_pdf: str | None = None,
+    input_file: Optional[str] = None,
+    sitemap_url: Optional[str] = None,
+    brand_voice_pdf: Optional[str] = None,
+    site_name: Optional[str] = None,
+    site_domain: Optional[str] = None,
+    sitemaps: Optional[list[str]] = None,
+    industry: Optional[str] = None,
+    output_dir_arg: Optional[str] = None,
+    skip_patterns: Optional[list[str]] = None,
+    listing_patterns: Optional[list[str]] = None,
+    competitors: Optional[list[str]] = None,
+    max_urls_per_competitor: int = 100,
+    runs_root: Optional[str] = None,
+    skip_history: bool = False,
     debug: bool = False,
 ):
     """Main pipeline."""
     setup_logging(debug)
     logger = logging.getLogger("main")
+    run_started_at = time.time()
 
     if debug:
         logger.info("=== DEBUG MODE: processing max %d URLs, skipping FAISS ===", DEBUG_URL_LIMIT)
@@ -57,7 +139,7 @@ def run(
         logger.info("Loading URLs from %s", input_file)
         urls = load_urls(input_file)
     else:
-        logger.error("Provide either --input or --sitemap. Exiting.")
+        logger.error("Provide either --input or --sitemap (or use --config). Exiting.")
         sys.exit(1)
 
     if debug:
@@ -67,6 +149,30 @@ def run(
     if not urls:
         logger.error("No URLs to process. Exiting.")
         sys.exit(1)
+
+    # --- 1b. Establish + persist site config (so other modules pick it up) ---
+    domain = _derive_domain(urls, site_domain)
+    name = site_name or domain
+    sitemap_list = list(sitemaps) if sitemaps else ([sitemap_url] if sitemap_url else [])
+    resolved_output_dir = os.path.abspath(output_dir_arg) if output_dir_arg else None
+
+    site_config = SiteConfig(
+        name=name,
+        domain=domain,
+        sitemaps=sitemap_list,
+        output_dir=resolved_output_dir,
+        industry=industry,
+        skip_patterns=list(skip_patterns or []),
+        listing_patterns=list(listing_patterns or []),
+    )
+    save_site_config(site_config)
+    logger.info(
+        "Site: name=%r domain=%r industry=%r sitemaps=%d output=%s",
+        name, domain, industry, len(sitemap_list), resolved_output_dir or "(default)",
+    )
+
+    OUT = output_dir()
+    os.makedirs(OUT, exist_ok=True)
 
     # --- 2. Ingest content ---
     logger.info("Step 1/6: Ingesting content...")
@@ -80,7 +186,7 @@ def run(
 
     # --- 3. Generate embeddings ---
     logger.info("Step 2/6: Generating embeddings...")
-    cache_path = os.path.join(CACHE_DIR, "embeddings.pkl")
+    cache_path = os.path.join(cache_dir(), "embeddings.pkl")
     embeddings = compute_embeddings(
         texts=chunks_df["chunk_text"].tolist(),
         cache_path=cache_path if not debug else None,
@@ -103,8 +209,6 @@ def run(
     # --- 6. URL-level mapping ---
     logger.info("Step 5/6: Mapping clusters to URLs...")
     url_mapping = assign_url_clusters(chunks_df)
-
-    # Merge cluster names into url_mapping for readability
     url_mapping = url_mapping.merge(
         cluster_info[["cluster_id", "cluster_name"]].rename(columns={"cluster_id": "main_cluster"}),
         on="main_cluster",
@@ -128,7 +232,6 @@ def run(
             rec["cluster_name"] = row["cluster_name"]
             recs.append(rec)
         recommendations = pd.DataFrame(recs)
-        # Reorder columns
         recommendations = recommendations[["cluster_id", "cluster_name", "content_type", "tone", "angle", "cta_style"]]
     else:
         logger.info("Step 6/6: Skipping recommendations (no brand profile)")
@@ -136,50 +239,200 @@ def run(
     # --- 9. FAISS index ---
     if not debug:
         logger.info("Building FAISS index...")
-        faiss_path = os.path.join(CACHE_DIR, "embeddings.faiss")
+        faiss_path = os.path.join(cache_dir(), "embeddings.faiss")
         build_faiss_index(embeddings, save_path=faiss_path)
     else:
         logger.info("Skipping FAISS index (debug mode)")
 
-    # --- 10. Export ---
+    # --- 10. Export base outputs ---
     logger.info("Exporting results...")
     export_all(cluster_info, url_mapping, cannibalization, skipped, recommendations)
+
+    # --- 11. Competitor analysis (optional) ---
+    content_ideas_df = pd.DataFrame()
+    if competitors:
+        from src.competitor import run_competitor_analyses
+
+        logger.info("Step 7: Competitor analysis (%d competitors)...", len(competitors))
+        succeeded = run_competitor_analyses(
+            competitors, cluster_info, name, max_urls_per_competitor=max_urls_per_competitor
+        )
+        # Persist resolved competitor list back into site config so downstream modules know
+        site_config.competitors = succeeded
+        save_site_config(site_config)
+        logger.info("Competitor analysis complete: %s", ", ".join(succeeded) if succeeded else "(none succeeded)")
+
+        # --- 12. Generate content ideas from gap data ---
+        if succeeded:
+            from src.content_ideas import generate_content_ideas
+
+            logger.info("Step 8: Generating content briefs from gap data...")
+            content_ideas_df = generate_content_ideas(site_config=site_config)
+            logger.info("Content ideas: %d briefs generated", len(content_ideas_df))
+
+    # --- 13. QA pass (must run before any render) ---
+    from src.qa import run_qa, print_summary
+
+    logger.info("Step 9: Running QA validation...")
+    qa_report = run_qa(run_started_at=run_started_at)
+    print_summary(qa_report)
+    if qa_report.critical_count() > 0:
+        logger.error(
+            "QA found %d CRITICAL issues. Review output/qa_report.json before rendering the dashboard or PDF.",
+            qa_report.critical_count(),
+        )
+
+    # --- 13b. Compute site health + 1-page exec summary + Claude artifact ---
+    try:
+        from src.site_health import compute_health, write_health
+        from src.exec_summary import generate_exec_summary
+        from src.dashboard_artifact import generate_artifact
+
+        logger.info("Step 9b: Computing site health + exec summary + Claude artifact...")
+        health_snap = compute_health(site_config=site_config)
+        write_health(health_snap)
+        exec_path = generate_exec_summary(site_config=site_config, health=health_snap)
+        artifact_path = generate_artifact(site_config=site_config)
+        logger.info(
+            "Site Health: %d/100 (%s) -> exec %s, artifact %s",
+            health_snap.composite, health_snap.composite_label, exec_path, artifact_path,
+        )
+    except Exception:
+        logger.exception("Site health / exec summary / artifact generation failed (non-fatal)")
+
+    # --- 14. Snapshot this run for historical context ---
+    snapshot_path = None
+    if not skip_history:
+        from src.run_history import snapshot_run, diff_against_previous
+
+        try:
+            metadata = snapshot_run(site_config, runs_root=runs_root or os.path.abspath("./runs"))
+            snapshot_path = metadata.snapshot_dir
+            logger.info("Run snapshot saved: %s", snapshot_path)
+            delta = diff_against_previous(site_config.name, runs_root=runs_root or os.path.abspath("./runs"))
+            if delta:
+                logger.info(
+                    "Delta vs previous run (%s -> %s): %s",
+                    delta["from_run"], delta["to_run"], delta["delta"],
+                )
+        except Exception:
+            logger.exception("Failed to create run snapshot (run still completed)")
 
     # --- Summary ---
     print("\n" + "=" * 60)
     print("TOPICAL AUTHORITY MAPPER - COMPLETE")
     print("=" * 60)
+    print(f"  Site:            {name} ({domain})")
+    if industry:
+        print(f"  Industry:        {industry}")
     print(f"  URLs processed:  {chunks_df['url'].nunique()}")
     print(f"  URLs skipped:    {len(skipped)}")
     print(f"  Total chunks:    {len(chunks_df)}")
     print(f"  Clusters found:  {len(cluster_info)}")
     print(f"  Cannibalization: {len(cannibalization)} clusters flagged")
-    print(f"  Output dir:      {OUTPUT_DIR}/")
+    if competitors:
+        print(f"  Competitors:     {', '.join(site_config.competitors) or '(none)'}")
+    if not content_ideas_df.empty:
+        print(f"  Content ideas:   {len(content_ideas_df)} briefs (output/content_ideas.csv)")
+    print(f"  QA:              {qa_report.critical_count()} critical, {qa_report.warn_count()} warn")
+    try:
+        print(f"  Health:          {health_snap.composite}/100 ({health_snap.composite_label})")
+    except (NameError, AttributeError):
+        pass
+    if snapshot_path:
+        print(f"  Snapshot:        {snapshot_path}")
+    print(f"  Output dir:      {OUT}/")
     print("=" * 60)
-
-    if not cluster_info.empty:
-        print("\nCluster Summary:")
-        for _, row in cluster_info.iterrows():
-            print(f"  [{row['cluster_id']}] {row['cluster_name']}")
-            print(f"      Keywords: {row['keywords']}")
-
-    if not cannibalization.empty:
-        print("\nCannibalization Alerts:")
-        for _, row in cannibalization.iterrows():
-            print(f"  Cluster {row['cluster_id']} ({row['cluster_name']}): {row['url_count']} URLs")
-            print(f"    -> {row['recommendation']}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Topical Authority Mapper")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--input", "-i", help="Path to file with URLs (one per line)")
-    group.add_argument("--sitemap", "-s", help="URL to XML sitemap (parses all URLs from it)")
-    parser.add_argument("--brand-voice", "-b", help="Path to brand voice PDF (optional)")
-    parser.add_argument("--debug", "-d", action="store_true", help="Debug mode: 10 URLs, skip FAISS, verbose")
+    parser = argparse.ArgumentParser(
+        description="Topical Authority Mapper",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument("--config", help="Path to a YAML config file. CLI args override its values.")
+
+    src_group = parser.add_mutually_exclusive_group(required=False)
+    src_group.add_argument("--input", "-i", help="Path to a file with URLs (one per line)")
+    src_group.add_argument("--sitemap", "-s", help="URL to an XML sitemap (parses all URLs from it)")
+
+    parser.add_argument("--site-name", help="Human-readable site name. Defaults to the domain.")
+    parser.add_argument("--site-domain", help="Bare hostname (e.g. 'acme.com'). Auto-derived if omitted.")
+    parser.add_argument("--industry", help="Optional vertical hint (e.g. 'b2b-saas', 'ecommerce').")
+    parser.add_argument(
+        "--sitemap-url", action="append", default=[],
+        help="Additional sitemap URL for freshness scoring (repeatable).",
+    )
+    parser.add_argument(
+        "--competitor", action="append", default=[],
+        help="Competitor domain or sitemap URL (repeatable). Each is auto-crawled and gap-analyzed.",
+    )
+    parser.add_argument(
+        "--max-urls-per-competitor", type=int, default=100,
+        help="Cap on URLs ingested per competitor (default 100).",
+    )
+    parser.add_argument(
+        "--skip-pattern", action="append", default=[],
+        help="Extra URL substring to skip (repeatable). Merged with built-in skip list.",
+    )
+    parser.add_argument(
+        "--listing-pattern", action="append", default=[],
+        help="Regex for URLs that are intentionally thin (hubs/archives). Repeatable.",
+    )
+    parser.add_argument("--output-dir", help="Override the output directory for CSVs/HTML/PDF.")
+    parser.add_argument("--cache-dir", help="Override the cache directory for embeddings + site config.")
+    parser.add_argument("--runs-root", help="Where to write timestamped run snapshots (default: ./runs).")
+    parser.add_argument("--no-snapshot", action="store_true", help="Skip writing a run snapshot.")
+    parser.add_argument("--brand-voice", "-b", help="Path to brand voice PDF (optional).")
+    parser.add_argument("--debug", "-d", action="store_true", help="Debug mode: 10 URLs, skip FAISS, verbose.")
     args = parser.parse_args()
 
-    run(input_file=args.input, sitemap_url=args.sitemap, brand_voice_pdf=args.brand_voice, debug=args.debug)
+    # Load YAML config first, then let CLI args override.
+    cfg: dict = {}
+    if args.config:
+        cfg = _load_yaml_config(args.config)
+
+    def pick(cli_val, key, default=None):
+        """CLI value if non-falsy, else YAML, else default."""
+        if cli_val:
+            return cli_val
+        return cfg.get(key) if cfg.get(key) is not None else default
+
+    cache_path = pick(args.cache_dir, "cache_dir")
+    if cache_path:
+        set_runtime_cache_dir(cache_path)
+
+    sitemap = pick(args.sitemap, "sitemap")
+    input_file = pick(args.input, "input")
+    if not sitemap and not input_file:
+        parser.error("Must provide --sitemap or --input (via CLI or --config).")
+
+    sitemaps = list(args.sitemap_url) + list(cfg.get("additional_sitemaps", []))
+    if sitemap and sitemap not in sitemaps:
+        sitemaps.append(sitemap)
+
+    competitors = list(args.competitor) + list(cfg.get("competitors", []))
+    skip_patterns = list(args.skip_pattern) + list(cfg.get("skip_patterns", []))
+    listing_patterns = list(args.listing_pattern) + list(cfg.get("listing_patterns", []))
+
+    run(
+        input_file=input_file,
+        sitemap_url=sitemap,
+        brand_voice_pdf=pick(args.brand_voice, "brand_voice"),
+        site_name=pick(args.site_name, "site_name"),
+        site_domain=pick(args.site_domain, "site_domain"),
+        sitemaps=sitemaps,
+        industry=pick(args.industry, "industry"),
+        output_dir_arg=pick(args.output_dir, "output_dir"),
+        skip_patterns=skip_patterns,
+        listing_patterns=listing_patterns,
+        competitors=competitors,
+        max_urls_per_competitor=int(args.max_urls_per_competitor or cfg.get("max_urls_per_competitor", 100)),
+        runs_root=pick(args.runs_root, "runs_root"),
+        skip_history=args.no_snapshot,
+        debug=args.debug,
+    )
 
 
 if __name__ == "__main__":

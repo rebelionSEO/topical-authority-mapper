@@ -300,6 +300,26 @@ def run(
     except Exception:
         logger.exception("Site health / exec summary / artifact generation failed (non-fatal)")
 
+    # --- 13c. Render the interactive dashboard + PDF report ---
+    # These read from the output dir, so they need to run after exports + health are done.
+    try:
+        from src.dashboard import generate_dashboard
+
+        logger.info("Step 9c: Rendering interactive dashboard...")
+        dash_path = generate_dashboard(site_config=site_config)
+        logger.info("Dashboard rendered: %s", dash_path)
+    except Exception:
+        logger.exception("Dashboard render failed (non-fatal)")
+
+    try:
+        from src.report import generate_pdf
+
+        logger.info("Step 9d: Rendering PDF report...")
+        pdf_path = generate_pdf(site_config=site_config)
+        logger.info("PDF report: %s", pdf_path)
+    except Exception:
+        logger.exception("PDF report render failed (non-fatal — wkhtmltopdf or Chrome may be missing)")
+
     # --- 14. Snapshot this run for historical context ---
     snapshot_path = None
     if not skip_history:

@@ -2,6 +2,7 @@
 
 import logging
 import os
+from typing import Optional
 
 import pandas as pd
 
@@ -10,16 +11,52 @@ from src.config import SiteConfig, load_site_config, output_dir
 logger = logging.getLogger(__name__)
 
 
-# Generic, content-based hints used to label thin pages. Heuristic only —
-# the page-type classifier in src.enhancements is the source of truth.
+# Thin-content categorization. Tiered by how actionable the page is — readers should
+# fix HIGH-priority items first because they're real content the site is putting out.
+# LOW-priority items are catch-all utility/lander pages that may not need text at all.
+_BLOG_HINTS = ("/blog/", "/posts/", "/article/", "/articles/", "/news/", "/insights/",
+               "/podcast-", "/whats-", "/why-", "/how-")
+_SERVICE_HINTS = ("/services/", "/service/", "/solutions/", "/solution/",
+                  "/products/", "/product/", "/platform/", "/features/", "/feature/")
+_CASE_HINTS = ("/case-stud", "/customer-stories", "/customer-story", "/success-stories")
+_GUIDE_HINTS = ("/guides/", "/guide/", "/library/", "/learn/", "/academy/", "/playbook")
+_INDUSTRY_HINTS = ("/industries/", "/industry/", "/verticals/", "/for-")
+_AUTHOR_HINTS = ("/author/", "/authors/", "/team/", "/people/", "/contributors/", "/staff/")
 _TOOL_HINTS = ("/tools/", "/tool/", "tool-review", "/marketing-tools/", "/ai-tools/")
 _LOCAL_HINTS = ("/locations/", "/cities/", "-near-me", "/areas/")
 _LOCAL_PATH_HINTS = ("services-for-", "services-in-", "marketing-for-", "design-for-", "agency-in-")
 
 
+# Order matters — first match wins. Each entry: (key, label, priority 1-5)
+# Priority 1 = highest (fix first), 5 = lowest (probably don't need fixing).
+_THIN_CATEGORIES = [
+    ("blog",         "Blog / Article",        1),
+    ("case-study",   "Case Study",            1),
+    ("service",      "Service / Product Page", 2),
+    ("industry",     "Industry / Vertical Page", 2),
+    ("guide",        "Guide / Resource Hub",  3),
+    ("author",       "Author / Team Page",    4),
+    ("tool",         "Tool Review",           4),
+    ("local",        "Local / Location",      4),
+    ("other",        "Other (low priority)",  5),
+]
+
+
 def _classify_thin(url: str) -> str:
-    """Classify a thin URL into a coarse category for grouping in the dashboard."""
+    """Classify a thin URL into a category for grouping. Returns the key from _THIN_CATEGORIES."""
     u = url.lower()
+    if any(h in u for h in _BLOG_HINTS):
+        return "blog"
+    if any(h in u for h in _CASE_HINTS):
+        return "case-study"
+    if any(h in u for h in _SERVICE_HINTS):
+        return "service"
+    if any(h in u for h in _INDUSTRY_HINTS):
+        return "industry"
+    if any(h in u for h in _GUIDE_HINTS):
+        return "guide"
+    if any(h in u for h in _AUTHOR_HINTS):
+        return "author"
     if any(h in u for h in _TOOL_HINTS):
         return "tool"
     if any(h in u for h in _LOCAL_HINTS) or any(h in u for h in _LOCAL_PATH_HINTS):
@@ -29,17 +66,23 @@ def _classify_thin(url: str) -> str:
 
 def _thin_recommendation(url: str, category: str) -> str:
     """Generate a short recommendation for a thin content page."""
+    if category == "blog":
+        return "Expand to 800+ words OR merge into a related pillar. Blog stubs hurt topical authority — they should be either substantial or gone."
+    if category == "case-study":
+        return "Add full case study: challenge, strategy, execution, results with metrics + customer quote."
+    if category == "service":
+        return "Service page must convert: features, benefits, social proof, pricing signal, FAQ, clear CTA. 600-1200 words minimum."
+    if category == "industry":
+        return "Build out as industry pillar: pain points specific to vertical, named case studies, vertical-specific services, FAQ."
+    if category == "guide":
+        return "Expand into a comprehensive resource hub with linked subtopics + downloadable asset."
+    if category == "author":
+        return "Expand: bio, credentials, articles authored, social links — supports E-E-A-T."
     if category == "tool":
-        return "Expand to 500+ words: add use cases, pricing, pros/cons, and comparison to alternatives"
+        return "Expand to 500+ words: use cases, pricing, pros/cons, comparison to alternatives."
     if category == "local":
-        return "Expand with local case studies, testimonials, service area details, and unique location-specific content"
-    if "case-stud" in url:
-        return "Add full case study: challenge, strategy, execution, results with metrics"
-    if "industr" in url:
-        return "Build out as industry pillar page: pain points, services, case studies, FAQs"
-    if "guide" in url:
-        return "Expand into a comprehensive resource hub with linked subtopics"
-    return "Expand with substantive content or consolidate into a related pillar page"
+        return "Expand with local case studies, testimonials, service area details, unique location-specific content."
+    return "Low priority — review whether this URL needs to be indexed at all. If yes, expand or consolidate; if no, noindex."
 
 
 def _discover_competitor_csvs() -> list[tuple[str, pd.DataFrame]]:
@@ -153,9 +196,66 @@ def generate_dashboard(site_config: SiteConfig | None = None):
     )
     thin_actionable["word_count"] = thin_actionable["reason"].str.extract(r"(\d+)").astype(float).fillna(0).astype(int)
 
+    # LLM thin-content judgment — drops false positives the regex couldn't catch
+    from src import llm_advisor as _llm
+    if _llm.is_enabled() and not thin_actionable.empty:
+        logger.info("LLM thin-content judgment on %d URLs...", len(thin_actionable))
+        thin_urls = thin_actionable["url"].tolist()
+        # Batch in chunks of 50
+        verdicts: dict = {}
+        chunk = 50
+        for i in range(0, len(thin_urls), chunk):
+            sub = thin_urls[i:i + chunk]
+            res = _llm.advise_thin_content(
+                site_name=site_config.name, site_domain=site_config.domain,
+                industry=site_config.industry, urls=sub,
+            )
+            if res and isinstance(res, dict):
+                for j in (res.get("judgments") or []):
+                    u = j.get("url", "").strip()
+                    if u:
+                        verdicts[u] = {"verdict": j.get("verdict", "ambiguous"), "reason": j.get("reason", "")}
+        # Apply verdicts: drop "exclude", annotate the rest
+        keep_mask = thin_actionable["url"].apply(lambda u: verdicts.get(u, {}).get("verdict") != "exclude")
+        excluded_n = int((~keep_mask).sum())
+        if excluded_n:
+            logger.info("LLM excluded %d thin URLs as false positives", excluded_n)
+        thin_actionable = thin_actionable[keep_mask].copy()
+        # Decorate the recommendation with LLM reasoning where available
+        def _decorate(row):
+            v = verdicts.get(row["url"], {})
+            if v and v.get("reason"):
+                return f"{row['recommendation']} (advisor: {v['reason']})"
+            return row["recommendation"]
+        thin_actionable["recommendation"] = thin_actionable.apply(_decorate, axis=1)
+
+    # Group thin pages by category, ordered by priority (1 = fix first).
+    cat_lookup = {key: (label, prio) for key, label, prio in _THIN_CATEGORIES}
+    thin_groups = []
+    for cat_key, label, prio in _THIN_CATEGORIES:
+        rows = thin_actionable[thin_actionable["category"] == cat_key]
+        if rows.empty:
+            continue
+        records = []
+        for _, r in rows.iterrows():
+            records.append({
+                "url": r["url"],
+                "slug": site_config.strip_url(r["url"]),
+                "word_count": int(r["word_count"]),
+                "recommendation": r["recommendation"],
+            })
+        thin_groups.append({
+            "category": cat_key,
+            "label": label,
+            "priority": prio,
+            "count": len(records),
+            "pages": records,
+        })
+
+    # Backwards-compat slices (still used by some old templates / exec summary)
     thin_tools = thin_actionable[thin_actionable["category"] == "tool"].to_dict("records")
     thin_local = thin_actionable[thin_actionable["category"] == "local"].to_dict("records")
-    thin_other = thin_actionable[thin_actionable["category"] == "other"].to_dict("records")
+    thin_other = thin_actionable[~thin_actionable["category"].isin(["tool", "local"])].to_dict("records")
 
     # URL detail data
     url_details = url_map.merge(
@@ -176,70 +276,187 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         "values": cannib_chart["url_count"].astype(int).tolist(),
     }
 
-    # Cannibalization detail with page types and actions
+    # Per-URL intent lookup (for richer cannibalization detail)
+    intent_by_url: dict = {}
+    if not intent_df.empty:
+        for _, row in intent_df.iterrows():
+            intent_by_url[row["url"]] = {
+                "primary": row.get("primary_intent", ""),
+                "secondary": row.get("secondary_intent", ""),
+                "confidence": row.get("confidence", ""),
+            }
+
+    # Per-URL chunk count → rough word-count proxy (each chunk is ~600 words)
+    chunks_by_url: dict = {}
+    try:
+        import pickle as _pickle
+        chunks_pkl = os.path.join(os.path.dirname(out), "cache", "chunks_df.pkl")
+        if not os.path.exists(chunks_pkl):
+            chunks_pkl = os.path.join(out, "../cache/chunks_df.pkl")
+    except Exception:
+        chunks_pkl = ""
+
+    # Cannibalization detail — now with per-URL "winner" recommendation, intent, page type
     cannib_detail = []
-    for _, row in cannib_full.iterrows():
-        urls = str(row["urls"]).split(" | ")
+    role_order = {"money": 0, "support": 1, "content": 2}
+
+    def _pick_winner(urls_list: list) -> Optional[int]:
+        """Choose the URL most likely to deserve the canonical/winner slot.
+        Heuristic: service > case-study > industry > local-landing > blog. Within the same
+        page type, prefer URLs whose intent best matches the cluster (commercial > info)."""
+        if not urls_list:
+            return None
+        type_score = {"service": 100, "case-study": 80, "industry": 70,
+                      "local-landing": 60, "tool-review": 50, "blog": 30,
+                      "webinar": 20, "listing": 0, "homepage": 90}
+        intent_bonus = {"transactional": 15, "commercial": 10, "informational": 0, "navigational": -5}
+        best_idx, best_score = 0, -1
+        for i, u in enumerate(urls_list):
+            score = type_score.get(u["type"], 30)
+            ib = intent_bonus.get(u.get("intent_primary", ""), 0)
+            score += ib
+            if score > best_score:
+                best_score, best_idx = score, i
+        return best_idx
+
+    # LLM advisor — gives much sharper recommendations than the rule-based winner picker.
+    # Falls back to rule-based when LLM is disabled.
+    from src import llm_advisor
+    llm_on = llm_advisor.is_enabled()
+    if llm_on:
+        logger.info("LLM cannibalization advisor enabled (%d clusters to analyze)", len(cannib_full))
+
+    for cidx, (_, row) in enumerate(cannib_full.iterrows()):
+        urls = [u.strip() for u in str(row["urls"]).split(" | ") if u.strip()]
         url_details_list = []
         for u in urls:
             ptype = classify_page_type(u)
-            if ptype == "service":
-                action = "PROTECT — this is the conversion page"
-                role = "money"
-            elif ptype == "case-study":
-                action = "KEEP — supports trust and conversion"
-                role = "support"
-            elif ptype == "industry":
-                action = "KEEP — unique vertical angle"
-                role = "support"
-            elif ptype == "local-landing":
-                action = "KEEP if geo-targeted, otherwise merge"
-                role = "support"
-            else:
-                action = "EVALUATE — merge into pillar or differentiate angle"
-                role = "content"
+            ip = intent_by_url.get(u, {}).get("primary", "")
             url_details_list.append({
                 "url": u,
                 "slug": site_config.strip_url(u),
                 "type": ptype,
-                "action": action,
-                "role": role,
+                "intent_primary": ip,
+                "intent_secondary": intent_by_url.get(u, {}).get("secondary", ""),
+                "role": "money" if ptype == "service" else "support" if ptype in ("case-study", "industry", "local-landing") else "content",
             })
-        role_order = {"money": 0, "support": 1, "content": 2}
-        url_details_list.sort(key=lambda x: role_order.get(x["role"], 2))
+
+        kw_row = clusters[clusters["cluster_id"] == row["cluster_id"]]
+        keywords_list = (kw_row.iloc[0]["keywords"].split(", ") if len(kw_row) > 0 else [])
+
+        # Try LLM advisor first
+        llm_verdict = None
+        if llm_on:
+            try:
+                llm_verdict = llm_advisor.advise_cannibalization(
+                    cluster_name=str(row["cluster_name"]),
+                    keywords=keywords_list,
+                    urls=url_details_list,
+                )
+                if llm_verdict:
+                    logger.info("  [%d/%d] LLM verdict on '%s': %s",
+                                cidx + 1, len(cannib_full), row["cluster_name"],
+                                "REAL cannibalization" if llm_verdict.get("is_cannibalization") else "FALSE POSITIVE")
+            except Exception:
+                logger.exception("LLM cannibalization analysis failed; falling back to rules")
+                llm_verdict = None
+
+        winner_slug = None
+        if llm_verdict and isinstance(llm_verdict, dict):
+            # Apply LLM judgments to per-URL details
+            per_url_lookup = {}
+            for entry in (llm_verdict.get("per_url") or []):
+                key = entry.get("url", "").strip()
+                if key:
+                    per_url_lookup[key] = entry
+                    # Match either by full URL or by slug
+                    per_url_lookup[site_config.strip_url(key) if key.startswith("http") else key] = entry
+            # Apply
+            for u in url_details_list:
+                v = per_url_lookup.get(u["slug"]) or per_url_lookup.get(u["url"])
+                if v:
+                    u["recommendation"] = v.get("verdict", "MERGE")
+                    u["action"] = v.get("action") or "Consolidate per LLM advisor"
+                else:
+                    u["recommendation"] = "MERGE"
+                    u["action"] = "Consolidate (no per-URL verdict from advisor)"
+            winner_slug = llm_verdict.get("winner_url")
+        else:
+            # Rule-based fallback
+            winner_idx = _pick_winner(url_details_list)
+            winner_slug = url_details_list[winner_idx]["slug"] if winner_idx is not None else None
+            for i, u in enumerate(url_details_list):
+                if i == winner_idx:
+                    u["recommendation"] = "WINNER"
+                    u["action"] = f"KEEP — strongest candidate (page type: {u['type']}, intent: {u['intent_primary'] or 'n/a'}). Consolidate the others into this URL."
+                else:
+                    winner_intent = url_details_list[winner_idx]["intent_primary"] if winner_idx is not None else ""
+                    same_intent = u["intent_primary"] == winner_intent if winner_intent else True
+                    if u["type"] == "service" and url_details_list[winner_idx]["type"] == "service":
+                        u["recommendation"] = "REVIEW"
+                        u["action"] = "REVIEW — two service pages on the same topic. Pick the one with stronger rankings; consolidate the other."
+                    elif same_intent:
+                        u["recommendation"] = "MERGE"
+                        u["action"] = f"MERGE INTO winner via 301 → {winner_slug}"
+                    else:
+                        u["recommendation"] = "DIFFERENTIATE"
+                        u["action"] = f"DIFFERENTIATE — different intent ({u['intent_primary'] or 'n/a'}) than winner. Re-target with unique angle, or merge."
+
+        # Sort: winner first, then non-exclude, then exclude (false-positives last)
+        rec_order = {"WINNER": 0, "REVIEW": 1, "DIFFERENTIATE": 2, "MERGE": 3, "EXCLUDE": 9}
+        url_details_list.sort(key=lambda x: rec_order.get(x.get("recommendation", "MERGE"), 3))
 
         types_present = set(d["type"] for d in url_details_list)
         has_conversion_risk = "service" in types_present and "blog" in types_present
 
-        if has_conversion_risk:
+        # Use LLM verdict_summary if available, otherwise build a heuristic analysis
+        is_real_cannib = True
+        if llm_verdict and isinstance(llm_verdict, dict):
+            is_real_cannib = bool(llm_verdict.get("is_cannibalization", True))
+            analysis = llm_verdict.get("verdict_summary") or "Cluster analyzed by SEO advisor."
+            if not is_real_cannib:
+                analysis = "FALSE POSITIVE per advisor — " + analysis
+        elif has_conversion_risk:
+            blog_count = sum(1 for d in url_details_list if d['type'] == 'blog')
             analysis = (
-                f"CONVERSION RISK: {sum(1 for d in url_details_list if d['type']=='blog')} blog posts competing "
-                "against the service page for the same topic. Blog content may outrank the service page, "
-                "pushing users away from conversion."
+                f"CONVERSION RISK: {blog_count} blog posts competing against the service page. "
+                "The blog(s) may outrank the service page, pushing users away from conversion."
             )
         elif len(urls) > 10:
             analysis = (
-                f"SEVERE TOPIC FRAGMENTATION: {len(urls)} pages covering the same topic dilutes authority. "
-                "Consolidate into 1 pillar + 2-3 angle-specific posts."
+                f"SEVERE TOPIC FRAGMENTATION: {len(urls)} pages on the same topic dilutes authority. "
+                "Consolidate into 1 pillar + 2-3 angle-specific spokes."
             )
         else:
             analysis = (
-                f"{len(urls)} pages overlap on this topic. Identify the strongest performer and merge weaker "
-                "pages via 301 redirects."
+                f"{len(urls)} pages overlap on this topic. Winner identified below — merge the rest "
+                "into it via 301 redirects."
             )
 
-        kw_row = clusters[clusters["cluster_id"] == row["cluster_id"]]
         keywords = kw_row.iloc[0]["keywords"] if len(kw_row) > 0 else ""
+
+        # Severity now considers LLM verdict — false positives are downgraded
+        if not is_real_cannib:
+            severity = "false-positive"
+        elif row["url_count"] >= 10 or has_conversion_risk:
+            severity = "critical"
+        elif row["url_count"] >= 6:
+            severity = "high"
+        else:
+            severity = "moderate"
 
         cannib_detail.append({
             "id": int(row["cluster_id"]),
             "name": row["cluster_name"],
             "count": int(row["url_count"]),
             "urls": url_details_list,
-            "keywords": keywords.split(", ")[:5],
+            "keywords": keywords.split(", ")[:6],
+            "winner_slug": winner_slug or "",
             "analysis": analysis,
             "has_conversion_risk": has_conversion_risk,
-            "severity": "critical" if row["url_count"] >= 10 or has_conversion_risk else "high" if row["url_count"] >= 6 else "moderate",
+            "is_real_cannibalization": is_real_cannib,
+            "advisor_reasoning": (llm_verdict.get("winner_reasoning") if llm_verdict else "") or "",
+            "severity": severity,
         })
 
     all_clusters_data = []
@@ -343,6 +560,23 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         except Exception:
             logger.exception("Could not compute site health for dashboard")
 
+    # Spoke cluster lookup for the URL Explorer (rename "Secondary" → "Spoke cluster")
+    cluster_name_by_id = {int(r["cluster_id"]): r["cluster_name"] for _, r in clusters.iterrows()}
+    for u in url_table:
+        sec = str(u.get("secondary", "")).strip()
+        # secondary may be a comma-separated list of cluster IDs; pick the first as the spoke
+        if sec and sec.lower() != "nan":
+            try:
+                sec_id = int(float(sec.split(",")[0]))
+                u["spoke_cluster"] = cluster_name_by_id.get(sec_id, "")
+                u["spoke_id"] = sec_id
+            except (ValueError, IndexError):
+                u["spoke_cluster"] = ""
+                u["spoke_id"] = ""
+        else:
+            u["spoke_cluster"] = ""
+            u["spoke_id"] = ""
+
     from src.dashboard_html import build_html
     html = build_html(
         site_config=site_config,
@@ -356,6 +590,7 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         thin_tools=thin_tools,
         thin_local=thin_local,
         thin_other=thin_other,
+        thin_groups=thin_groups,
         top_cannib_summary=top_cannib_summary,
         enhancements=enh,
         health=health_data,

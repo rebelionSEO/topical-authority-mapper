@@ -45,11 +45,14 @@ def build_html(
     top_cannib_summary,
     enhancements=None,
     health=None,
+    thin_groups=None,
 ):
     if enhancements is None:
         enhancements = {}
     if health is None:
         health = {}
+    if thin_groups is None:
+        thin_groups = []
 
     site_name = escape(site_config.name) if site_config else "Site"
     site_domain = site_config.domain if site_config else ""
@@ -337,11 +340,16 @@ a:hover{{ text-decoration:underline; }}
   <input type="text" class="srch" id="cluster-search" placeholder="Search clusters by name, keyword, or content type...">
   <div id="cluster-detail" class="detail">
     <h3 id="detail-title" style="font-size:16px;margin-bottom:8px"></h3>
-    <div class="row row-2" style="margin-bottom:8px;font-size:13px">
-      <div><strong>Keywords:</strong> <span id="detail-kw" style="color:var(--muted)"></span></div>
-      <div><strong>Content Type:</strong> <span id="detail-type"></span></div>
-      <div><strong>Angle:</strong> <span id="detail-angle" style="color:var(--muted)"></span></div>
-      <div><strong>CTA Style:</strong> <span id="detail-cta" style="color:var(--muted)"></span></div>
+    <div style="margin-bottom:10px;font-size:13px"><strong>Keywords:</strong> <span id="detail-kw" style="color:var(--muted)"></span></div>
+    <div id="detail-brand-block" style="display:none;margin-bottom:10px">
+      <div class="row row-2" style="font-size:13px">
+        <div><strong>Content Type:</strong> <span id="detail-type"></span></div>
+        <div><strong>Angle:</strong> <span id="detail-angle" style="color:var(--muted)"></span></div>
+        <div><strong>CTA Style:</strong> <span id="detail-cta" style="color:var(--muted)"></span></div>
+      </div>
+    </div>
+    <div id="detail-brand-empty" style="display:none;font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">
+      No brand voice profile loaded. Pass <code style="background:var(--surface-alt);padding:1px 6px;border-radius:3px">--brand-voice &lt;pdf&gt;</code> to populate Content Type / Angle / CTA per cluster.
     </div>
     <strong>URLs:</strong>
     <div id="detail-urls" style="max-height:200px;overflow-y:auto"></div>
@@ -424,8 +432,8 @@ a:hover{{ text-decoration:underline; }}
         <thead><tr>
           <th class="sortable" data-sort="text">URL</th>
           <th class="sortable" data-sort="num">Cluster ID</th>
-          <th class="sortable" data-sort="text">Cluster Name</th>
-          <th>Secondary</th>
+          <th class="sortable" data-sort="text">Primary cluster</th>
+          <th class="sortable" data-sort="text" data-tip="The closest second-best cluster this URL also belongs to (the 'spoke'). Pages with a spoke cluster are good candidates to also link from that cluster's pillar.">Spoke cluster</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -451,6 +459,7 @@ const STATS={json.dumps(stats)};
 const THIN_TOOLS={json.dumps(thin_tools)};
 const THIN_LOCAL={json.dumps(thin_local)};
 const THIN_OTHER={json.dumps(thin_other)};
+const THIN_GROUPS={json.dumps(thin_groups)};
 const ENH={json.dumps(enhancements)};
 const HEALTH={json.dumps(health)};
 const ACTIONS={json.dumps(actions)};
@@ -694,18 +703,33 @@ registerLazy('summary',()=>{{
 // ============================================================================
 registerLazy('clusters',()=>{{
   if(!TREEMAP.labels||!TREEMAP.labels.length){{ document.getElementById('treemap').innerHTML=emptyState('No clusters formed','Run the pipeline against more URLs.'); return; }}
-  // Color by cannibalization severity if available, else fall back to viridis
+  // De-duplicate cluster names (TF-IDF can produce duplicates like two "Marketing Leaders" clusters).
+  // Plotly treemap silently breaks when label values collide — so we suffix duplicates.
+  const seen={{}};
+  const labels=TREEMAP.labels.map((n,i)=>{{
+    seen[n]=(seen[n]||0)+1;
+    return seen[n]>1?`${{n}} (#${{TREEMAP.ids[i]}})`:n;
+  }});
+  // Color by cannibalization severity if available, else neutral blue.
   const sevByName={{}}; CANNIB_DETAIL.forEach(c=>sevByName[c.name]={{count:c.count,sev:c.severity}});
   const colors=TREEMAP.labels.map(name=>{{ const s=sevByName[name]; return s?(severityColor[s.sev]||'#6366f1'):'#3b82f6'; }});
-  Plotly.newPlot('treemap',[{{type:'treemap',labels:TREEMAP.labels,values:TREEMAP.values,
-    parents:TREEMAP.labels.map(()=>''),
+  // Build a label-with-size string. Plotly auto-clips when cells are too small for the
+  // label, but explicit textposition + textfont control prevents the overflow / glitch
+  // we saw with values like "Market Insi..." spilling out of cells.
+  Plotly.newPlot('treemap',[{{type:'treemap',labels:labels,values:TREEMAP.values,
+    parents:labels.map(()=>''),
+    ids:TREEMAP.ids.map(String),
     text:TREEMAP.keywords.map(k=>k.split(',').slice(0,3).join(', ')),
     hovertemplate:'<b>%{{label}}</b><br>%{{value}} URLs<br>%{{text}}<extra></extra>',
-    textinfo:'label',textfont:{{size:13,color:'#fff'}},
-    marker:{{colors,line:{{width:1,color:'#0f1117'}}}},
+    textinfo:'label+value',
+    textfont:{{size:12,color:'#fff'}},
+    textposition:'middle center',
+    marker:{{colors,line:{{width:2,color:'#0f1117'}},pad:{{t:2,l:2,r:2,b:2}}}},
     pathbar:{{visible:false}},
-    tiling:{{packing:'squarify'}},
-  }}],{{...PL,margin:{{t:10,b:10,l:10,r:10}},height:440}},{{responsive:true,displayModeBar:false}});
+    tiling:{{packing:'squarify',pad:2}},
+  }}],{{...PL,margin:{{t:10,b:10,l:10,r:10}},height:480,
+    uniformtext:{{minsize:10,mode:'hide'}}}},
+    {{responsive:true,displayModeBar:false}});
 }});
 
 function renderClusterTable(filter=''){{
@@ -728,9 +752,15 @@ function showDetail(id){{
   const urls=URL_TABLE.filter(u=>u.cluster===id);
   document.getElementById('detail-title').textContent=`[${{c.id}}] ${{c.name}} — ${{c.urls}} URLs`;
   document.getElementById('detail-kw').textContent=c.keywords||'';
-  document.getElementById('detail-type').textContent=c.content_type||'-';
-  document.getElementById('detail-angle').textContent=c.angle||'-';
-  document.getElementById('detail-cta').textContent=c.cta||'-';
+  // Show the brand-voice fields only if we have data; otherwise show the helper note.
+  const hasBrand = (c.content_type && c.content_type.trim()) || (c.angle && c.angle.trim()) || (c.cta && c.cta.trim());
+  document.getElementById('detail-brand-block').style.display = hasBrand ? '' : 'none';
+  document.getElementById('detail-brand-empty').style.display = hasBrand ? 'none' : '';
+  if (hasBrand) {{
+    document.getElementById('detail-type').textContent=c.content_type||'—';
+    document.getElementById('detail-angle').textContent=c.angle||'—';
+    document.getElementById('detail-cta').textContent=c.cta||'—';
+  }}
   document.getElementById('detail-urls').innerHTML=urls.map(u=>`<a href="${{u.url}}" target="_blank" style="display:block;padding:3px 0;font-size:13px">${{u.url}}</a>`).join('');
   const panel=document.getElementById('cluster-detail');
   panel.classList.add('show');
@@ -762,28 +792,48 @@ function renderCannib(filter=''){{
   const list=document.getElementById('cannib-list');
   if(!items.length){{ list.innerHTML=emptyState('No matches'); return; }}
   list.innerHTML=items.map(c=>{{
-    const cb=c.has_conversion_risk?'border-left:3px solid var(--red);':'';
+    const isFalse=c.is_real_cannibalization===false;
+    const cb=isFalse?'border-left:3px solid var(--muted);opacity:0.75;':(c.has_conversion_risk?'border-left:3px solid var(--red);':'');
+    const sevBadge=isFalse?'<span class="b b-m" data-tip="The SEO advisor reviewed this cluster and determined the URLs are NOT actually competing for the same search intent. Probably mixed page types grouped by TF-IDF noise.">FALSE POSITIVE</span>':`<span class="b ${{c.severity==='critical'?'b-r':c.severity==='high'?'b-y':'b-g'}}">${{c.count}} URLs · ${{c.severity}}</span>`;
     return `
     <div class="card expand" onclick="this.classList.toggle('open')" style="cursor:pointer;${{cb}}">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <strong>${{c.name}}</strong>
-          ${{c.has_conversion_risk?'<span class="b b-r" style="margin-left:8px" data-tip="A blog/info page is competing against a service page for the same keywords. Risk: blog outranks service, users never convert.">Conversion Risk</span>':''}}
+          ${{c.has_conversion_risk&&!isFalse?'<span class="b b-r" style="margin-left:8px" data-tip="A blog/info page is competing against a service page for the same keywords. Risk: blog outranks service, users never convert.">Conversion Risk</span>':''}}
         </div>
-        <div><span class="b ${{c.severity==='critical'?'b-r':c.severity==='high'?'b-y':'b-g'}}">${{c.count}} URLs · ${{c.severity}}</span> <span class="expand-arrow">▶</span></div>
+        <div>${{sevBadge}} <span class="expand-arrow">▶</span></div>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px">${{c.analysis||''}}</div>
       ${{c.keywords&&c.keywords.length?'<div style="margin-top:4px;font-size:11px;color:var(--muted)">Shared keywords: '+c.keywords.join(', ')+'</div>':''}}
+      ${{c.advisor_reasoning?`<div style="margin-top:4px;font-size:11px;color:var(--accent);font-style:italic">▶ ${{c.advisor_reasoning}}</div>`:''}}
+      ${{c.winner_slug&&!isFalse?`<div style="margin-top:6px;font-size:11px;color:var(--green)">▶ Recommended winner: <code style="background:rgba(34,197,94,0.1);padding:1px 6px;border-radius:4px">${{c.winner_slug}}</code></div>`:''}}
       <div class="expand-body">
         <table style="font-size:12px">
-          <thead><tr><th style="width:50%">URL</th><th style="width:12%">Type</th><th style="width:38%">Action</th></tr></thead>
+          <thead><tr>
+            <th style="width:9%">Verdict</th>
+            <th style="width:33%">URL</th>
+            <th style="width:11%">Type</th>
+            <th style="width:12%">Intent</th>
+            <th style="width:35%">Recommended action</th>
+          </tr></thead>
           <tbody>${{c.urls.map(u=>{{
             const tc=typeColor[u.type]||'#6b7280';
-            const rowBg=u.role==='money'?'background:rgba(239,68,68,0.06);':'';
+            const ipc={{transactional:'#22c55e',commercial:'#3b82f6',navigational:'#9ca3af',informational:'#6366f1'}};
+            const ic=ipc[u.intent_primary]||'#6b7280';
+            const rec=u.recommendation||'MERGE';
+            const recBadge={{WINNER:'b-g',MERGE:'b-r',DIFFERENTIATE:'b-y',REVIEW:'b-o',EXCLUDE:'b-m'}};
+            const recCls=recBadge[rec]||'b-m';
+            const isWinner=rec==='WINNER';
+            const isExclude=rec==='EXCLUDE';
+            const rowBg=isWinner?'background:rgba(34,197,94,0.07);':isExclude?'background:rgba(156,163,175,0.05);opacity:0.7;':'';
+            const actionColor=isWinner?'var(--green)':isExclude?'var(--muted)':rec==='MERGE'?'var(--red)':rec==='DIFFERENTIATE'?'var(--yellow)':'var(--orange)';
             return `<tr style="${{rowBg}}">
+              <td><span class="b ${{recCls}}">${{rec}}</span></td>
               <td><a href="${{u.url}}" target="_blank" class="url-cell" title="${{u.url}}">${{u.slug}}</a></td>
               <td><span class="b" style="background:${{tc+'22'}};color:${{tc}}">${{u.type}}</span></td>
-              <td style="color:${{u.role==='money'?'var(--red)':u.role==='support'?'var(--green)':'var(--muted)'}};font-weight:${{u.role==='money'?'600':'400'}}">${{u.action}}</td>
+              <td>${{u.intent_primary?`<span class="b" style="background:${{ic+'22'}};color:${{ic}}">${{u.intent_primary}}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}}</td>
+              <td style="color:${{actionColor}};font-weight:${{isWinner?'600':'400'}}">${{u.action}}</td>
             </tr>`;
           }}).join('')}}</tbody>
         </table>
@@ -837,33 +887,90 @@ registerLazy('duplicates',()=>{{
 }});
 
 // ============================================================================
-// THIN CONTENT TAB
+// THIN CONTENT TAB — categorized by content type, prioritized, sortable
 // ============================================================================
 registerLazy('thin',()=>{{
   const root=document.getElementById('thin-content');
-  const total=THIN_TOOLS.length+THIN_LOCAL.length+THIN_OTHER.length;
-  if(!total){{ root.innerHTML=emptyState('No thin content flagged','All pages meet the word count threshold.'); return; }}
-  function thinSection(label,data,badgeClass){{
-    if(!data.length) return '';
-    const rows=data.map(d=>`<div style="display:grid;grid-template-columns:1fr 50px 2fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);align-items:center">
-      <a href="${{d.url}}" target="_blank" class="url-cell" title="${{d.url}}" style="font-size:12px">${{stripUrl(d.url)}}</a>
-      <span style="font-size:12px;color:var(--red);font-weight:600;text-align:center">${{d.word_count}}w</span>
-      <span style="font-size:12px;color:var(--muted)">${{d.recommendation}}</span>
-    </div>`).join('');
-    return `<div class="card expand" onclick="this.classList.toggle('open')">
-      <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0"><span class="b ${{badgeClass}}">${{data.length}}</span> ${{label}}</h3><span class="expand-arrow">▶</span></div>
+  const groups=THIN_GROUPS||[];
+  const total=groups.reduce((a,g)=>a+(g.count||0),0);
+  if(!total){{ root.innerHTML=emptyState('No thin content flagged','All pages meet the word count threshold (or are correctly classified as intentionally thin).'); return; }}
+
+  // Per-group sort state. Keys: groupIdx -> {{by:'words'|'url', dir:'asc'|'desc'}}
+  const sortState={{}};
+  // Default each group to sort by word count ascending (the most painful first)
+  groups.forEach((g,i)=>{{ sortState[i]={{by:'words',dir:'asc'}}; }});
+
+  const priorityColor={{1:'var(--red)',2:'var(--yellow)',3:'var(--accent)',4:'var(--muted)',5:'var(--muted)'}};
+  const priorityLabel={{1:'P1 fix first',2:'P2',3:'P3',4:'P4',5:'P5 low priority'}};
+
+  function sortPages(pages, by, dir){{
+    const arr=pages.slice();
+    arr.sort((a,b)=>{{
+      let av,bv;
+      if(by==='words'){{ av=a.word_count||0; bv=b.word_count||0; return dir==='asc'?av-bv:bv-av; }}
+      av=(a.slug||a.url||'').toLowerCase();
+      bv=(b.slug||b.url||'').toLowerCase();
+      return dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+    }});
+    return arr;
+  }}
+
+  function renderGroup(g, i){{
+    const st=sortState[i];
+    const sorted=sortPages(g.pages, st.by, st.dir);
+    const arrow=(active)=>active?(st.dir==='asc'?'↑':'↓'):'';
+    const wordsActive=st.by==='words', urlActive=st.by==='url';
+    const rows=sorted.map(d=>`
+      <div style="display:grid;grid-template-columns:1fr 60px 2fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);align-items:center">
+        <a href="${{d.url}}" target="_blank" class="url-cell" title="${{d.url}}" style="font-size:12px">${{d.slug||stripUrl(d.url)}}</a>
+        <span style="font-size:12px;color:${{(d.word_count||0)<100?'var(--red)':(d.word_count||0)<200?'var(--orange)':'var(--yellow)'}};font-weight:600;text-align:center">${{d.word_count||0}}w</span>
+        <span style="font-size:12px;color:var(--muted)">${{d.recommendation||''}}</span>
+      </div>`).join('');
+    const pcol=priorityColor[g.priority]||'var(--muted)';
+    return `<div class="card expand" onclick="this.classList.toggle('open')" style="border-left:3px solid ${{pcol}}">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0;display:flex;align-items:center;gap:10px">
+          <span class="b" style="background:${{pcol}}22;color:${{pcol}}">${{g.count}}</span>
+          ${{g.label}}
+          <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">${{priorityLabel[g.priority]||''}}</span>
+        </h3>
+        <div style="display:flex;gap:6px;align-items:center" onclick="event.stopPropagation()">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase">Sort:</span>
+          <button class="csv-btn" data-sort-group="${{i}}" data-sort-by="words" style="padding:2px 8px;font-size:10px;${{wordsActive?'background:var(--accent-soft);':''}}">Words ${{arrow(wordsActive)}}</button>
+          <button class="csv-btn" data-sort-group="${{i}}" data-sort-by="url" style="padding:2px 8px;font-size:10px;${{urlActive?'background:var(--accent-soft);':''}}">URL ${{arrow(urlActive)}}</button>
+          <span class="expand-arrow">▶</span>
+        </div>
+      </div>
       <div class="expand-body">${{rows}}</div>
     </div>`;
   }}
-  root.innerHTML=`
-    <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-      <div class="stat"><div class="v" style="color:var(--yellow)">${{THIN_TOOLS.length}}</div><div class="l">Tool / Resource</div></div>
-      <div class="stat"><div class="v" style="color:var(--red)">${{THIN_LOCAL.length}}</div><div class="l">Local / Location</div></div>
-      <div class="stat"><div class="v" style="color:var(--muted)">${{THIN_OTHER.length}}</div><div class="l">Other</div></div>
-    </div>
-    ${{thinSection('Tool / Resource Pages',THIN_TOOLS,'b-y')}}
-    ${{thinSection('Local / Location Pages',THIN_LOCAL,'b-r')}}
-    ${{thinSection('Other Thin Pages',THIN_OTHER,'b-m')}}`;
+
+  function rerender(){{
+    root.innerHTML=`
+      <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
+        ${{groups.map(g=>{{
+          const pcol=priorityColor[g.priority]||'var(--muted)';
+          return `<div class="stat"><div class="v" style="color:${{pcol}}">${{g.count}}</div><div class="l">${{g.label}}</div></div>`;
+        }}).join('')}}
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Grouped by content purpose, ordered by priority. Blogs and case studies must have substantive content (P1). Service / industry pages need conversion-grade depth (P2). Lower-priority groups are catch-all utility pages — review whether each really needs to be indexed.</p>
+      ${{groups.map((g,i)=>renderGroup(g,i)).join('')}}`;
+  }}
+
+  rerender();
+
+  // Sort button delegation (re-bind after each rerender via event delegation on root)
+  root.addEventListener('click',(e)=>{{
+    const btn=e.target.closest('[data-sort-group]');
+    if(!btn) return;
+    e.stopPropagation();
+    const gi=parseInt(btn.dataset.sortGroup);
+    const by=btn.dataset.sortBy;
+    const cur=sortState[gi];
+    if(cur.by===by){{ cur.dir=cur.dir==='asc'?'desc':'asc'; }}
+    else{{ cur.by=by; cur.dir='asc'; }}
+    rerender();
+  }});
 }});
 
 // ============================================================================
@@ -1030,6 +1137,12 @@ registerLazy('ideas',()=>{{
       const kws=Array.isArray(i.suggested_keywords)?i.suggested_keywords:[];
       const qs=Array.isArray(i.key_questions)?i.key_questions:[];
       const safeTitle=(i.title||'').replace(/'/g,"\\\\'");
+      const seoSrc=i.seo_data_source||'none';
+      const sv=i.search_volume||'—';
+      const kd=i.keyword_difficulty||'—';
+      const pk=i.parent_keyword||'';
+      const spoke=i.spoke_cluster||'';
+      const spokeSim=i.spoke_similarity||'';
       return `<div class="card expand" onclick="this.classList.toggle('open')" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
           <div style="flex:1">
@@ -1042,15 +1155,29 @@ registerLazy('ideas',()=>{{
             </div>
             <strong style="font-size:14px;line-height:1.4">${{i.title}}</strong>
             <div style="font-size:12px;color:var(--muted);margin-top:4px">Gap topic: <em>${{i.gap_topic}}</em> · Audience: ${{i.target_audience}}</div>
+            ${{spoke?`<div style="font-size:11px;color:var(--accent);margin-top:4px" data-tip="Closest existing cluster on your site. Link this new piece from that cluster's pillar page so it joins an existing topical hub instead of starting one from scratch.">▶ Spoke off existing cluster: <strong>${{spoke}}</strong>${{spokeSim?` <span style="color:var(--muted)">(similarity ${{spokeSim}})</span>`:''}}</div>`:'<div style="font-size:11px;color:var(--muted);margin-top:4px">▶ No matching existing cluster — this would start a new topical hub.</div>'}}
           </div>
           <span class="expand-arrow" style="margin-top:8px">▶</span>
         </div>
         <div class="expand-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-            <div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">Target keywords</h4>
-              <div style="display:flex;flex-wrap:wrap;gap:6px">${{kws.map(k=>`<span class="b b-b">${{k}}</span>`).join('')}}</div></div>
-            <div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">Key questions to answer</h4>
-              <ul style="font-size:12px;line-height:1.7;padding-left:18px;color:var(--text)">${{qs.map(q=>`<li>${{q}}</li>`).join('')}}</ul></div>
+            <div>
+              <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">Target keywords</h4>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${{kws.map(k=>`<span class="b b-b">${{k}}</span>`).join('')}}</div>
+              <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px">
+                SEO data
+                <span class="b b-m" style="font-size:9px;text-transform:none" data-tip="No keyword DB integration enabled. Wire Ahrefs / DataForSEO / GKP via the SEO API hook to populate volume + difficulty + parent keyword.">source: ${{seoSrc}}</span>
+              </h4>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+                <div><span style="color:var(--muted)">Volume:</span> <strong>${{sv}}</strong></div>
+                <div><span style="color:var(--muted)">KD:</span> <strong>${{kd}}</strong></div>
+                <div style="grid-column:1/-1"><span style="color:var(--muted)">Parent kw:</span> <strong>${{pk||'—'}}</strong></div>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">Key questions to answer</h4>
+              <ul style="font-size:12px;line-height:1.7;padding-left:18px;color:var(--text)">${{qs.map(q=>`<li>${{q}}</li>`).join('')}}</ul>
+            </div>
           </div>
         </div>
       </div>`;
@@ -1082,12 +1209,18 @@ registerLazy('merges',()=>{{
 // URL EXPLORER
 // ============================================================================
 function renderUrlTable(filter=''){{
-  const fl=filter.toLowerCase(),rows=URL_TABLE.filter(u=>!fl||u.url.toLowerCase().includes(fl)||(u.name&&u.name.toLowerCase().includes(fl)));
+  const fl=filter.toLowerCase(),rows=URL_TABLE.filter(u=>!fl||u.url.toLowerCase().includes(fl)||(u.name&&u.name.toLowerCase().includes(fl))||((u.spoke_cluster||'').toLowerCase().includes(fl)));
   const ltd=rows.slice(0,200);
   const tbody=document.querySelector('#url-table tbody');
-  tbody.innerHTML=ltd.map(u=>`<tr>
-    <td><a href="${{u.url}}" target="_blank" class="url-cell" title="${{u.url}}">${{stripUrl(u.url)}}</a></td>
-    <td>${{u.cluster}}</td><td>${{u.name||'Unclustered'}}</td><td style="color:var(--muted)">${{u.secondary||''}}</td></tr>`).join('');
+  tbody.innerHTML=ltd.map(u=>{{
+    const spoke=u.spoke_cluster?`<span style="color:var(--accent)">${{u.spoke_cluster}}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>';
+    return `<tr>
+      <td><a href="${{u.url}}" target="_blank" class="url-cell" title="${{u.url}}">${{stripUrl(u.url)}}</a></td>
+      <td>${{u.cluster}}</td>
+      <td>${{u.name||'<span style="color:var(--muted)">Unclustered</span>'}}</td>
+      <td>${{spoke}}</td>
+    </tr>`;
+  }}).join('');
   if(rows.length>200) tbody.innerHTML+=`<tr><td colspan="4" style="color:var(--muted);text-align:center">Showing 200 of ${{rows.length}} — refine your search</td></tr>`;
 }}
 

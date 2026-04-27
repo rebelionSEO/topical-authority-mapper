@@ -20,23 +20,150 @@ from src.config import cache_dir, extra_listing_patterns, output_dir
 # Page type classification
 # ---------------------------------------------------------------------------
 
-# Listing/archive pages that are INTENTIONALLY thin — exclude from thin content flagging
+# Listing / archive / hub pages that are INTENTIONALLY thin — exclude from thin content flagging
 LISTING_PAGE_PATTERNS = [
     r"^https?://[^/]+/blog/?$",
-    r"^https?://[^/]+/webinars/?$",
-    r"^https?://[^/]+/case-studies/?$",
+    r"^https?://[^/]+/webinars?/?$",
+    r"^https?://[^/]+/case-stud(?:y|ies)/?$",
     r"^https?://[^/]+/podcasts?/?$",
-    r"^https?://[^/]+/featured-podcasts/?$",
+    r"^https?://[^/]+/featured-podcasts?/?$",
     r"^https?://[^/]+/careers/?$",
-    r"^https?://[^/]+/about-us/?$",
-    r"^https?://[^/]+/contact-us/?$",
+    r"^https?://[^/]+/about-?us/?$",
+    r"^https?://[^/]+/contact-?us/?$",
     r"^https?://[^/]+/partner-with-us/?$",
     r"^https?://[^/]+/referral-program/?$",
     r"^https?://[^/]+/guides/[^/]+/?$",
     r"^https?://[^/]+/ai-tools/?$",
     r"^https?://[^/]+/geo-tools/?$",
     r"^https?://[^/]+/calculators/?$",
-    r"^https?://[^/]+/industries/[^/]+/?$",  # industry hub pages
+    r"^https?://[^/]+/industries/[^/]+/?$",
+    r"^https?://[^/]+/customers/?$",
+    r"^https?://[^/]+/integrations/?$",
+    r"^https?://[^/]+/resources/?$",
+    r"^https?://[^/]+/learn/?$",
+    r"^https?://[^/]+/library/?$",
+]
+
+# Pages that have a NON-CONTENT purpose (commercial, transactional, conversion-flow,
+# product-feature landers, gated assets). These should NEVER be flagged as thin even if
+# their word count is low — that's the intended UX.
+NON_CONTENT_URL_PATTERNS = [
+    # Commercial / conversion
+    r"/pricing/?$",
+    r"/plans?/?$",
+    r"/buy/?$",
+    r"/checkout",
+    r"/cart",
+    r"/order",
+    r"/quote",
+    r"/demo(?:s|/?$|/[^/]+)",
+    r"/instant-demo",
+    r"/book-(?:a-)?demo",
+    r"/get-(?:started|demo|access)",
+    r"/start-(?:free|trial)",
+    r"/free-trial",
+    r"/trial(?:/?$|/[^/]+)",
+    r"/contact(?:-sales)?(?:/?$|/[^/]+)",
+    r"/sign-?up",
+    r"/sign-?in",
+    r"/log-?in",
+    r"/log-?out",
+    r"/register",
+    r"/access(?:/?$)",
+    # Conversion flow exits
+    r"/thank-you(?:/?$|/[^/]+)",
+    r"/success(?:/?$|/[^/]+)",
+    r"/confirmation",
+    r"/welcome(?:/?$|/[^/]+)",
+    r"/onboarding",
+    r"/subscribed(?:/?$|/[^/]+)",
+    r"/unsubscribed?(?:/?$|/[^/]+)",
+    r"/subscribe(?:/?$|/[^/]+)",
+    r"/upcoming(?:/?$|/[^/]+)",
+    r"/coming-soon",
+    r"/upgrade(?:/?$|/[^/]+)",
+    # Course / lesson scaffolding pages (the meat is in the lessons, the index is thin)
+    r"/[a-z0-9-]+-course(?:/?$|/[^/]+)",
+    r"/[a-z0-9-]+-course-lessons?",
+    r"/[a-z0-9-]+-course-exam",
+    r"/[a-z0-9-]+-makeover(?:/?$|/[^/]+)",
+    r"/[a-z0-9-]+-test-quiz",
+    r"/[a-z0-9-]+-quiz(?:/?$|/[^/]+)",
+    r"/[a-z0-9-]+-walkthrough-example",
+    # Status / system / ops landers
+    r"/technical-issues",
+    r"/system-status",
+    r"/uptime",
+    r"/maintenance",
+    r"/incident",
+    # UI utility / form-flow helper pages (form steps, etc.)
+    r"/remove-text",
+    r"/[a-z0-9-]+-submissions?(?:/?$|/[^/]+)",
+    r"/podcast-[a-z0-9-]+",          # podcast-episode landers (the audio IS the content)
+    r"/episode-[a-z0-9-]+",
+    # Calculator / quiz landers (interactive tool, not text content)
+    r"/[a-z0-9-]+-calculator(?:/?$|/[^/]+)",
+    # Other Acme-shaped landers (audience selectors, video walkthroughs)
+    r"/[a-z0-9-]+-audiences?(?:/?$|/[^/]+)",
+    r"/[a-z0-9-]+-video(?:/?$|/[^/]+|-[a-z0-9-]+)",
+    r"/[a-z0-9-]+-video-walkthrough",
+    # Account / auth pages
+    r"/account",
+    r"/profile",
+    r"/dashboard(?:/?$|/[^/]+)",
+    r"/settings",
+    r"/billing",
+    r"/subscription",
+    # Single-feature landers (intentionally focused, often <300 words by design)
+    r"/landing-page-testing/?$",
+    r"/messaging-testing/?$",
+    r"/copy-testing/?$",
+    r"/[a-z0-9-]+-testing/?$",      # generic feature-testing landers
+    r"/games/?$",
+    r"/games/[^/]+",                # game pages
+    r"/participant/?$",
+    r"/participant/[^/]+",
+    r"/redirect",
+    r"/share/[^/]+",
+    # Tool / calculator stubs (the thing IS the tool, not the words)
+    r"/tools/[^/]+/?$",
+    r"/calculator/?$",
+    r"/calculators/[^/]+",
+    # Asset gates
+    r"/download(?:/[^/]+)?$",
+    r"/ebook(?:/[^/]+)?$",
+    r"/whitepaper(?:/[^/]+)?$",
+    r"/report(?:/[^/]+)?$",
+    r"/template(?:s/[^/]+)?$",
+    r"/get-the-(?:report|guide|ebook)",
+    # Legal / policy
+    r"/privacy",
+    r"/terms",
+    r"/cookie",
+    r"/legal",
+    r"/disclaimer",
+    r"/security",
+    r"/gdpr",
+    r"/dpa",
+    r"/sla",
+    # System / status
+    r"/status",
+    r"/changelog/?$",
+    r"/release-notes/?$",
+    r"/sitemap",
+    r"/feed",
+    r"/rss",
+    r"/api(?:/?$|/[^/]+)",
+    # Search / filter result pages
+    r"/search",
+    r"/filter",
+    r"/tag/[^/]+",
+    r"/category/[^/]+",
+    r"/page/\d+",
+    # Author / team listing stubs (these CAN be content but often aren't — leave thin
+    # unless content is provided)
+    r"/team/[^/]+/?$",
+    r"/people/[^/]+/?$",
 ]
 
 
@@ -90,17 +217,37 @@ def classify_page_type(url: str) -> str:
 
 
 def is_intentionally_thin(url: str) -> bool:
-    """Check if a page is expected to be thin (listing, hub, archive, etc.).
+    """Check if a page is expected to be thin (listing, hub, conversion, legal, etc.).
 
-    Combines built-in patterns + page-type classifier + per-site custom regexes from
-    SiteConfig.listing_patterns.
+    A page is "intentionally thin" if it falls into any of these categories:
+      - Listing / hub / archive page (LISTING_PAGE_PATTERNS)
+      - Non-content purpose: pricing, demos, signup, thank-you, account, legal,
+        single-feature landers, asset gates, system pages (NON_CONTENT_URL_PATTERNS)
+      - Page-type classifier returns listing / industry-hub / homepage
+      - Per-site custom regex from SiteConfig.listing_patterns
+
+    The thin-content alert should only fire on pages that SHOULD have substantive
+    content (blog posts, service pages, case studies with bodies, etc.).
     """
+    url_lower = url.lower()
+
+    # Check non-content patterns (substring search — patterns are simple regex bodies)
+    for pattern in NON_CONTENT_URL_PATTERNS:
+        try:
+            if re.search(pattern, url_lower):
+                return True
+        except re.error:
+            continue
+
+    # Per-site custom listing patterns
     for pattern in extra_listing_patterns():
         try:
             if re.match(pattern, url, re.IGNORECASE):
                 return True
         except re.error:
             continue
+
+    # Page-type classifier (homepage, listing index, industry hub)
     ptype = classify_page_type(url)
     return ptype in ("listing", "industry-hub", "homepage")
 
@@ -390,12 +537,19 @@ def detect_cluster_merges(clusters: pd.DataFrame, chunks_df: pd.DataFrame, embed
 # #7 — Content freshness scoring
 # ---------------------------------------------------------------------------
 
-def score_content_freshness(sitemap_urls: list[str] | None = None) -> pd.DataFrame:
+def score_content_freshness(
+    sitemap_urls: list[str] | None = None,
+    fallback_urls: list[str] | None = None,
+) -> pd.DataFrame:
     """
     Extract lastmod from sitemap(s) and score freshness.
 
     sitemap_urls: explicit list of sitemap URLs to crawl. If omitted, falls back
     to the sitemaps recorded in the cached SiteConfig (cache/site_config.json).
+
+    fallback_urls: if no lastmod data is found in sitemaps, scrape these URLs for
+    publish/modified dates from HTML (meta tags, schema.org Article, Open Graph,
+    HTTP Last-Modified header). Limited to 100 URLs to keep the run quick.
     """
     import xml.etree.ElementTree as ET
     import requests
@@ -408,7 +562,7 @@ def score_content_freshness(sitemap_urls: list[str] | None = None) -> pd.DataFra
         site = load_site_config()
         sitemap_urls = list(site.sitemaps) if site else []
 
-    if not sitemap_urls:
+    if not sitemap_urls and not fallback_urls:
         logger.warning("No sitemap URLs provided and none in SiteConfig — skipping freshness scoring")
         return pd.DataFrame()
 
@@ -429,8 +583,14 @@ def score_content_freshness(sitemap_urls: list[str] | None = None) -> pd.DataFra
         except Exception as e:
             logger.warning("Failed to parse sitemap %s: %s", sm_url, e)
 
+    # If sitemap had no lastmod data, fall back to scraping HTML for publish dates.
+    if not url_dates and fallback_urls:
+        logger.info("Sitemap had no lastmod — scraping HTML for publish dates on %d URLs (capped at 100)...",
+                    len(fallback_urls))
+        url_dates = _extract_dates_from_html(fallback_urls[:100])
+
     if not url_dates:
-        logger.warning("No lastmod data found in sitemaps")
+        logger.warning("No lastmod data found in sitemaps and no HTML fallback succeeded")
         return pd.DataFrame()
 
     from datetime import datetime, timedelta
@@ -457,6 +617,106 @@ def score_content_freshness(sitemap_urls: list[str] | None = None) -> pd.DataFra
     df.to_csv(out_path, index=False)
     logger.info("Scored freshness for %d URLs", len(df))
     return df
+
+
+def _extract_dates_from_html(urls: list[str]) -> dict:
+    """Scrape HTML for publish / modified dates. Tries multiple strategies per URL.
+
+    Looks for, in order:
+      1. <meta property="article:published_time"> (OpenGraph)
+      2. <meta property="article:modified_time"> (OpenGraph)
+      3. <meta name="date">, <meta name="pubdate">, <meta name="published">
+      4. <time datetime="..."> elements
+      5. JSON-LD Article schema datePublished / dateModified
+      6. HTTP Last-Modified response header (least reliable)
+    Returns {url: 'YYYY-MM-DD'}. Best-effort; failures silently skipped.
+    """
+    import re as _re
+    import json as _json
+    import requests as _req
+    from datetime import datetime
+
+    results: dict = {}
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; TopicalAuthorityMapper)"}
+
+    def _normalize(s):
+        if not s:
+            return None
+        s = str(s).strip()
+        # ISO 8601: 2026-04-26T10:00:00Z or with tz
+        m = _re.match(r"(\d{4}-\d{2}-\d{2})", s)
+        if m:
+            return m.group(1)
+        # RFC 1123 / HTTP Last-Modified: Sun, 26 Apr 2026 10:00:00 GMT
+        try:
+            dt = datetime.strptime(s, "%a, %d %b %Y %H:%M:%S %Z")
+            return dt.strftime("%Y-%m-%d")
+        except ValueError:
+            return None
+
+    for i, url in enumerate(urls):
+        try:
+            r = _req.get(url, headers=headers, timeout=10, allow_redirects=True)
+            if r.status_code != 200:
+                continue
+            html = r.text or ""
+            date = None
+
+            # 1-3. Meta tags
+            for pattern in (
+                r'<meta[^>]+property=["\']article:modified_time["\'][^>]+content=["\']([^"\']+)["\']',
+                r'<meta[^>]+property=["\']article:published_time["\'][^>]+content=["\']([^"\']+)["\']',
+                r'<meta[^>]+name=["\'](?:date|pubdate|published|publish-date)["\'][^>]+content=["\']([^"\']+)["\']',
+                r'<meta[^>]+itemprop=["\']dateModified["\'][^>]+content=["\']([^"\']+)["\']',
+                r'<meta[^>]+itemprop=["\']datePublished["\'][^>]+content=["\']([^"\']+)["\']',
+            ):
+                m = _re.search(pattern, html, _re.IGNORECASE)
+                if m:
+                    date = _normalize(m.group(1))
+                    if date:
+                        break
+
+            # 4. <time datetime="...">
+            if not date:
+                m = _re.search(r'<time[^>]+datetime=["\']([^"\']+)["\']', html, _re.IGNORECASE)
+                if m:
+                    date = _normalize(m.group(1))
+
+            # 5. JSON-LD Article
+            if not date:
+                for jm in _re.finditer(r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.+?)</script>', html, _re.IGNORECASE | _re.DOTALL):
+                    try:
+                        ld = _json.loads(jm.group(1))
+                    except (ValueError, _json.JSONDecodeError):
+                        continue
+                    items = ld if isinstance(ld, list) else [ld]
+                    for it in items:
+                        if not isinstance(it, dict):
+                            continue
+                        for key in ("dateModified", "datePublished"):
+                            if key in it:
+                                date = _normalize(it[key])
+                                if date:
+                                    break
+                        if date:
+                            break
+                    if date:
+                        break
+
+            # 6. HTTP Last-Modified header
+            if not date:
+                date = _normalize(r.headers.get("Last-Modified"))
+
+            if date:
+                results[url] = date
+
+            if (i + 1) % 25 == 0:
+                logger.info("  HTML date scrape: %d / %d done (%d found)", i + 1, len(urls), len(results))
+        except Exception:
+            continue
+
+    logger.info("HTML date scrape complete: %d/%d URLs returned a date", len(results), len(urls))
+    return results
 
 
 def _freshness_label(age_days: int) -> str:

@@ -11,3 +11,4 @@ keybert
 faiss-cpu
 PyPDF2
 PyYAML
+anthropic

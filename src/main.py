@@ -222,6 +222,33 @@ def run(
     recommendations = None
     brand_profile = load_or_create_brand_profile(pdf_path=brand_voice_pdf)
 
+    # If no brand profile loaded AND LLM is enabled, auto-generate one from sampled site content.
+    if not brand_profile.get("tone") and not brand_voice_pdf:
+        try:
+            from src import llm_advisor as _llm
+            if _llm.is_enabled() and not chunks_df.empty:
+                logger.info("Auto-generating brand voice profile from sampled site content...")
+                # Sample up to 8 representative chunks (one per URL, prefer longer ones)
+                sample_chunks = (
+                    chunks_df.sort_values("chunk_text", key=lambda s: s.str.len(), ascending=False)
+                    .drop_duplicates(subset="url")
+                    .head(8)["chunk_text"].tolist()
+                )
+                generated = _llm.generate_brand_profile(
+                    site_name=name, site_domain=domain, industry=industry, samples=sample_chunks,
+                )
+                if generated and isinstance(generated, dict):
+                    import json as _json
+                    profile_path = os.path.join(cache_dir(), "brand_profile.json")
+                    with open(profile_path, "w") as f:
+                        _json.dump(generated, f, indent=2)
+                    brand_profile = generated
+                    logger.info("Brand profile generated and saved to %s", profile_path)
+                else:
+                    logger.warning("Brand profile generation returned no result")
+        except Exception:
+            logger.exception("Brand profile auto-generation failed (non-fatal)")
+
     if brand_profile.get("tone") or brand_voice_pdf:
         logger.info("Step 6/6: Generating content recommendations...")
         recs = []
@@ -243,6 +270,22 @@ def run(
         build_faiss_index(embeddings, save_path=faiss_path)
     else:
         logger.info("Skipping FAISS index (debug mode)")
+
+    # --- 9b. Content freshness (sitemap lastmod, fall back to HTML scrape) ---
+    try:
+        from src.enhancements import score_content_freshness
+        # Use the URLs we just analyzed as the HTML-scrape fallback
+        target_urls = chunks_df["url"].drop_duplicates().tolist() if not chunks_df.empty else []
+        score_content_freshness(sitemap_urls=sitemap_list, fallback_urls=target_urls)
+    except Exception:
+        logger.exception("Freshness scoring failed (non-fatal)")
+
+    # --- 9c. Search intent classification ---
+    try:
+        from src.enhancements import classify_search_intent
+        classify_search_intent(chunks_df)
+    except Exception:
+        logger.exception("Intent classification failed (non-fatal)")
 
     # --- 10. Export base outputs ---
     logger.info("Exporting results...")
@@ -405,6 +448,12 @@ def main():
     parser.add_argument("--runs-root", help="Where to write timestamped run snapshots (default: ./runs).")
     parser.add_argument("--no-snapshot", action="store_true", help="Skip writing a run snapshot.")
     parser.add_argument("--brand-voice", "-b", help="Path to brand voice PDF (optional).")
+    parser.add_argument(
+        "--use-llm",
+        action="store_true",
+        help="Enable LLM-powered analysis (cannibalization, thin-content judgment, audience inference, "
+             "auto-generated brand voice profile). Requires ANTHROPIC_API_KEY env var. ~$0.05-0.15 per audit.",
+    )
     parser.add_argument("--debug", "-d", action="store_true", help="Debug mode: 10 URLs, skip FAISS, verbose.")
     args = parser.parse_args()
 
@@ -422,6 +471,15 @@ def main():
     cache_path = pick(args.cache_dir, "cache_dir")
     if cache_path:
         set_runtime_cache_dir(cache_path)
+
+    # Activate LLM advisor if requested
+    if args.use_llm or os.environ.get("TAM_LLM_PROVIDER", "").lower() in ("anthropic", "claude"):
+        from src.llm_advisor import enable_for_session, is_enabled
+        ok = enable_for_session()
+        if ok and is_enabled():
+            print("✓ LLM advisor enabled (anthropic + claude-haiku-4-5)")
+        else:
+            print("⚠ LLM advisor requested but ANTHROPIC_API_KEY missing — falling back to rule-based")
 
     sitemap = pick(args.sitemap, "sitemap")
     input_file = pick(args.input, "input")

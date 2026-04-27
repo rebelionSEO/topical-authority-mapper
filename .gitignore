@@ -12,6 +12,12 @@ output/
 # Per-site audit snapshots — never commit client/prospect data to a public repo
 runs/
 
+# Local-only: per-prospect site configs that shouldn't live in a public repo.
+# Keep generic templates in examples/sites/ but actual prospect configs go in .local/.
+.local/
+examples/sites/*.yaml
+!examples/sites/example.yaml
+
 # Environment
 .env
 

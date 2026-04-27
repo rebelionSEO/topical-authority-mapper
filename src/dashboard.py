@@ -502,9 +502,36 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         gaps = sum(1 for r in competitor_table if r["status"] == "GAP")
         advantages = sum(1 for r in competitor_table if r["status"] == "ADVANTAGE")
         shared = sum(1 for r in competitor_table if r["status"] == "SHARED")
+
+        # Per-competitor breakdown — for each competitor, count topics they cover that
+        # we don't (gaps), topics we both cover (shared), topics only we cover (adv).
+        per_comp = []
+        for cname in competitor_names:
+            c_gaps = c_shared = c_advantages = 0
+            top_gap_topics = []
+            for row in competitor_table:
+                comp_has = bool(row["competitors"].get(cname))
+                target_has = bool(row["target"])
+                if comp_has and not target_has:
+                    c_gaps += 1
+                    if len(top_gap_topics) < 5:
+                        top_gap_topics.append(row["topic"])
+                elif comp_has and target_has:
+                    c_shared += 1
+                elif target_has and not comp_has:
+                    c_advantages += 1
+            per_comp.append({
+                "name": cname,
+                "gaps": c_gaps,
+                "shared": c_shared,
+                "advantages": c_advantages,
+                "top_gap_topics": top_gap_topics,
+            })
+
         enh["competitor"] = {
             "rows": competitor_table,
             "names": competitor_names,
+            "per_competitor": per_comp,
         }
         enh["comp_stats"] = {"gaps": gaps, "advantages": advantages, "shared": shared}
     if not similarity_df.empty:
@@ -515,8 +542,135 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         enh["similarity"] = sim_records
     if not intent_df.empty:
         enh["intent"] = intent_df["primary_intent"].value_counts().to_dict()
+
+        # Intent by cluster — joins intent + cluster assignment so each cluster reports
+        # its dominant intent + breakdown. Useful for spotting clusters that are split
+        # between commercial / informational pages (often a cannibalization signal).
+        intent_url_map = intent_df.merge(url_map[["url", "main_cluster"]], on="url", how="left")
+        cluster_name_lookup = dict(zip(clusters["cluster_id"], clusters["cluster_name"]))
+        intent_by_cluster = []
+        for cid, group in intent_url_map[intent_url_map["main_cluster"] != -1].groupby("main_cluster"):
+            counts = group["primary_intent"].value_counts().to_dict()
+            total = int(sum(counts.values()))
+            if total == 0:
+                continue
+            dominant_intent, dominant_n = next(iter(group["primary_intent"].value_counts().items()))
+            mix_score = round(1 - (dominant_n / total), 2)  # 0 = pure, 1 = even mix
+            intent_by_cluster.append({
+                "cluster_id": int(cid),
+                "cluster_name": cluster_name_lookup.get(cid, f"Cluster {cid}"),
+                "url_count": total,
+                "dominant_intent": str(dominant_intent),
+                "mix_score": mix_score,
+                "informational": int(counts.get("informational", 0)),
+                "commercial": int(counts.get("commercial", 0)),
+                "transactional": int(counts.get("transactional", 0)),
+                "navigational": int(counts.get("navigational", 0)),
+            })
+        intent_by_cluster.sort(key=lambda r: r["url_count"], reverse=True)
+        enh["intent_by_cluster"] = intent_by_cluster
+
+        # Per-intent URL list (top URLs by signal strength) — gives the user concrete
+        # examples of what the analyzer thinks each intent looks like on their site.
+        intent_urls: dict = {}
+        for intent_label in ("informational", "commercial", "transactional", "navigational"):
+            sub = intent_df[intent_df["primary_intent"] == intent_label].copy()
+            if sub.empty:
+                continue
+            sig_col = f"{intent_label}_signals"
+            if sig_col in sub.columns:
+                sub = sub.sort_values(sig_col, ascending=False)
+            sub_records = []
+            for _, row in sub.head(15).iterrows():
+                sub_records.append({
+                    "url": site_config.strip_url(row["url"]),
+                    "confidence": row.get("confidence", 0),
+                    "secondary": row.get("secondary_intent", ""),
+                    "signals": int(row.get(sig_col, 0)) if sig_col in sub.columns else 0,
+                })
+            intent_urls[intent_label] = sub_records
+        enh["intent_urls"] = intent_urls
+
     if not freshness_df.empty:
         enh["freshness"] = freshness_df["freshness"].value_counts().to_dict()
+
+        # Detect data-quality issue: if everything lands in the youngest bucket, the
+        # underlying lastmod values are almost certainly the site's deploy timestamp
+        # (uniform across pages) rather than per-article publish dates.
+        unique_dates = freshness_df["lastmod"].nunique() if "lastmod" in freshness_df.columns else 0
+        date_span_days = 0
+        if unique_dates > 0:
+            try:
+                from datetime import datetime as _dt
+                ds = pd.to_datetime(freshness_df["lastmod"], errors="coerce").dropna()
+                if not ds.empty:
+                    date_span_days = int((ds.max() - ds.min()).days)
+            except Exception:
+                date_span_days = 0
+        all_in_one_bucket = len(set(freshness_df["freshness"])) == 1
+        if all_in_one_bucket and date_span_days <= 14:
+            enh["freshness_finding"] = {
+                "title": "Source data limitation detected",
+                "summary": (
+                    f"All {len(freshness_df)} URLs report the same freshness bucket because the "
+                    f"underlying dates span only {date_span_days} days — this is the deploy "
+                    "timestamp of the CMS, not per-article publish dates."
+                ),
+                "evidence": [
+                    "Sitemap (sitemap.xml) reports no <lastmod> values per URL.",
+                    "HTML pages do not expose <meta property=\"article:published_time\"> or JSON-LD datePublished.",
+                    "The only available signal is the HTTP Last-Modified header, which equals the deploy time.",
+                ],
+                "recommendation": (
+                    "Add `article:published_time` and `article:modified_time` meta tags (or JSON-LD "
+                    "Article schema with datePublished/dateModified) to blog post + recording templates. "
+                    "Without these, search engines can't show 'fresh' badges in SERPs and tools like this "
+                    "audit can't surface stale-content opportunities."
+                ),
+            }
+
+    # Content inventory — counts of URLs by URL pattern. Always useful, especially when
+    # freshness data is unavailable.
+    inventory_buckets = {
+        "Blog posts": [u for u in url_map["url"] if any(p in u for p in ("/post/", "/blog/", "/posts/", "/article/"))],
+        "Case studies": [u for u in url_map["url"] if "/case-stud" in u.lower() or "/customer-stories" in u.lower()],
+        "Recordings / podcasts": [u for u in url_map["url"] if any(p in u for p in ("/recordings/", "/podcast", "/episode"))],
+        "Author / team pages": [u for u in url_map["url"] if any(p in u for p in ("/author/", "/team/", "/people/"))],
+        "Policies / legal": [u for u in url_map["url"] if any(p in u for p in ("/policies/", "/legal", "/privacy", "/terms"))],
+        "Tools / calculators": [u for u in url_map["url"] if any(p in u for p in ("/tools/", "/calculator", "/calculators"))],
+        "Other": [],
+    }
+    classified = set()
+    for k, v in inventory_buckets.items():
+        if k != "Other":
+            classified.update(v)
+    inventory_buckets["Other"] = [u for u in url_map["url"] if u not in classified]
+    enh["content_inventory"] = [
+        {"category": k, "count": len(v)} for k, v in inventory_buckets.items() if v
+    ]
+
+    # Static brand profile — read from the LLM-generated cache so the Brand Voice tab
+    # has content even when per-URL scoring (brand_voice_scores.csv) hasn't been run.
+    try:
+        from src.config import cache_dir as _cache_dir
+        brand_profile_path = os.path.join(_cache_dir(), "brand_profile.json")
+        if os.path.exists(brand_profile_path):
+            import json as _json
+            with open(brand_profile_path) as _f:
+                profile = _json.load(_f)
+            if profile.get("tone") or profile.get("do") or profile.get("audience"):
+                enh["brand_profile"] = {
+                    "brand_name": profile.get("brand_name", site_config.name),
+                    "tone": profile.get("tone", []),
+                    "audience": profile.get("audience", ""),
+                    "do": profile.get("do", []),
+                    "dont": profile.get("dont", []),
+                    "example_phrases": profile.get("example_phrases", []),
+                    "writing_style": profile.get("writing_style", {}),
+                }
+    except Exception:
+        logger.exception("Failed to load brand profile (non-fatal)")
+
     if not brand_df.empty:
         bottom_records = brand_df.head(20).to_dict("records")
         for r in bottom_records:

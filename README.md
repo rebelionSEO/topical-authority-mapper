@@ -220,7 +220,7 @@ dashboards to GitHub Pages.
 
 ### Add sites
 
-Drop one YAML per site into [`examples/sites/`](examples/sites/). See [`examples/sites/_README.md`](examples/sites/_README.md) for the schema. A real example is shipped in [`examples/sites/acme.yaml`](examples/sites/acme.yaml).
+Drop one YAML per site into [`examples/sites/`](examples/sites/). See [`examples/sites/_README.md`](examples/sites/_README.md) for the schema. A template is shipped in [`examples/sites/example.yaml`](examples/sites/example.yaml).
 
 ### Trigger a run
 
@@ -242,11 +242,13 @@ Each card on the index shows the composite Site Health score, totals, last run t
 QA status, and links to the full dashboard, the 1-page exec summary, and the Claude
 artifact `.tsx` (downloadable).
 
-### Run snapshots (the version-controlled history)
+### Run snapshots
 
-Every successful run is committed back to the repo at `runs/<site-slug>/<timestamp>/`,
-including the full output dir + site_config + qa_report. So `git log runs/acme/` shows
-the audit history for that site, and any past dashboard is one `git checkout` away.
+Each weekly run uploads its outputs as a workflow artifact (private to the repo,
+14-day retention). Snapshots are NOT committed back to the repo — keeping per-site
+audit data out of a public repo is a hard rule (`runs/` is gitignored). If you
+need persistent history, push snapshots to a private sibling repo via deploy key
+or PAT.
 
 ### Cost
 

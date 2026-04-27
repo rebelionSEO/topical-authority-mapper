@@ -1,0 +1,36 @@
+# Template config — copy this file, rename it (e.g. acme.yaml), and edit
+# the values for your site. Files named exactly `example.yaml` are skipped
+# by the GitHub Actions workflow but the local CLI will still run it.
+
+site:
+  name: "Acme Inc"
+  domain: "acme.com"
+  industry: "b2b-saas"
+
+input:
+  sitemap: "https://acme.com/sitemap.xml"
+
+# Up to ~6 direct competitors. The pipeline crawls each, clusters their
+# content, and runs a topic-gap analysis against your site.
+competitors:
+  - "competitor-one.com"
+  - "competitor-two.com"
+  - "competitor-three.com"
+
+max_urls_per_competitor: 80
+
+# URL substrings to skip during ingestion (boilerplate, auth, legal pages).
+skip_patterns:
+  - "/legal/"
+  - "/privacy/"
+  - "/terms/"
+  - "/login"
+  - "/signup"
+
+# Per-site regex overrides marking pages that are intentionally thin
+# (hub / archive / index pages). Prevents false-positive "thin content"
+# alerts on listing pages that aren't supposed to have a body.
+listing_patterns:
+  - "^https?://[^/]+/customers/?$"
+  - "^https?://[^/]+/integrations/?$"
+  - "^https?://[^/]+/blog/?$"

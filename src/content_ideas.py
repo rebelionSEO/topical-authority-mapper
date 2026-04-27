@@ -76,7 +76,7 @@ _TOPIC_STOPWORDS = {
 }
 
 # Words that, if a topic is JUST these + numbers, drop it (e.g. "10 000", "200 countries",
-# "24 hours", "22 2026" — all came up in the live Acme audit as TF-IDF noise).
+# "24 hours", "22 2026" — these come up frequently as TF-IDF noise on real audits).
 _QUANTITY_WORDS = {
     "hours", "minutes", "seconds", "days", "weeks", "months", "years",
     "countries", "cities", "people", "users", "respondents",

@@ -976,12 +976,44 @@ registerLazy('thin',()=>{{
 registerLazy('intent',()=>{{
   const root=document.getElementById('intent-content');
   if(!ENH.intent){{ root.innerHTML=emptyState('No intent data','Run the enhancement pass.'); return; }}
-  root.innerHTML=`<div class="row row-2-1">
-    <div class="card"><h3>Search Intent Distribution <span data-tip="What kind of query each page targets — informational (learn), commercial (compare/research), transactional (buy), navigational (find a page).">ⓘ</span></h3><div id="intent-chart"></div></div>
-    <div class="card" id="intent-summary" style="display:flex;flex-direction:column;justify-content:center;font-size:14px;line-height:2"></div>
-  </div>`;
-  const iL=Object.keys(ENH.intent),iV=Object.values(ENH.intent);
   const iC={{informational:'#6366f1',commercial:'#3b82f6',transactional:'#22c55e',navigational:'#9ca3af'}};
+  const ibc=ENH.intent_by_cluster||[];
+  const iurls=ENH.intent_urls||{{}};
+  // Mixed clusters = at least 30% non-dominant — these often hide cannibalization
+  const mixedCount=ibc.filter(c=>c.mix_score>=0.30).length;
+  root.innerHTML=`<div class="row row-2-1">
+      <div class="card"><h3>Search Intent Distribution <span data-tip="What kind of query each page targets — informational (learn), commercial (compare/research), transactional (buy), navigational (find a page).">ⓘ</span></h3><div id="intent-chart"></div></div>
+      <div class="card" id="intent-summary" style="display:flex;flex-direction:column;justify-content:center;font-size:14px;line-height:2"></div>
+    </div>
+    ${{ibc.length?`<div class="card" style="padding:0">
+      <h3 style="padding:14px 18px 0">Intent by Cluster <span data-tip="Each cluster's dominant intent + mix. Mix score >0.30 = the cluster is split between intents (often a cannibalization signal — e.g., commercial service page competing with informational blog posts).">ⓘ</span> <span class="b b-y" style="margin-left:8px">${{mixedCount}} mixed-intent clusters</span></h3>
+      <div class="tw" style="border:none">
+        <table id="intent-cluster-table"><thead><tr>
+          <th class="sortable" data-sort="text">Cluster</th>
+          <th class="sortable" data-sort="num">URLs</th>
+          <th class="sortable" data-sort="text">Dominant intent</th>
+          <th class="sortable" data-sort="num">Mix score</th>
+          <th>Breakdown</th>
+        </tr></thead><tbody>${{ibc.map(c=>{{
+          const cells=['informational','commercial','transactional','navigational'].map(int=>{{
+            const n=c[int]||0;if(!n) return '';
+            const pct=(n/c.url_count*100);
+            return `<span class="b" style="background:${{iC[int]}}22;color:${{iC[int]}};margin-right:4px">${{int.slice(0,4)}} ${{n}} <span style="opacity:0.7">(${{pct.toFixed(0)}}%)</span></span>`;
+          }}).filter(Boolean).join('');
+          const mixCol=c.mix_score>=0.40?'var(--red)':c.mix_score>=0.25?'var(--yellow)':'var(--muted)';
+          return `<tr><td>${{c.cluster_name}}</td><td>${{c.url_count}}</td><td><span class="b" style="background:${{iC[c.dominant_intent]}}22;color:${{iC[c.dominant_intent]}}">${{c.dominant_intent}}</span></td><td style="color:${{mixCol}};font-weight:700">${{c.mix_score.toFixed(2)}}</td><td>${{cells}}</td></tr>`;
+        }}).join('')}}</tbody></table>
+      </div>
+    </div>`:''}}
+    ${{Object.keys(iurls).length?`<div class="card" style="padding:0">
+      <h3 style="padding:14px 18px 0">Top URLs by Intent <span data-tip="Strongest signals per intent. Useful for sanity-checking the classifier and spotting URLs assigned to the wrong intent.">ⓘ</span></h3>
+      <div style="padding:14px 18px">${{['informational','commercial','transactional','navigational'].map(int=>{{
+        const list=iurls[int]||[];if(!list.length) return '';
+        return `<details style="margin-bottom:10px"><summary style="cursor:pointer;padding:6px 0"><span class="b" style="background:${{iC[int]}}22;color:${{iC[int]}}">${{int}}</span> <strong style="margin-left:8px">${{list.length}} sample URLs</strong></summary>
+          <table style="margin-top:8px"><thead><tr><th>URL</th><th>Confidence</th><th>Signals</th><th>Secondary intent</th></tr></thead><tbody>${{list.map(u=>`<tr><td style="font-family:var(--mono);font-size:11px">${{u.url}}</td><td>${{u.confidence}}</td><td>${{u.signals}}</td><td><span style="color:var(--muted);font-size:11px">${{u.secondary||'—'}}</span></td></tr>`).join('')}}</tbody></table>
+        </details>`;
+      }}).join('')}}</div></div>`:''}}`;
+  const iL=Object.keys(ENH.intent),iV=Object.values(ENH.intent);
   Plotly.newPlot('intent-chart',[{{type:'pie',labels:iL,values:iV,hole:0.6,textinfo:'percent',marker:{{colors:iL.map(l=>iC[l]||'#6b7280')}},textfont:{{size:12,color:'#fff'}}}}],
     {{...PL,height:260,showlegend:false,margin:{{t:10,b:10,l:10,r:10}}}},{{responsive:true,displayModeBar:false}});
   const tot=iV.reduce((a,b)=>a+b,0);
@@ -989,6 +1021,7 @@ registerLazy('intent',()=>{{
     const pct=(ENH.intent[l]/tot*100);
     return `<div style="display:flex;align-items:center;gap:12px"><div style="width:120px"><strong style="color:${{iC[l]||'#6b7280'}};font-size:24px">${{ENH.intent[l]}}</strong><span style="color:var(--muted);font-size:12px;margin-left:4px">${{l}}</span></div><div style="flex:1;background:var(--border);height:6px;border-radius:3px;overflow:hidden"><div style="background:${{iC[l]}};height:100%;width:${{pct.toFixed(1)}}%"></div></div><span style="color:var(--muted);font-size:11px;min-width:40px">${{pct.toFixed(0)}}%</span></div>`;
   }}).join('');
+  if(document.getElementById('intent-cluster-table')) makeSortable('intent-cluster-table');
 }});
 
 // ============================================================================
@@ -996,15 +1029,42 @@ registerLazy('intent',()=>{{
 // ============================================================================
 registerLazy('freshness',()=>{{
   const root=document.getElementById('freshness-content');
-  if(!ENH.freshness){{ root.innerHTML=emptyState('No freshness data','Provide sitemap URLs (--sitemap-url) so the analyzer can read lastmod dates.'); return; }}
-  root.innerHTML=`<div class="card"><h3>Content Age Distribution <span data-tip="Based on sitemap lastmod dates. Stale = 6+ months old.">ⓘ</span></h3><div id="freshness-chart"></div></div>`;
+  if(!ENH.freshness && !ENH.freshness_finding && !ENH.content_inventory){{ root.innerHTML=emptyState('No freshness data','Provide sitemap URLs (--sitemap-url) so the analyzer can read lastmod dates.'); return; }}
+  const finding=ENH.freshness_finding;
+  const inv=ENH.content_inventory||[];
   const fO=['Fresh (< 1 month)','Recent (1-3 months)','Aging (3-6 months)','Stale (6-12 months)','Decaying (12+ months)'];
-  const fL=fO.filter(k=>ENH.freshness[k]),fV=fL.map(k=>ENH.freshness[k]||0);
   const fC={{'Fresh (< 1 month)':'#22c55e','Recent (1-3 months)':'#4ade80','Aging (3-6 months)':'#eab308','Stale (6-12 months)':'#f97316','Decaying (12+ months)':'#ef4444'}};
-  Plotly.newPlot('freshness-chart',[{{type:'bar',y:fL.slice().reverse(),x:fV.slice().reverse(),orientation:'h',
-    marker:{{color:fL.slice().reverse().map(l=>fC[l])}},text:fV.slice().reverse(),textposition:'outside',textfont:{{color:'#9ca3af',size:12}}}}],
-    {{...PL,height:240,margin:{{t:10,b:20,l:200,r:60}},xaxis:{{gridcolor:'#2a2d3a'}},yaxis:{{tickfont:{{size:13,color:'#e4e4e7'}}}}}},
-    {{responsive:true,displayModeBar:false}});
+  let html='';
+  if(finding){{
+    html+=`<div class="card" style="border-left:3px solid var(--yellow);padding:18px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="b b-y">DATA QUALITY</span><h3 style="margin:0">${{finding.title}}</h3></div>
+      <p style="font-size:14px;line-height:1.6;color:var(--text);margin:8px 0 14px">${{finding.summary}}</p>
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Evidence</div>
+      <ul style="font-size:13px;line-height:1.7;padding-left:20px;margin-bottom:14px">${{(finding.evidence||[]).map(e=>`<li>${{e}}</li>`).join('')}}</ul>
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Recommendation for ${{SITE_NAME}}</div>
+      <p style="font-size:13px;line-height:1.6;color:var(--text);margin:0;padding:10px 14px;background:var(--surface-alt);border-radius:4px">${{finding.recommendation}}</p>
+    </div>`;
+  }}
+  if(ENH.freshness){{
+    html+=`<div class="card"><h3>Content Age Distribution <span data-tip="Based on sitemap lastmod or HTML article:published_time. When the source dates are uniform (CMS deploy timestamp), all URLs collapse into the youngest bucket — this is a data quality signal, not actual freshness.">ⓘ</span></h3><div id="freshness-chart"></div></div>`;
+  }}
+  if(inv.length){{
+    const total=inv.reduce((a,b)=>a+b.count,0);
+    html+=`<div class="card" style="padding:0">
+      <h3 style="padding:14px 18px 0">Content Inventory <span data-tip="What kinds of pages does this site publish? URL-pattern-based classification — useful when freshness data is unavailable to still understand publishing structure.">ⓘ</span> <span class="b b-m" style="margin-left:8px">${{total}} URLs total</span></h3>
+      <div class="tw" style="border:none"><table style="border:none"><thead><tr><th>Category</th><th>URLs</th><th style="width:50%">Share</th></tr></thead><tbody>${{inv.map(r=>{{
+        const pct=(r.count/total*100).toFixed(1);
+        return `<tr><td>${{r.category}}</td><td><strong>${{r.count}}</strong></td><td><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;background:var(--border);height:8px;border-radius:4px;overflow:hidden"><div style="background:var(--accent);height:100%;width:${{pct}}%"></div></div><span style="color:var(--muted);font-size:11px;min-width:46px">${{pct}}%</span></div></td></tr>`;
+      }}).join('')}}</tbody></table></div></div>`;
+  }}
+  root.innerHTML=html||emptyState('No freshness data','Provide sitemap URLs with lastmod or article:published_time meta tags.');
+  if(ENH.freshness && document.getElementById('freshness-chart')){{
+    const fL=fO.filter(k=>ENH.freshness[k]),fV=fL.map(k=>ENH.freshness[k]||0);
+    Plotly.newPlot('freshness-chart',[{{type:'bar',y:fL.slice().reverse(),x:fV.slice().reverse(),orientation:'h',
+      marker:{{color:fL.slice().reverse().map(l=>fC[l])}},text:fV.slice().reverse(),textposition:'outside',textfont:{{color:'#9ca3af',size:12}}}}],
+      {{...PL,height:240,margin:{{t:10,b:20,l:200,r:60}},xaxis:{{gridcolor:'#2a2d3a'}},yaxis:{{tickfont:{{size:13,color:'#e4e4e7'}}}}}},
+      {{responsive:true,displayModeBar:false}});
+  }}
 }});
 
 // ============================================================================
@@ -1012,6 +1072,34 @@ registerLazy('freshness',()=>{{
 // ============================================================================
 registerLazy('brand',()=>{{
   const root=document.getElementById('brand-content');
+  // Profile-only fallback: when per-URL scores aren't available but the LLM brand
+  // profile is, render the profile so the tab still has substance.
+  if(!ENH.brand && ENH.brand_profile){{
+    const p=ENH.brand_profile;
+    const tones=(p.tone||[]).map(t=>`<span class="b" style="background:var(--accent)22;color:var(--accent);margin-right:6px;margin-bottom:6px;display:inline-block">${{t}}</span>`).join('');
+    const dos=(p.do||[]).map(d=>`<li>${{d}}</li>`).join('');
+    const donts=(p.dont||[]).map(d=>`<li>${{d}}</li>`).join('');
+    const exs=(p.example_phrases||[]).map(e=>`<blockquote style="margin:6px 0;padding:8px 14px;border-left:2px solid var(--accent);background:var(--surface-alt);font-style:italic;font-size:13px">"${{e}}"</blockquote>`).join('');
+    const ws=p.writing_style||{{}};
+    const styleRows=Object.entries(ws).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted);text-transform:capitalize">${{k.replace(/_/g,' ')}}</span><strong>${{v}}</strong></div>`).join('');
+    root.innerHTML=`<div class="card" style="border-left:3px solid var(--accent);padding:18px 22px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="b b-b">PROFILE</span><h3 style="margin:0">${{p.brand_name||SITE_NAME}} Brand Voice</h3></div>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:14px">LLM-derived from the site's actual content (auto-generated when no PDF guideline is provided). This drives the per-cluster content recommendations in the Topic Clusters tab.</p>
+        <div style="margin-bottom:18px"><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Audience</h4>
+          <p style="font-size:14px;line-height:1.6;margin:0">${{p.audience||'Not specified.'}}</p></div>
+        <div style="margin-bottom:18px"><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Tone descriptors</h4>
+          <div>${{tones||'<span style="color:var(--muted)">none</span>'}}</div></div>
+        <div class="row row-2-1" style="margin-bottom:18px">
+          <div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);margin-bottom:8px">Do</h4><ul style="font-size:13px;line-height:1.7;padding-left:20px;margin:0">${{dos||'<li style="color:var(--muted)">none</li>'}}</ul></div>
+          <div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--red);margin-bottom:8px">Don't</h4><ul style="font-size:13px;line-height:1.7;padding-left:20px;margin:0">${{donts||'<li style="color:var(--muted)">none</li>'}}</ul></div>
+        </div>
+        ${{exs?`<div style="margin-bottom:18px"><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Example phrases (extracted from site)</h4>${{exs}}</div>`:''}}
+        ${{styleRows?`<div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Writing style</h4>${{styleRows}}</div>`:''}}
+      </div>
+      <div class="card" style="padding:14px 18px"><h3 style="margin-top:0">Per-URL scoring not yet run</h3>
+        <p style="color:var(--muted);font-size:13px;margin:0">To score every URL against this profile (which pages are most/least on-brand), enable per-URL brand voice scoring in the next pipeline run. The profile shown above already drives the Topic Clusters tab's per-cluster content recommendations (tone, angle, CTA style).</p></div>`;
+    return;
+  }}
   if(!ENH.brand){{ root.innerHTML=emptyState('No brand voice data','Pass --brand-voice <pdf> on the next run to enable this section.'); return; }}
   root.innerHTML=`<div class="row row-2-1">
     <div class="card"><h3>Brand Voice Distribution</h3><div id="brand-chart"></div></div>
@@ -1068,11 +1156,26 @@ registerLazy('competitors',()=>{{
   const compRows=ENH.competitor.rows||[];
   const compNames=ENH.competitor.names||[];
   const compTh=compNames.map(n=>`<th class="sortable" data-sort="text">${{n}}</th>`).join('');
+  const perComp=ENH.competitor.per_competitor||[];
+  const perCompCards=perComp.map(p=>{{
+    const topGaps=(p.top_gap_topics||[]).slice(0,3).map(t=>`<div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5">• ${{t}}</div>`).join('');
+    return `<div class="card" style="padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:13px;text-transform:capitalize">${{p.name}}</strong></div>
+      <div style="display:flex;gap:14px;font-size:11px;margin-bottom:8px">
+        <div><span style="color:var(--red);font-weight:700;font-size:18px">${{p.gaps}}</span> <span style="color:var(--muted)">gaps</span></div>
+        <div><span style="color:var(--blue);font-weight:700;font-size:18px">${{p.shared}}</span> <span style="color:var(--muted)">shared</span></div>
+        <div><span style="color:var(--green);font-weight:700;font-size:18px">${{p.advantages}}</span> <span style="color:var(--muted)">adv</span></div>
+      </div>
+      ${{topGaps?`<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Top gaps</div>${{topGaps}}`:''}}
+    </div>`;
+  }}).join('');
   root.innerHTML=`<div class="stats" style="grid-template-columns:repeat(3,1fr)">
       <div class="stat"><div class="v" style="color:var(--green)">${{stats.advantages}}</div><div class="l">${{SITE_NAME}} Advantages</div></div>
       <div class="stat"><div class="v" style="color:var(--blue)">${{stats.shared}}</div><div class="l">Shared Topics</div></div>
       <div class="stat"><div class="v" style="color:var(--red)">${{stats.gaps}}</div><div class="l">Content Gaps</div></div>
     </div>
+    ${{perCompCards?`<div style="margin-bottom:14px"><h3 style="margin-bottom:10px">Breakdown by Competitor <span data-tip="Per-competitor topic coverage. \\'Gaps\\' = topics this competitor covers that ${{SITE_NAME}} does not. \\'Adv\\' = topics ${{SITE_NAME}} owns that this competitor doesn\\'t cover.">ⓘ</span></h3>
+      <div class="stats" style="grid-template-columns:repeat(${{Math.min(perComp.length,4)}},1fr);gap:12px">${{perCompCards}}</div></div>`:''}}
     <div class="card"><div id="comp-chart"></div></div>
     <input type="text" class="srch" id="comp-search" placeholder="Search topics...">
     <div class="card" style="padding:0">
@@ -1190,15 +1293,36 @@ registerLazy('ideas',()=>{{
 registerLazy('merges',()=>{{
   const root=document.getElementById('merges-content');
   if(!ENH.merges||!ENH.merges.length){{ root.innerHTML=emptyState('No merge candidates','Cluster centroids are well-separated.'); return; }}
-  root.innerHTML=`<p style="color:var(--muted);margin-bottom:14px;font-size:14px">Clusters with high semantic overlap that should be combined to strengthen topical authority.</p>
+  const mergeCount=ENH.merges.filter(m=>m.recommendation==='MERGE').length;
+  const reviewCount=ENH.merges.length-mergeCount;
+  root.innerHTML=`<p style="color:var(--muted);margin-bottom:14px;font-size:14px">Clusters with high topic overlap that should be combined to strengthen topical authority. Same-name pairs (where the LLM cluster-namer converged on the same label across two cluster IDs) are the strongest merge signal.</p>
+    <div class="stats" style="grid-template-columns:repeat(2,1fr);margin-bottom:14px">
+      <div class="stat"><div class="v" style="color:var(--red)">${{mergeCount}}</div><div class="l">MERGE candidates</div></div>
+      <div class="stat"><div class="v" style="color:var(--yellow)">${{reviewCount}}</div><div class="l">REVIEW candidates</div></div>
+    </div>
     <div class="card" style="padding:0"><h3 style="padding:14px 18px 0">Merge Candidates <button class="csv-btn" data-csv="merges">Download CSV</button></h3>
       <div class="tw" style="border:none"><table id="merge-table"><thead><tr>
-        <th class="sortable" data-sort="text">Cluster A</th><th class="sortable" data-sort="text">Cluster B</th>
-        <th class="sortable" data-sort="num">Similarity</th><th class="sortable" data-sort="text">Recommendation</th>
-      </tr></thead><tbody>${{ENH.merges.map(m=>`<tr>
-        <td>${{m.cluster_a_name}}</td><td>${{m.cluster_b_name}}</td>
-        <td style="color:${{m.similarity>=0.85?'#ef4444':'#eab308'}};font-weight:700">${{(m.similarity*100).toFixed(0)}}%</td>
-        <td><span class="b ${{m.recommendation==='MERGE'?'b-r':'b-y'}}">${{m.recommendation}}</span></td></tr>`).join('')}}</tbody></table></div></div>`;
+        <th class="sortable" data-sort="text">Cluster A</th>
+        <th class="sortable" data-sort="text">Cluster B</th>
+        <th class="sortable" data-sort="num">Similarity</th>
+        <th class="sortable" data-sort="num">Combined size</th>
+        <th class="sortable" data-sort="text">Recommendation</th>
+        <th>Reason</th>
+      </tr></thead><tbody>${{ENH.merges.map(m=>{{
+        const aSize=m.cluster_a_size||'';
+        const bSize=m.cluster_b_size||'';
+        const combined=m.combined_size||((m.cluster_a_size||0)+(m.cluster_b_size||0))||'';
+        const aLabel=aSize?`${{m.cluster_a_name}} <span style="color:var(--muted);font-size:11px">(${{aSize}} URLs)</span>`:m.cluster_a_name;
+        const bLabel=bSize?`${{m.cluster_b_name}} <span style="color:var(--muted);font-size:11px">(${{bSize}} URLs)</span>`:m.cluster_b_name;
+        return `<tr>
+          <td>${{aLabel}}</td>
+          <td>${{bLabel}}</td>
+          <td style="color:${{m.similarity>=0.85?'#ef4444':'#eab308'}};font-weight:700">${{(m.similarity*100).toFixed(0)}}%</td>
+          <td><strong>${{combined||'—'}}</strong></td>
+          <td><span class="b ${{m.recommendation==='MERGE'?'b-r':'b-y'}}">${{m.recommendation}}</span></td>
+          <td style="font-size:11px;color:var(--muted)">${{m.reason||''}}</td>
+        </tr>`;
+      }}).join('')}}</tbody></table></div></div>`;
   makeSortable('merge-table');
 }});
 

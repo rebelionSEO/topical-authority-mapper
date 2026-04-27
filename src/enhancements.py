@@ -103,7 +103,7 @@ NON_CONTENT_URL_PATTERNS = [
     r"/episode-[a-z0-9-]+",
     # Calculator / quiz landers (interactive tool, not text content)
     r"/[a-z0-9-]+-calculator(?:/?$|/[^/]+)",
-    # Other Acme-shaped landers (audience selectors, video walkthroughs)
+    # Other intent-specific landers (audience selectors, video walkthroughs)
     r"/[a-z0-9-]+-audiences?(?:/?$|/[^/]+)",
     r"/[a-z0-9-]+-video(?:/?$|/[^/]+|-[a-z0-9-]+)",
     r"/[a-z0-9-]+-video-walkthrough",

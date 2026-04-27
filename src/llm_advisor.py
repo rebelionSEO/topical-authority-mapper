@@ -14,7 +14,7 @@ Adds judgment to the analyses that previously relied on regex + heuristics:
 All calls are OPT-IN. Disabled by default. Enable with TAM_LLM_PROVIDER=anthropic +
 ANTHROPIC_API_KEY env var, OR pass --use-llm to the CLI.
 
-Cost note: a full Acme-sized audit (~30 cannib clusters + ~50 thin URLs +
+Cost note: a typical mid-size audit (~30 cannib clusters + ~50 thin URLs +
 ~50 content ideas + 1 brand profile) costs roughly $0.05-0.15 with Claude Haiku 4.5.
 The module is structured to batch where possible.
 

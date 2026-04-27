@@ -1,10 +1,19 @@
 name: Weekly Audit
 
-# Runs the topical authority pipeline against every site in examples/sites/*.yaml,
-# commits the run snapshot back to the repo, and publishes the dashboards to GitHub Pages.
+# Runs the topical authority pipeline against every site in examples/sites/*.yaml
+# and uploads each run's outputs as workflow artifacts (private, 14-day retention).
 #
-# Setup: Settings → Pages → Source = "GitHub Actions"
-# Trigger: weekly cron (Mondays 06:00 UTC), or manually via "Run workflow"
+# Snapshots are NOT committed back to this repo and are NOT published to GitHub
+# Pages, because runs/ contains per-site audit data for clients/prospects and
+# this repository is public. Keeping snapshots out of the public repo is a hard
+# rule — see https://github.com/rebelionSEO/topical-authority-mapper README and
+# .gitignore (runs/ is gitignored).
+#
+# Future: if persistent historical snapshots are needed, push them to a PRIVATE
+# sibling repo using a deploy key or PAT — never back to this public repo.
+#
+# Trigger: weekly cron (Mondays 06:00 UTC) for CI exercise of the pipeline, or
+# manually via "Run workflow".
 
 on:
   schedule:
@@ -17,9 +26,7 @@ on:
         default: ''
 
 permissions:
-  contents: write   # to commit run snapshots back to the repo
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: audit-${{ github.ref }}
@@ -110,71 +117,6 @@ jobs:
             runs/
             output/
           retention-days: 14
-
-  publish:
-    name: Publish to GitHub Pages
-    needs: audit
-    if: ${{ always() && needs.audit.result == 'success' }}
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # needed for committing back
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Download all audit artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
-      - name: Merge artifacts into runs/
-        shell: bash
-        run: |
-          mkdir -p runs
-          # Each artifact dir contains its own runs/ (and output/), copy runs/ into top-level
-          for d in artifacts/*/; do
-            if [ -d "${d}runs" ]; then
-              cp -rn "${d}runs/." runs/ 2>/dev/null || true
-              # Use cp -r with merge: the per-site dirs don't conflict
-              rsync -a "${d}runs/" runs/ || cp -r "${d}runs/." runs/
-            fi
-          done
-          ls -la runs/ || echo "(runs/ empty)"
-
-      - name: Build Pages index
-        run: python scripts/build_pages_index.py runs/ public/
-
-      - name: Commit snapshots back to repo
-        shell: bash
-        run: |
-          git config user.name "audit-bot"
-          git config user.email "audit-bot@users.noreply.github.com"
-          git add runs/
-          if git diff --cached --quiet; then
-            echo "No new snapshot changes to commit."
-          else
-            git commit -m "chore(audit): run snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push
-          fi
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public/
-
-      - name: Deploy to Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
 
   notify-empty:
     name: No site configs found

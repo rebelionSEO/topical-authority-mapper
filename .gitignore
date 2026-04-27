@@ -9,6 +9,9 @@ cache/
 # Output files (regenerated on each run)
 output/
 
+# Per-site audit snapshots — never commit client/prospect data to a public repo
+runs/
+
 # Environment
 .env
 

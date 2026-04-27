@@ -915,6 +915,16 @@ registerLazy('thin',()=>{{
     return arr;
   }}
 
+  // Expose handler globally so inline onclick can call it (avoids the
+  // bubble-vs-stopPropagation race with the parent .card[onclick="this.classList.toggle('open')"]).
+  window._tamThinSort=function(gi,by,evt){{
+    if(evt){{ evt.stopPropagation(); evt.preventDefault(); }}
+    const cur=sortState[gi];
+    if(cur.by===by){{ cur.dir=cur.dir==='asc'?'desc':'asc'; }}
+    else{{ cur.by=by; cur.dir='asc'; }}
+    rerender();
+  }};
+
   function renderGroup(g, i){{
     const st=sortState[i];
     const sorted=sortPages(g.pages, st.by, st.dir);
@@ -934,10 +944,10 @@ registerLazy('thin',()=>{{
           ${{g.label}}
           <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">${{priorityLabel[g.priority]||''}}</span>
         </h3>
-        <div style="display:flex;gap:6px;align-items:center" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:11px;color:var(--muted);text-transform:uppercase">Sort:</span>
-          <button class="csv-btn" data-sort-group="${{i}}" data-sort-by="words" style="padding:2px 8px;font-size:10px;${{wordsActive?'background:var(--accent-soft);':''}}">Words ${{arrow(wordsActive)}}</button>
-          <button class="csv-btn" data-sort-group="${{i}}" data-sort-by="url" style="padding:2px 8px;font-size:10px;${{urlActive?'background:var(--accent-soft);':''}}">URL ${{arrow(urlActive)}}</button>
+          <button onclick="_tamThinSort(${{i}},'words',event)" style="padding:3px 10px;font-size:11px;cursor:pointer;border-radius:14px;border:1px solid var(--accent);color:var(--accent);background:${{wordsActive?'var(--accent-soft)':'transparent'}}">Words ${{arrow(wordsActive)}}</button>
+          <button onclick="_tamThinSort(${{i}},'url',event)" style="padding:3px 10px;font-size:11px;cursor:pointer;border-radius:14px;border:1px solid var(--accent);color:var(--accent);background:${{urlActive?'var(--accent-soft)':'transparent'}}">URL ${{arrow(urlActive)}}</button>
           <span class="expand-arrow">▶</span>
         </div>
       </div>
@@ -958,19 +968,6 @@ registerLazy('thin',()=>{{
   }}
 
   rerender();
-
-  // Sort button delegation (re-bind after each rerender via event delegation on root)
-  root.addEventListener('click',(e)=>{{
-    const btn=e.target.closest('[data-sort-group]');
-    if(!btn) return;
-    e.stopPropagation();
-    const gi=parseInt(btn.dataset.sortGroup);
-    const by=btn.dataset.sortBy;
-    const cur=sortState[gi];
-    if(cur.by===by){{ cur.dir=cur.dir==='asc'?'desc':'asc'; }}
-    else{{ cur.by=by; cur.dir='asc'; }}
-    rerender();
-  }});
 }});
 
 // ============================================================================

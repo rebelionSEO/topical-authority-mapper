@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lumenflow — Topical Authority One-Pager</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    color: #1f2937; background: #fff; line-height: 1.5; padding: 32px;
+    max-width: 880px; margin: 0 auto;
+  }
+  .header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 3px solid #4A7BF7; padding-bottom: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 22px; font-weight: 800; color: #111827; }
+  .header .meta { color: #6b7280; font-size: 12px; line-height: 1.6; text-align: right; }
+
+  .hero { display:grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center; margin-bottom: 28px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fafbff; }
+  .hero .score { text-align: center; }
+  .hero .score .num { font-size: 64px; font-weight: 800; color: #d97706; line-height: 1; }
+  .hero .score .label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600; }
+  .hero .meta-row { display:flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .hero .meta-row .item { font-size: 12px; color: #6b7280; }
+  .hero .meta-row .item strong { color: #1f2937; font-size: 15px; display: block; margin-bottom: 2px; }
+  .delta { font-size: 13px; }
+  .spark-wrap { display:flex; align-items:center; gap: 8px; }
+
+  h2 { font-size: 14px; font-weight: 700; color: #4A7BF7; text-transform: uppercase; letter-spacing: 0.6px; margin: 24px 0 10px; }
+  table.subscores { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+  table.subscores th { background: #f3f4f6; padding: 8px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; font-weight: 600; text-align: left; border-bottom: 1px solid #e5e7eb; }
+  table.subscores td { border-bottom: 1px solid #f3f4f6; }
+  table.subscores tr:last-child td { border-bottom: none; }
+
+  .row-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px; }
+  .panel { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+  .panel h3 { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600; }
+  .panel ul { list-style: none; padding: 0; font-size: 12px; }
+
+  .stats-strip { display:grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 12px 0 24px; }
+  .stats-strip .stat { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; text-align: center; }
+  .stats-strip .stat .v { font-size: 22px; font-weight: 700; color: #1f2937; }
+  .stats-strip .stat .l { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 10px; text-align: center; }
+
+  @media print {
+    body { padding: 16px; }
+    .hero { break-inside: avoid; }
+    .panel { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Lumenflow — Topical Authority Snapshot</h1>
+    <div style="color:#6b7280;font-size:12px;margin-top:2px">lumenflow.demo</div>
+  </div>
+  <div class="meta">
+    Generated May 02, 2026<br>
+    198 pages analyzed
+  </div>
+</div>
+
+<div class="hero">
+  <div class="score">
+    <div class="num">62</div>
+    <div class="label">Site Health / 100</div>
+  </div>
+  <div>
+    <div style="font-size:14px;color:#1f2937;font-weight:600;margin-bottom:6px">
+      Overall: <span style="color:#d97706">Yellow</span>
+      <span class="delta" style="margin-left:8px"><span style="color:#9ca3af">—</span></span>
+    </div>
+    <div class="meta-row">
+      <div class="spark-wrap">
+        <svg width="120" height="32" viewBox="0 0 120 32" style="vertical-align:middle"><polyline fill="none" stroke="#4A7BF7" stroke-width="2" points="2.0,30.0 118.0,30.0"/><circle cx="118.0" cy="30.0" r="2.5" fill="#4A7BF7"/></svg>
+        <span style="font-size:10px;color:#9ca3af">last 1 runs</span>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:#6b7280;line-height:1.6">
+      Composite of 5 subscores below.
+      Higher is better. Green ≥ 75 · Yellow 50–74 · Red &lt; 50.
+    </div>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stat"><div class="v">198</div><div class="l">URLs</div></div>
+  <div class="stat"><div class="v">30</div><div class="l">Clusters</div></div>
+  <div class="stat"><div class="v" style="color:#dc2626">8</div><div class="l">Cannibalized</div></div>
+  <div class="stat"><div class="v" style="color:#d97706">19</div><div class="l">Thin Pages</div></div>
+  <div class="stat"><div class="v" style="color:#4A7BF7">38</div><div class="l">Content Ideas</div></div>
+</div>
+
+<h2>Subscores</h2>
+<table class="subscores">
+  <thead>
+    <tr>
+      <th style="width:25%">Area</th>
+      <th style="width:30%">Score</th>
+      <th>Detail</th>
+      <th style="width:15%;text-align:right">vs last run</th>
+    </tr>
+  </thead>
+  <tbody>
+        <tr>
+          <td style="padding:8px 12px;font-weight:500">Topic Coverage</td>
+          <td style="padding:8px 12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="background:#e5e7eb;border-radius:4px;height:8px;width:120px;overflow:hidden">
+                <div style="background:#16a34a;height:100%;width:90%"></div>
+              </div>
+              <strong style="color:#16a34a;min-width:32px">90</strong>
+            </div>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:11px">30 clusters across 198 URLs</td>
+          <td style="padding:8px 12px;text-align:right">—</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:500">Cannibalization</td>
+          <td style="padding:8px 12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="background:#e5e7eb;border-radius:4px;height:8px;width:120px;overflow:hidden">
+                <div style="background:#d97706;height:100%;width:73%"></div>
+              </div>
+              <strong style="color:#d97706;min-width:32px">73</strong>
+            </div>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:11px">8 of 30 clusters cannibalized</td>
+          <td style="padding:8px 12px;text-align:right">—</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:500">Content Freshness</td>
+          <td style="padding:8px 12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="background:#e5e7eb;border-radius:4px;height:8px;width:120px;overflow:hidden">
+                <div style="background:#d97706;height:100%;width:70%"></div>
+              </div>
+              <strong style="color:#d97706;min-width:32px">70</strong>
+            </div>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:11px">36 of 120 pages 6+ months old</td>
+          <td style="padding:8px 12px;text-align:right">—</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:500">Brand Voice</td>
+          <td style="padding:8px 12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="background:#e5e7eb;border-radius:4px;height:8px;width:120px;overflow:hidden">
+                <div style="background:#d97706;height:100%;width:65%"></div>
+              </div>
+              <strong style="color:#d97706;min-width:32px">65</strong>
+            </div>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:11px">avg 65/100 across 140 pages</td>
+          <td style="padding:8px 12px;text-align:right">—</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:500">Competitive Position</td>
+          <td style="padding:8px 12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="background:#e5e7eb;border-radius:4px;height:8px;width:120px;overflow:hidden">
+                <div style="background:#dc2626;height:100%;width:25%"></div>
+              </div>
+              <strong style="color:#dc2626;min-width:32px">25</strong>
+            </div>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:11px">covers 12 of 48 unique topics vs competitors</td>
+          <td style="padding:8px 12px;text-align:right">—</td>
+        </tr></tbody>
+</table>
+
+<div class="row-2">
+  <div class="panel">
+    <h3>Top Cannibalized Clusters</h3>
+    <ul>
+            <li style="margin-bottom:6px">
+              <strong>Customer Analytics Platform</strong>
+              <span style="color:#dc2626;font-size:11px;margin-left:6px">12 URLs · Critical</span>
+            </li>
+            <li style="margin-bottom:6px">
+              <strong>User Behavior Tracking</strong>
+              <span style="color:#dc2626;font-size:11px;margin-left:6px">11 URLs · Critical</span>
+            </li>
+            <li style="margin-bottom:6px">
+              <strong>A/B Testing Framework</strong>
+              <span style="color:#dc2626;font-size:11px;margin-left:6px">10 URLs · Critical</span>
+            </li>
+            <li style="margin-bottom:6px">
+              <strong>Funnel Analysis</strong>
+              <span style="color:#d97706;font-size:11px;margin-left:6px">7 URLs · High</span>
+            </li>
+            <li style="margin-bottom:6px">
+              <strong>Retention Metrics</strong>
+              <span style="color:#d97706;font-size:11px;margin-left:6px">9 URLs · High</span>
+            </li></ul>
+  </div>
+  <div class="panel">
+    <h3>Top Content Briefs (5 P1 total)</h3>
+    <ul>
+            <li style="margin-bottom:10px">
+              <strong>[P1]</strong> Best Customer Data Platform: A B2B SaaS Product Marketing Buyer&#x27;s Guide
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">
+                Comparison page · ~2500w · validated by BeaconAnalytics, PulseGrid
+              </div>
+            </li>
+            <li style="margin-bottom:10px">
+              <strong>[P1]</strong> How to Build a Tracking Plan: A Practical Guide for Product + Engineering Teams
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">
+                How-to guide · ~1800w · validated by BeaconAnalytics, Insightspark
+              </div>
+            </li>
+            <li style="margin-bottom:10px">
+              <strong>[P1]</strong> The JTBD Framework: How Product Teams Use It for Activation
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">
+                Framework explainer · ~1500w · validated by PulseGrid, Insightspark
+              </div>
+            </li>
+            <li style="margin-bottom:10px">
+              <strong>[P1]</strong> Activation Rate Benchmarks: What B2B SaaS Product Teams Should Be Hitting
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">
+                Benchmark + data report · ~1400w · validated by BeaconAnalytics, PulseGrid
+              </div>
+            </li>
+            <li style="margin-bottom:10px">
+              <strong>[P1]</strong> What Is Product-Qualified Lead (PQL)? A Complete Guide for PLG Teams
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">
+                Pillar / definitive guide · ~2000w · validated by PulseGrid, BeaconAnalytics
+              </div>
+            </li></ul>
+  </div>
+</div>
+
+<div class="footer">
+  Generated by Topical Authority Mapper · See dashboard.html for the full interactive view
+</div>
+
+</body>
+</html>

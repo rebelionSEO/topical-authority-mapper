@@ -1,0 +1,31 @@
+cluster_id,cluster_name,content_type,tone,angle,cta_style
+0,Customer Analytics Platform,Examples + templates post,Authoritative + data-driven,data-driven analysis with real benchmarks,consultative
+1,Product Telemetry,Benchmark + data report,Authoritative + data-driven,buyer's-guide format with framework,consultative
+2,User Behavior Tracking,Pillar guide,Authoritative + data-driven,step-by-step playbook from teams who've done it,demo-led
+3,Funnel Analysis,Framework explainer,Authoritative + data-driven,named-example walkthrough with numbers,trial-led
+4,Cohort Reporting,Comparison page,Authoritative + data-driven,named-example walkthrough with numbers,consultative
+5,Retention Metrics,Comparison page,Authoritative + data-driven,named-example walkthrough with numbers,consultative
+6,Onboarding Optimization,Framework explainer,Authoritative + data-driven,contrarian take backed by survey data,trial-led
+7,Feature Adoption,How-to guide,Authoritative + data-driven,named-example walkthrough with numbers,newsletter signup
+8,Churn Prediction,Benchmark + data report,Authoritative + data-driven,research-backed depth + diagrams,trial-led
+9,A/B Testing Framework,Comparison page,Authoritative + data-driven,step-by-step playbook from teams who've done it,research-download
+10,Event Schema Design,Comparison page,Authoritative + data-driven,data-driven analysis with real benchmarks,newsletter signup
+11,Session Replay,Benchmark + data report,Authoritative + data-driven,buyer's-guide format with framework,consultative
+12,Privacy Compliance,Benchmark + data report,Authoritative + data-driven,contrarian take backed by survey data,consultative
+13,Data Pipeline Architecture,Pillar guide,Authoritative + data-driven,buyer's-guide format with framework,trial-led
+14,Dashboard Building,Examples + templates post,Authoritative + data-driven,buyer's-guide format with framework,demo-led
+15,Self-Serve Analytics,Pillar guide,Authoritative + data-driven,buyer's-guide format with framework,consultative
+16,Mobile App Analytics,Comparison page,Authoritative + data-driven,data-driven analysis with real benchmarks,newsletter signup
+17,Web Analytics,Pillar guide,Authoritative + data-driven,research-backed depth + diagrams,demo-led
+18,E-commerce Tracking,Framework explainer,Authoritative + data-driven,data-driven analysis with real benchmarks,newsletter signup
+19,Marketing Attribution,Comparison page,Authoritative + data-driven,buyer's-guide format with framework,newsletter signup
+20,Product-Led Growth,Pillar guide,Authoritative + data-driven,buyer's-guide format with framework,consultative
+21,Customer Journey Mapping,Framework explainer,Authoritative + data-driven,research-backed depth + diagrams,newsletter signup
+22,Voice of Customer,Examples + templates post,Authoritative + data-driven,buyer's-guide format with framework,research-download
+23,NPS Tracking,How-to guide,Authoritative + data-driven,step-by-step playbook from teams who've done it,research-download
+24,Heatmaps,Comparison page,Authoritative + data-driven,contrarian take backed by survey data,trial-led
+25,Personalization Engine,Comparison page,Authoritative + data-driven,research-backed depth + diagrams,research-download
+26,Push Notification Strategy,Framework explainer,Authoritative + data-driven,contrarian take backed by survey data,consultative
+27,Email Engagement,Pillar guide,Authoritative + data-driven,named-example walkthrough with numbers,newsletter signup
+28,Conversion Optimization,Examples + templates post,Authoritative + data-driven,data-driven analysis with real benchmarks,consultative
+29,SaaS Metrics,Examples + templates post,Authoritative + data-driven,step-by-step playbook from teams who've done it,newsletter signup

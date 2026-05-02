@@ -1,0 +1,26 @@
+cluster_id,url_a,url_b,type_a,type_b,similarity,conversion_risk,action
+6,https://lumenflow.demo/blog/onboarding-optimization-best-practices,https://lumenflow.demo/guide/onboarding-optimization-explained,blog,blog,0.9529,False,MERGE: near-duplicate content — consolidate into one page
+7,https://lumenflow.demo/post/feature-adoption-tutorial-1,https://lumenflow.demo/blog/feature-adoption-best-practices,blog,blog,0.9495,False,MERGE: near-duplicate content — consolidate into one page
+3,https://lumenflow.demo/blog/funnel-analysis-best-practices,https://lumenflow.demo/guide/funnel-analysis-explained,blog,blog,0.9454,False,MERGE: near-duplicate content — consolidate into one page
+2,https://lumenflow.demo/post/user-behavior-tracking-tutorial-1,https://lumenflow.demo/blog/user-behavior-tracking-best-practices,blog,blog,0.9452,False,MERGE: near-duplicate content — consolidate into one page
+5,https://lumenflow.demo/post/retention-metrics-tutorial-1,https://lumenflow.demo/blog/retention-metrics-best-practices,blog,blog,0.9451,False,MERGE: near-duplicate content — consolidate into one page
+6,https://lumenflow.demo/post/onboarding-optimization-tutorial-1,https://lumenflow.demo/blog/onboarding-optimization-best-practices,blog,blog,0.9349,False,MERGE: near-duplicate content — consolidate into one page
+5,https://lumenflow.demo/guide/retention-metrics-explained,https://lumenflow.demo/post/how-to-retention-metrics-4,blog,blog,0.9324,False,MERGE: near-duplicate content — consolidate into one page
+3,https://lumenflow.demo/guide/funnel-analysis-explained,https://lumenflow.demo/post/how-to-funnel-analysis-4,blog,blog,0.932,False,MERGE: near-duplicate content — consolidate into one page
+5,https://lumenflow.demo/blog/retention-metrics-best-practices,https://lumenflow.demo/guide/retention-metrics-explained,blog,blog,0.9194,False,REVIEW: very similar — differentiate angles or merge
+3,https://lumenflow.demo/post/funnel-analysis-tutorial-1,https://lumenflow.demo/blog/funnel-analysis-best-practices,blog,blog,0.909,False,REVIEW: very similar — differentiate angles or merge
+4,https://lumenflow.demo/guide/cohort-reporting-explained,https://lumenflow.demo/post/how-to-cohort-reporting-4,blog,blog,0.8856,False,REVIEW: very similar — differentiate angles or merge
+1,https://lumenflow.demo/blog/product-telemetry-best-practices,https://lumenflow.demo/guide/product-telemetry-explained,blog,blog,0.8748,False,REVIEW: very similar — differentiate angles or merge
+0,https://lumenflow.demo/post/customer-analytics-platform-tutorial-1,https://lumenflow.demo/blog/customer-analytics-platform-best-practices,blog,blog,0.8683,False,REVIEW: very similar — differentiate angles or merge
+7,https://lumenflow.demo/blog/feature-adoption-best-practices,https://lumenflow.demo/guide/feature-adoption-explained,blog,blog,0.8512,False,REVIEW: very similar — differentiate angles or merge
+6,https://lumenflow.demo/guide/onboarding-optimization-explained,https://lumenflow.demo/post/how-to-onboarding-optimization-4,blog,blog,0.8472,False,REVIEW: very similar — differentiate angles or merge
+4,https://lumenflow.demo/post/cohort-reporting-tutorial-1,https://lumenflow.demo/blog/cohort-reporting-best-practices,blog,blog,0.8382,False,REVIEW: very similar — differentiate angles or merge
+8,https://lumenflow.demo/post/churn-prediction-tutorial-1,https://lumenflow.demo/blog/churn-prediction-best-practices,blog,blog,0.8343,False,REVIEW: very similar — differentiate angles or merge
+0,https://lumenflow.demo/guide/customer-analytics-platform-explained,https://lumenflow.demo/post/how-to-customer-analytics-platform-4,blog,blog,0.8219,False,REVIEW: very similar — differentiate angles or merge
+1,https://lumenflow.demo/post/product-telemetry-tutorial-1,https://lumenflow.demo/blog/product-telemetry-best-practices,blog,blog,0.8194,False,REVIEW: very similar — differentiate angles or merge
+2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices,https://lumenflow.demo/guide/user-behavior-tracking-explained,blog,blog,0.8163,False,REVIEW: very similar — differentiate angles or merge
+2,https://lumenflow.demo/guide/user-behavior-tracking-explained,https://lumenflow.demo/post/how-to-user-behavior-tracking-4,blog,blog,0.8035,False,REVIEW: very similar — differentiate angles or merge
+7,https://lumenflow.demo/guide/feature-adoption-explained,https://lumenflow.demo/post/how-to-feature-adoption-4,blog,blog,0.7982,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices,https://lumenflow.demo/guide/customer-analytics-platform-explained,blog,blog,0.7962,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+4,https://lumenflow.demo/blog/cohort-reporting-best-practices,https://lumenflow.demo/guide/cohort-reporting-explained,blog,blog,0.7839,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/guide/product-telemetry-explained,https://lumenflow.demo/post/how-to-product-telemetry-4,blog,blog,0.7801,False,DIFFERENTIATE: overlap exists — ensure unique intent per page

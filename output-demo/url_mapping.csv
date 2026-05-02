@@ -1,0 +1,199 @@
+url,main_cluster,cluster_name,secondary_clusters
+https://lumenflow.demo/post/customer-analytics-platform-tutorial-1,0,Customer Analytics Platform,
+https://lumenflow.demo/blog/customer-analytics-platform-best-practices,0,Customer Analytics Platform,7
+https://lumenflow.demo/guide/customer-analytics-platform-explained,0,Customer Analytics Platform,7
+https://lumenflow.demo/post/how-to-customer-analytics-platform-4,0,Customer Analytics Platform,7
+https://lumenflow.demo/case-study/customer-analytics-platform-umbrella,0,Customer Analytics Platform,
+https://lumenflow.demo/post/customer-analytics-platform-tutorial-6,0,Customer Analytics Platform,
+https://lumenflow.demo/blog/customer-analytics-platform-best-practices,0,Customer Analytics Platform,
+https://lumenflow.demo/guide/customer-analytics-platform-explained,0,Customer Analytics Platform,7
+https://lumenflow.demo/post/how-to-customer-analytics-platform-9,0,Customer Analytics Platform,
+https://lumenflow.demo/case-study/customer-analytics-platform-umbrella,0,Customer Analytics Platform,7
+https://lumenflow.demo/post/customer-analytics-platform-tutorial-11,0,Customer Analytics Platform,7
+https://lumenflow.demo/blog/customer-analytics-platform-best-practices,0,Customer Analytics Platform,
+https://lumenflow.demo/post/product-telemetry-tutorial-1,1,Product Telemetry,8
+https://lumenflow.demo/blog/product-telemetry-best-practices,1,Product Telemetry,8
+https://lumenflow.demo/guide/product-telemetry-explained,1,Product Telemetry,
+https://lumenflow.demo/post/how-to-product-telemetry-4,1,Product Telemetry,
+https://lumenflow.demo/case-study/product-telemetry-umbrella,1,Product Telemetry,8
+https://lumenflow.demo/post/product-telemetry-tutorial-6,1,Product Telemetry,
+https://lumenflow.demo/blog/product-telemetry-best-practices,1,Product Telemetry,
+https://lumenflow.demo/guide/product-telemetry-explained,1,Product Telemetry,8
+https://lumenflow.demo/post/user-behavior-tracking-tutorial-1,2,User Behavior Tracking,
+https://lumenflow.demo/blog/user-behavior-tracking-best-practices,2,User Behavior Tracking,
+https://lumenflow.demo/guide/user-behavior-tracking-explained,2,User Behavior Tracking,
+https://lumenflow.demo/post/how-to-user-behavior-tracking-4,2,User Behavior Tracking,9
+https://lumenflow.demo/case-study/user-behavior-tracking-umbrella,2,User Behavior Tracking,
+https://lumenflow.demo/post/user-behavior-tracking-tutorial-6,2,User Behavior Tracking,
+https://lumenflow.demo/blog/user-behavior-tracking-best-practices,2,User Behavior Tracking,9
+https://lumenflow.demo/guide/user-behavior-tracking-explained,2,User Behavior Tracking,9
+https://lumenflow.demo/post/how-to-user-behavior-tracking-9,2,User Behavior Tracking,
+https://lumenflow.demo/case-study/user-behavior-tracking-umbrella,2,User Behavior Tracking,
+https://lumenflow.demo/post/user-behavior-tracking-tutorial-11,2,User Behavior Tracking,
+https://lumenflow.demo/post/funnel-analysis-tutorial-1,3,Funnel Analysis,
+https://lumenflow.demo/blog/funnel-analysis-best-practices,3,Funnel Analysis,
+https://lumenflow.demo/guide/funnel-analysis-explained,3,Funnel Analysis,
+https://lumenflow.demo/post/how-to-funnel-analysis-4,3,Funnel Analysis,
+https://lumenflow.demo/case-study/funnel-analysis-umbrella,3,Funnel Analysis,
+https://lumenflow.demo/post/funnel-analysis-tutorial-6,3,Funnel Analysis,
+https://lumenflow.demo/blog/funnel-analysis-best-practices,3,Funnel Analysis,
+https://lumenflow.demo/post/cohort-reporting-tutorial-1,4,Cohort Reporting,
+https://lumenflow.demo/blog/cohort-reporting-best-practices,4,Cohort Reporting,
+https://lumenflow.demo/guide/cohort-reporting-explained,4,Cohort Reporting,
+https://lumenflow.demo/post/how-to-cohort-reporting-4,4,Cohort Reporting,11
+https://lumenflow.demo/case-study/cohort-reporting-umbrella,4,Cohort Reporting,11
+https://lumenflow.demo/post/cohort-reporting-tutorial-6,4,Cohort Reporting,11
+https://lumenflow.demo/post/retention-metrics-tutorial-1,5,Retention Metrics,12
+https://lumenflow.demo/blog/retention-metrics-best-practices,5,Retention Metrics,12
+https://lumenflow.demo/guide/retention-metrics-explained,5,Retention Metrics,12
+https://lumenflow.demo/post/how-to-retention-metrics-4,5,Retention Metrics,12
+https://lumenflow.demo/case-study/retention-metrics-umbrella,5,Retention Metrics,
+https://lumenflow.demo/post/retention-metrics-tutorial-6,5,Retention Metrics,
+https://lumenflow.demo/blog/retention-metrics-best-practices,5,Retention Metrics,
+https://lumenflow.demo/guide/retention-metrics-explained,5,Retention Metrics,12
+https://lumenflow.demo/post/how-to-retention-metrics-9,5,Retention Metrics,12
+https://lumenflow.demo/post/onboarding-optimization-tutorial-1,6,Onboarding Optimization,
+https://lumenflow.demo/blog/onboarding-optimization-best-practices,6,Onboarding Optimization,
+https://lumenflow.demo/guide/onboarding-optimization-explained,6,Onboarding Optimization,
+https://lumenflow.demo/post/how-to-onboarding-optimization-4,6,Onboarding Optimization,13
+https://lumenflow.demo/case-study/onboarding-optimization-umbrella,6,Onboarding Optimization,
+https://lumenflow.demo/post/feature-adoption-tutorial-1,7,Feature Adoption,14
+https://lumenflow.demo/blog/feature-adoption-best-practices,7,Feature Adoption,
+https://lumenflow.demo/guide/feature-adoption-explained,7,Feature Adoption,
+https://lumenflow.demo/post/how-to-feature-adoption-4,7,Feature Adoption,
+https://lumenflow.demo/case-study/feature-adoption-umbrella,7,Feature Adoption,
+https://lumenflow.demo/post/feature-adoption-tutorial-6,7,Feature Adoption,
+https://lumenflow.demo/blog/feature-adoption-best-practices,7,Feature Adoption,
+https://lumenflow.demo/post/churn-prediction-tutorial-1,8,Churn Prediction,
+https://lumenflow.demo/blog/churn-prediction-best-practices,8,Churn Prediction,15
+https://lumenflow.demo/guide/churn-prediction-explained,8,Churn Prediction,15
+https://lumenflow.demo/post/how-to-churn-prediction-4,8,Churn Prediction,
+https://lumenflow.demo/post/a-b-testing-framework-tutorial-1,9,A/B Testing Framework,16
+https://lumenflow.demo/blog/a-b-testing-framework-best-practices,9,A/B Testing Framework,16
+https://lumenflow.demo/guide/a-b-testing-framework-explained,9,A/B Testing Framework,
+https://lumenflow.demo/post/how-to-a-b-testing-framework-4,9,A/B Testing Framework,
+https://lumenflow.demo/case-study/a-b-testing-framework-umbrella,9,A/B Testing Framework,
+https://lumenflow.demo/post/a-b-testing-framework-tutorial-6,9,A/B Testing Framework,
+https://lumenflow.demo/blog/a-b-testing-framework-best-practices,9,A/B Testing Framework,
+https://lumenflow.demo/guide/a-b-testing-framework-explained,9,A/B Testing Framework,
+https://lumenflow.demo/post/how-to-a-b-testing-framework-9,9,A/B Testing Framework,
+https://lumenflow.demo/case-study/a-b-testing-framework-umbrella,9,A/B Testing Framework,16
+https://lumenflow.demo/post/event-schema-design-tutorial-1,10,Event Schema Design,17
+https://lumenflow.demo/blog/event-schema-design-best-practices,10,Event Schema Design,
+https://lumenflow.demo/guide/event-schema-design-explained,10,Event Schema Design,17
+https://lumenflow.demo/post/how-to-event-schema-design-4,10,Event Schema Design,
+https://lumenflow.demo/case-study/event-schema-design-umbrella,10,Event Schema Design,
+https://lumenflow.demo/post/event-schema-design-tutorial-6,10,Event Schema Design,
+https://lumenflow.demo/post/session-replay-tutorial-1,11,Session Replay,18
+https://lumenflow.demo/blog/session-replay-best-practices,11,Session Replay,
+https://lumenflow.demo/guide/session-replay-explained,11,Session Replay,
+https://lumenflow.demo/post/how-to-session-replay-4,11,Session Replay,18
+https://lumenflow.demo/case-study/session-replay-umbrella,11,Session Replay,18
+https://lumenflow.demo/post/privacy-compliance-tutorial-1,12,Privacy Compliance,19
+https://lumenflow.demo/blog/privacy-compliance-best-practices,12,Privacy Compliance,
+https://lumenflow.demo/guide/privacy-compliance-explained,12,Privacy Compliance,
+https://lumenflow.demo/post/how-to-privacy-compliance-4,12,Privacy Compliance,
+https://lumenflow.demo/post/data-pipeline-architecture-tutorial-1,13,Data Pipeline Architecture,20
+https://lumenflow.demo/blog/data-pipeline-architecture-best-practices,13,Data Pipeline Architecture,
+https://lumenflow.demo/guide/data-pipeline-architecture-explained,13,Data Pipeline Architecture,
+https://lumenflow.demo/post/how-to-data-pipeline-architecture-4,13,Data Pipeline Architecture,
+https://lumenflow.demo/case-study/data-pipeline-architecture-umbrella,13,Data Pipeline Architecture,
+https://lumenflow.demo/post/data-pipeline-architecture-tutorial-6,13,Data Pipeline Architecture,
+https://lumenflow.demo/post/dashboard-building-tutorial-1,14,Dashboard Building,21
+https://lumenflow.demo/blog/dashboard-building-best-practices,14,Dashboard Building,
+https://lumenflow.demo/guide/dashboard-building-explained,14,Dashboard Building,
+https://lumenflow.demo/post/how-to-dashboard-building-4,14,Dashboard Building,
+https://lumenflow.demo/case-study/dashboard-building-umbrella,14,Dashboard Building,21
+https://lumenflow.demo/post/dashboard-building-tutorial-6,14,Dashboard Building,
+https://lumenflow.demo/blog/dashboard-building-best-practices,14,Dashboard Building,21
+https://lumenflow.demo/guide/dashboard-building-explained,14,Dashboard Building,
+https://lumenflow.demo/post/self-serve-analytics-tutorial-1,15,Self-Serve Analytics,
+https://lumenflow.demo/blog/self-serve-analytics-best-practices,15,Self-Serve Analytics,
+https://lumenflow.demo/guide/self-serve-analytics-explained,15,Self-Serve Analytics,
+https://lumenflow.demo/post/how-to-self-serve-analytics-4,15,Self-Serve Analytics,22
+https://lumenflow.demo/case-study/self-serve-analytics-umbrella,15,Self-Serve Analytics,
+https://lumenflow.demo/post/self-serve-analytics-tutorial-6,15,Self-Serve Analytics,22
+https://lumenflow.demo/blog/self-serve-analytics-best-practices,15,Self-Serve Analytics,
+https://lumenflow.demo/post/mobile-app-analytics-tutorial-1,16,Mobile App Analytics,
+https://lumenflow.demo/blog/mobile-app-analytics-best-practices,16,Mobile App Analytics,23
+https://lumenflow.demo/guide/mobile-app-analytics-explained,16,Mobile App Analytics,
+https://lumenflow.demo/post/how-to-mobile-app-analytics-4,16,Mobile App Analytics,
+https://lumenflow.demo/case-study/mobile-app-analytics-umbrella,16,Mobile App Analytics,23
+https://lumenflow.demo/post/web-analytics-tutorial-1,17,Web Analytics,
+https://lumenflow.demo/blog/web-analytics-best-practices,17,Web Analytics,
+https://lumenflow.demo/guide/web-analytics-explained,17,Web Analytics,
+https://lumenflow.demo/post/how-to-web-analytics-4,17,Web Analytics,
+https://lumenflow.demo/case-study/web-analytics-umbrella,17,Web Analytics,24
+https://lumenflow.demo/post/web-analytics-tutorial-6,17,Web Analytics,
+https://lumenflow.demo/post/e-commerce-tracking-tutorial-1,18,E-commerce Tracking,25
+https://lumenflow.demo/blog/e-commerce-tracking-best-practices,18,E-commerce Tracking,
+https://lumenflow.demo/guide/e-commerce-tracking-explained,18,E-commerce Tracking,
+https://lumenflow.demo/post/how-to-e-commerce-tracking-4,18,E-commerce Tracking,
+https://lumenflow.demo/post/marketing-attribution-tutorial-1,19,Marketing Attribution,
+https://lumenflow.demo/blog/marketing-attribution-best-practices,19,Marketing Attribution,26
+https://lumenflow.demo/guide/marketing-attribution-explained,19,Marketing Attribution,
+https://lumenflow.demo/post/how-to-marketing-attribution-4,19,Marketing Attribution,
+https://lumenflow.demo/case-study/marketing-attribution-umbrella,19,Marketing Attribution,26
+https://lumenflow.demo/post/marketing-attribution-tutorial-6,19,Marketing Attribution,
+https://lumenflow.demo/blog/marketing-attribution-best-practices,19,Marketing Attribution,26
+https://lumenflow.demo/post/product-led-growth-tutorial-1,20,Product-Led Growth,
+https://lumenflow.demo/blog/product-led-growth-best-practices,20,Product-Led Growth,
+https://lumenflow.demo/guide/product-led-growth-explained,20,Product-Led Growth,27
+https://lumenflow.demo/post/how-to-product-led-growth-4,20,Product-Led Growth,
+https://lumenflow.demo/case-study/product-led-growth-umbrella,20,Product-Led Growth,
+https://lumenflow.demo/post/product-led-growth-tutorial-6,20,Product-Led Growth,27
+https://lumenflow.demo/blog/product-led-growth-best-practices,20,Product-Led Growth,
+https://lumenflow.demo/guide/product-led-growth-explained,20,Product-Led Growth,
+https://lumenflow.demo/post/how-to-product-led-growth-9,20,Product-Led Growth,27
+https://lumenflow.demo/post/customer-journey-mapping-tutorial-1,21,Customer Journey Mapping,
+https://lumenflow.demo/blog/customer-journey-mapping-best-practices,21,Customer Journey Mapping,
+https://lumenflow.demo/guide/customer-journey-mapping-explained,21,Customer Journey Mapping,28
+https://lumenflow.demo/post/how-to-customer-journey-mapping-4,21,Customer Journey Mapping,
+https://lumenflow.demo/case-study/customer-journey-mapping-umbrella,21,Customer Journey Mapping,
+https://lumenflow.demo/post/voice-of-customer-tutorial-1,22,Voice of Customer,
+https://lumenflow.demo/blog/voice-of-customer-best-practices,22,Voice of Customer,
+https://lumenflow.demo/guide/voice-of-customer-explained,22,Voice of Customer,
+https://lumenflow.demo/post/how-to-voice-of-customer-4,22,Voice of Customer,29
+https://lumenflow.demo/post/nps-tracking-tutorial-1,23,NPS Tracking,0
+https://lumenflow.demo/blog/nps-tracking-best-practices,23,NPS Tracking,
+https://lumenflow.demo/guide/nps-tracking-explained,23,NPS Tracking,
+https://lumenflow.demo/post/how-to-nps-tracking-4,23,NPS Tracking,0
+https://lumenflow.demo/post/heatmaps-tutorial-1,24,Heatmaps,1
+https://lumenflow.demo/blog/heatmaps-best-practices,24,Heatmaps,1
+https://lumenflow.demo/guide/heatmaps-explained,24,Heatmaps,
+https://lumenflow.demo/post/how-to-heatmaps-4,24,Heatmaps,1
+https://lumenflow.demo/case-study/heatmaps-umbrella,24,Heatmaps,
+https://lumenflow.demo/post/personalization-engine-tutorial-1,25,Personalization Engine,
+https://lumenflow.demo/blog/personalization-engine-best-practices,25,Personalization Engine,2
+https://lumenflow.demo/guide/personalization-engine-explained,25,Personalization Engine,2
+https://lumenflow.demo/post/how-to-personalization-engine-4,25,Personalization Engine,
+https://lumenflow.demo/post/push-notification-strategy-tutorial-1,26,Push Notification Strategy,3
+https://lumenflow.demo/blog/push-notification-strategy-best-practices,26,Push Notification Strategy,3
+https://lumenflow.demo/guide/push-notification-strategy-explained,26,Push Notification Strategy,
+https://lumenflow.demo/post/email-engagement-tutorial-1,27,Email Engagement,
+https://lumenflow.demo/blog/email-engagement-best-practices,27,Email Engagement,
+https://lumenflow.demo/guide/email-engagement-explained,27,Email Engagement,
+https://lumenflow.demo/post/how-to-email-engagement-4,27,Email Engagement,
+https://lumenflow.demo/case-study/email-engagement-umbrella,27,Email Engagement,4
+https://lumenflow.demo/post/conversion-optimization-tutorial-1,28,Conversion Optimization,5
+https://lumenflow.demo/blog/conversion-optimization-best-practices,28,Conversion Optimization,
+https://lumenflow.demo/guide/conversion-optimization-explained,28,Conversion Optimization,
+https://lumenflow.demo/post/how-to-conversion-optimization-4,28,Conversion Optimization,
+https://lumenflow.demo/case-study/conversion-optimization-umbrella,28,Conversion Optimization,
+https://lumenflow.demo/post/conversion-optimization-tutorial-6,28,Conversion Optimization,
+https://lumenflow.demo/blog/conversion-optimization-best-practices,28,Conversion Optimization,
+https://lumenflow.demo/guide/conversion-optimization-explained,28,Conversion Optimization,5
+https://lumenflow.demo/post/saas-metrics-tutorial-1,29,SaaS Metrics,
+https://lumenflow.demo/blog/saas-metrics-best-practices,29,SaaS Metrics,
+https://lumenflow.demo/guide/saas-metrics-explained,29,SaaS Metrics,
+https://lumenflow.demo/post/how-to-saas-metrics-4,29,SaaS Metrics,6
+https://lumenflow.demo/case-study/saas-metrics-umbrella,29,SaaS Metrics,6
+https://lumenflow.demo/post/saas-metrics-tutorial-6,29,SaaS Metrics,
+https://lumenflow.demo/orphan-page-1,-1,,
+https://lumenflow.demo/orphan-page-2,-1,,
+https://lumenflow.demo/orphan-page-3,-1,,
+https://lumenflow.demo/orphan-page-4,-1,,
+https://lumenflow.demo/orphan-page-5,-1,,
+https://lumenflow.demo/orphan-page-6,-1,,
+https://lumenflow.demo/orphan-page-7,-1,,
+https://lumenflow.demo/orphan-page-8,-1,,

@@ -1,0 +1,141 @@
+url,brand_score,tone_alignment,tone_matches,style_match,avg_sentence_length,violations,rating
+https://lumenflow.demo/guide/product-telemetry-explained,25,25%,concise,No,15.4,jargon detected,Off-brand
+https://lumenflow.demo/post/how-to-a-b-testing-framework-4,25,25%,"pragmatic, authoritative",Yes,13.4,fluff words detected,Off-brand
+https://lumenflow.demo/blog/retention-metrics-best-practices,28,28%,"authoritative, concise",No,12.5,passive voice,Off-brand
+https://lumenflow.demo/guide/cohort-reporting-explained,32,32%,"authoritative, data-driven",No,13.8,jargon detected,Off-brand
+https://lumenflow.demo/case-study/product-telemetry-umbrella,34,34%,"pragmatic, concise",Yes,16.8,passive voice,Off-brand
+https://lumenflow.demo/post/how-to-customer-analytics-platform-4,35,35%,pragmatic,Yes,17.1,passive voice,Needs work
+https://lumenflow.demo/post/marketing-attribution-tutorial-1,35,35%,authoritative,Yes,17.6,jargon detected,Needs work
+https://lumenflow.demo/case-study/user-behavior-tracking-umbrella,37,37%,"data-driven, concise, pragmatic",No,13.6,fluff words detected,Needs work
+https://lumenflow.demo/post/feature-adoption-tutorial-1,37,37%,"concise, pragmatic",Yes,18.9,fluff words detected,Needs work
+https://lumenflow.demo/case-study/data-pipeline-architecture-umbrella,37,37%,"authoritative, concise",Yes,15.0,jargon detected,Needs work
+https://lumenflow.demo/post/web-analytics-tutorial-1,37,37%,"data-driven, authoritative",Yes,13.3,jargon detected,Needs work
+https://lumenflow.demo/post/product-telemetry-tutorial-1,38,38%,concise,No,17.4,jargon detected,Needs work
+https://lumenflow.demo/post/how-to-user-behavior-tracking-4,38,38%,"authoritative, data-driven, pragmatic",Yes,16.1,,Needs work
+https://lumenflow.demo/case-study/onboarding-optimization-umbrella,38,38%,authoritative,Yes,16.0,jargon detected,Needs work
+https://lumenflow.demo/guide/marketing-attribution-explained,38,38%,"data-driven, concise",No,17.6,passive voice,Needs work
+https://lumenflow.demo/blog/customer-analytics-platform-best-practices,39,39%,"data-driven, authoritative, concise",No,12.0,passive voice,Needs work
+https://lumenflow.demo/guide/product-telemetry-explained,39,39%,"authoritative, concise, pragmatic",Yes,14.1,jargon detected,Needs work
+https://lumenflow.demo/blog/dashboard-building-best-practices,41,41%,authoritative,Yes,15.7,passive voice,Needs work
+https://lumenflow.demo/guide/e-commerce-tracking-explained,41,41%,data-driven,Yes,18.7,passive voice,Needs work
+https://lumenflow.demo/case-study/feature-adoption-umbrella,44,44%,"authoritative, pragmatic, concise",No,14.1,fluff words detected,Needs work
+https://lumenflow.demo/post/cohort-reporting-tutorial-1,46,46%,"concise, authoritative",Yes,16.5,fluff words detected,Needs work
+https://lumenflow.demo/guide/retention-metrics-explained,46,46%,"data-driven, pragmatic",Yes,16.9,,Needs work
+https://lumenflow.demo/post/feature-adoption-tutorial-6,46,46%,concise,Yes,17.7,jargon detected,Needs work
+https://lumenflow.demo/blog/web-analytics-best-practices,46,46%,"authoritative, pragmatic",Yes,12.2,passive voice,Needs work
+https://lumenflow.demo/guide/user-behavior-tracking-explained,49,49%,"concise, data-driven, authoritative",No,12.5,,Needs work
+https://lumenflow.demo/post/product-led-growth-tutorial-1,50,50%,"authoritative, data-driven",Yes,13.0,fluff words detected,Needs work
+https://lumenflow.demo/post/self-serve-analytics-tutorial-1,51,51%,"authoritative, pragmatic, concise",No,16.2,fluff words detected,Needs work
+https://lumenflow.demo/blog/privacy-compliance-best-practices,52,52%,data-driven,No,17.2,jargon detected,Needs work
+https://lumenflow.demo/post/data-pipeline-architecture-tutorial-6,53,53%,"concise, authoritative, data-driven",Yes,11.8,passive voice,Needs work
+https://lumenflow.demo/guide/product-led-growth-explained,53,53%,authoritative,No,15.3,fluff words detected,Needs work
+https://lumenflow.demo/guide/funnel-analysis-explained,54,54%,"concise, pragmatic, authoritative",Yes,18.3,,Needs work
+https://lumenflow.demo/post/how-to-dashboard-building-4,55,55%,concise,Yes,14.8,fluff words detected,Partially aligned
+https://lumenflow.demo/blog/user-behavior-tracking-best-practices,56,56%,pragmatic,Yes,11.1,,Partially aligned
+https://lumenflow.demo/post/retention-metrics-tutorial-1,56,56%,"authoritative, pragmatic, concise",No,11.4,jargon detected,Partially aligned
+https://lumenflow.demo/case-study/retention-metrics-umbrella,56,56%,"authoritative, concise, data-driven",No,13.4,,Partially aligned
+https://lumenflow.demo/case-study/funnel-analysis-umbrella,57,57%,concise,Yes,15.1,passive voice,Partially aligned
+https://lumenflow.demo/blog/a-b-testing-framework-best-practices,57,57%,pragmatic,Yes,13.0,fluff words detected,Partially aligned
+https://lumenflow.demo/guide/a-b-testing-framework-explained,57,57%,"concise, pragmatic",No,15.3,jargon detected,Partially aligned
+https://lumenflow.demo/post/how-to-privacy-compliance-4,57,57%,authoritative,No,17.9,passive voice,Partially aligned
+https://lumenflow.demo/blog/marketing-attribution-best-practices,57,57%,"data-driven, concise",Yes,12.6,passive voice,Partially aligned
+https://lumenflow.demo/post/funnel-analysis-tutorial-1,58,58%,concise,No,16.5,jargon detected,Partially aligned
+https://lumenflow.demo/blog/cohort-reporting-best-practices,58,58%,"authoritative, pragmatic",Yes,17.7,,Partially aligned
+https://lumenflow.demo/guide/churn-prediction-explained,58,58%,concise,No,15.5,passive voice,Partially aligned
+https://lumenflow.demo/blog/event-schema-design-best-practices,58,58%,"pragmatic, authoritative",Yes,15.2,jargon detected,Partially aligned
+https://lumenflow.demo/case-study/dashboard-building-umbrella,58,58%,"authoritative, concise",Yes,16.1,fluff words detected,Partially aligned
+https://lumenflow.demo/blog/product-telemetry-best-practices,59,59%,"concise, pragmatic, data-driven",Yes,11.3,jargon detected,Partially aligned
+https://lumenflow.demo/post/how-to-web-analytics-4,59,59%,authoritative,No,16.6,jargon detected,Partially aligned
+https://lumenflow.demo/case-study/customer-analytics-platform-umbrella,61,61%,data-driven,No,15.0,passive voice,Partially aligned
+https://lumenflow.demo/blog/product-telemetry-best-practices,61,61%,"concise, pragmatic, data-driven",Yes,15.1,jargon detected,Partially aligned
+https://lumenflow.demo/post/how-to-retention-metrics-4,61,61%,"pragmatic, data-driven",Yes,11.4,passive voice,Partially aligned
+https://lumenflow.demo/post/a-b-testing-framework-tutorial-6,61,61%,data-driven,No,18.5,fluff words detected,Partially aligned
+https://lumenflow.demo/post/marketing-attribution-tutorial-6,61,61%,"data-driven, authoritative, pragmatic",No,15.4,passive voice,Partially aligned
+https://lumenflow.demo/post/user-behavior-tracking-tutorial-1,62,62%,"authoritative, concise",No,16.6,passive voice,Partially aligned
+https://lumenflow.demo/blog/funnel-analysis-best-practices,62,62%,concise,No,14.3,passive voice,Partially aligned
+https://lumenflow.demo/case-study/cohort-reporting-umbrella,62,62%,"authoritative, pragmatic",Yes,17.0,,Partially aligned
+https://lumenflow.demo/post/a-b-testing-framework-tutorial-1,62,62%,concise,Yes,12.1,jargon detected,Partially aligned
+https://lumenflow.demo/post/how-to-event-schema-design-4,62,62%,"authoritative, concise, pragmatic",No,12.9,passive voice,Partially aligned
+https://lumenflow.demo/blog/self-serve-analytics-best-practices,62,62%,data-driven,No,18.5,fluff words detected,Partially aligned
+https://lumenflow.demo/post/web-analytics-tutorial-6,62,62%,"concise, pragmatic",No,13.5,jargon detected,Partially aligned
+https://lumenflow.demo/post/how-to-user-behavior-tracking-9,63,63%,"pragmatic, authoritative, data-driven",Yes,15.9,passive voice,Partially aligned
+https://lumenflow.demo/post/how-to-e-commerce-tracking-4,63,63%,"concise, pragmatic",Yes,11.8,,Partially aligned
+https://lumenflow.demo/post/user-behavior-tracking-tutorial-6,64,64%,"data-driven, concise, pragmatic",Yes,18.3,fluff words detected,Partially aligned
+https://lumenflow.demo/post/how-to-session-replay-4,64,64%,"concise, pragmatic",Yes,17.9,,Partially aligned
+https://lumenflow.demo/post/onboarding-optimization-tutorial-1,65,65%,"concise, authoritative, data-driven",No,12.4,passive voice,Partially aligned
+https://lumenflow.demo/guide/dashboard-building-explained,65,65%,"data-driven, concise",No,17.2,,Partially aligned
+https://lumenflow.demo/blog/customer-analytics-platform-best-practices,66,66%,pragmatic,Yes,16.1,jargon detected,Partially aligned
+https://lumenflow.demo/blog/customer-analytics-platform-best-practices,66,66%,concise,No,17.1,jargon detected,Partially aligned
+https://lumenflow.demo/blog/retention-metrics-best-practices,66,66%,"concise, authoritative",Yes,17.4,passive voice,Partially aligned
+https://lumenflow.demo/blog/mobile-app-analytics-best-practices,66,66%,"authoritative, concise, data-driven",No,17.2,,Partially aligned
+https://lumenflow.demo/blog/e-commerce-tracking-best-practices,66,66%,"concise, authoritative",Yes,11.7,jargon detected,Partially aligned
+https://lumenflow.demo/case-study/a-b-testing-framework-umbrella,67,67%,"concise, pragmatic, data-driven",No,14.0,passive voice,Partially aligned
+https://lumenflow.demo/case-study/a-b-testing-framework-umbrella,67,67%,data-driven,Yes,13.1,fluff words detected,Partially aligned
+https://lumenflow.demo/case-study/session-replay-umbrella,67,67%,"concise, authoritative, pragmatic",No,16.7,passive voice,Partially aligned
+https://lumenflow.demo/post/how-to-data-pipeline-architecture-4,67,67%,"pragmatic, authoritative, concise",No,15.7,,Partially aligned
+https://lumenflow.demo/post/churn-prediction-tutorial-1,68,68%,"concise, data-driven, authoritative",Yes,16.7,,Partially aligned
+https://lumenflow.demo/case-study/event-schema-design-umbrella,68,68%,"authoritative, concise, pragmatic",No,11.0,fluff words detected,Partially aligned
+https://lumenflow.demo/guide/dashboard-building-explained,68,68%,authoritative,No,11.6,fluff words detected,Partially aligned
+https://lumenflow.demo/guide/self-serve-analytics-explained,68,68%,"authoritative, concise, data-driven",Yes,15.7,,Partially aligned
+https://lumenflow.demo/post/how-to-marketing-attribution-4,68,68%,authoritative,No,13.2,fluff words detected,Partially aligned
+https://lumenflow.demo/post/customer-analytics-platform-tutorial-6,69,69%,"authoritative, concise",Yes,13.5,jargon detected,Partially aligned
+https://lumenflow.demo/post/funnel-analysis-tutorial-6,69,69%,"pragmatic, data-driven",Yes,15.6,,Partially aligned
+https://lumenflow.demo/post/event-schema-design-tutorial-1,69,69%,pragmatic,Yes,14.9,jargon detected,Partially aligned
+https://lumenflow.demo/guide/event-schema-design-explained,69,69%,"data-driven, pragmatic",Yes,11.2,jargon detected,Partially aligned
+https://lumenflow.demo/guide/privacy-compliance-explained,69,69%,"data-driven, pragmatic",Yes,13.4,,Partially aligned
+https://lumenflow.demo/case-study/customer-analytics-platform-umbrella,70,70%,"pragmatic, authoritative, data-driven",No,13.4,,Partially aligned
+https://lumenflow.demo/guide/feature-adoption-explained,70,70%,"data-driven, pragmatic, concise",Yes,12.7,passive voice,Partially aligned
+https://lumenflow.demo/post/how-to-product-telemetry-4,71,71%,"pragmatic, authoritative, data-driven",No,13.6,,Partially aligned
+https://lumenflow.demo/guide/session-replay-explained,71,71%,"authoritative, pragmatic, concise",No,12.5,fluff words detected,Partially aligned
+https://lumenflow.demo/case-study/mobile-app-analytics-umbrella,71,71%,data-driven,No,11.6,passive voice,Partially aligned
+https://lumenflow.demo/blog/marketing-attribution-best-practices,71,71%,"authoritative, data-driven",No,15.8,,Partially aligned
+https://lumenflow.demo/blog/funnel-analysis-best-practices,72,72%,"data-driven, authoritative",No,12.4,fluff words detected,Partially aligned
+https://lumenflow.demo/post/customer-analytics-platform-tutorial-1,73,73%,"data-driven, concise",Yes,13.4,fluff words detected,Partially aligned
+https://lumenflow.demo/post/privacy-compliance-tutorial-1,73,73%,"data-driven, authoritative",Yes,15.3,fluff words detected,Partially aligned
+https://lumenflow.demo/case-study/web-analytics-umbrella,73,73%,concise,Yes,15.7,,Partially aligned
+https://lumenflow.demo/blog/feature-adoption-best-practices,74,74%,pragmatic,No,14.9,jargon detected,Partially aligned
+https://lumenflow.demo/post/how-to-a-b-testing-framework-9,74,74%,pragmatic,Yes,16.2,,Partially aligned
+https://lumenflow.demo/blog/session-replay-best-practices,74,74%,"authoritative, concise, data-driven",Yes,13.4,fluff words detected,Partially aligned
+https://lumenflow.demo/post/customer-analytics-platform-tutorial-11,75,75%,"pragmatic, authoritative",No,11.4,,On-brand
+https://lumenflow.demo/post/how-to-self-serve-analytics-4,76,76%,"concise, authoritative",No,11.7,fluff words detected,On-brand
+https://lumenflow.demo/post/how-to-mobile-app-analytics-4,76,76%,"authoritative, concise",No,13.2,,On-brand
+https://lumenflow.demo/blog/product-led-growth-best-practices,76,76%,"authoritative, data-driven",Yes,15.7,jargon detected,On-brand
+https://lumenflow.demo/blog/feature-adoption-best-practices,77,77%,"concise, pragmatic",No,11.4,,On-brand
+https://lumenflow.demo/post/how-to-feature-adoption-4,77,77%,"data-driven, concise, authoritative",Yes,18.7,fluff words detected,On-brand
+https://lumenflow.demo/post/how-to-churn-prediction-4,77,77%,"pragmatic, authoritative, data-driven",No,14.3,,On-brand
+https://lumenflow.demo/post/event-schema-design-tutorial-6,77,77%,pragmatic,No,12.6,,On-brand
+https://lumenflow.demo/guide/customer-analytics-platform-explained,78,78%,"concise, data-driven, pragmatic",No,18.5,jargon detected,On-brand
+https://lumenflow.demo/post/how-to-cohort-reporting-4,78,78%,authoritative,Yes,11.5,,On-brand
+https://lumenflow.demo/guide/onboarding-optimization-explained,79,79%,"pragmatic, data-driven",No,16.3,,On-brand
+https://lumenflow.demo/blog/a-b-testing-framework-best-practices,79,79%,"concise, authoritative",No,17.3,jargon detected,On-brand
+https://lumenflow.demo/post/data-pipeline-architecture-tutorial-1,79,79%,"pragmatic, concise, authoritative",Yes,13.6,jargon detected,On-brand
+https://lumenflow.demo/post/mobile-app-analytics-tutorial-1,79,79%,"concise, authoritative",Yes,13.1,,On-brand
+https://lumenflow.demo/post/how-to-customer-analytics-platform-9,80,80%,"pragmatic, authoritative",Yes,11.7,passive voice,On-brand
+https://lumenflow.demo/post/dashboard-building-tutorial-1,80,80%,"authoritative, pragmatic",Yes,18.1,jargon detected,On-brand
+https://lumenflow.demo/blog/self-serve-analytics-best-practices,80,80%,"data-driven, concise, authoritative",No,15.2,jargon detected,On-brand
+https://lumenflow.demo/post/retention-metrics-tutorial-6,81,81%,"authoritative, concise, data-driven",No,17.2,passive voice,On-brand
+https://lumenflow.demo/post/e-commerce-tracking-tutorial-1,81,81%,data-driven,Yes,14.6,jargon detected,On-brand
+https://lumenflow.demo/guide/retention-metrics-explained,82,82%,concise,No,15.5,fluff words detected,On-brand
+https://lumenflow.demo/guide/a-b-testing-framework-explained,82,82%,concise,Yes,12.1,,On-brand
+https://lumenflow.demo/blog/data-pipeline-architecture-best-practices,83,83%,"data-driven, authoritative",Yes,16.6,fluff words detected,On-brand
+https://lumenflow.demo/blog/dashboard-building-best-practices,83,83%,pragmatic,Yes,11.4,jargon detected,On-brand
+https://lumenflow.demo/guide/customer-analytics-platform-explained,84,84%,"authoritative, pragmatic, data-driven",Yes,16.3,jargon detected,On-brand
+https://lumenflow.demo/guide/user-behavior-tracking-explained,84,84%,"pragmatic, concise, authoritative",Yes,12.6,jargon detected,On-brand
+https://lumenflow.demo/post/cohort-reporting-tutorial-6,84,84%,"pragmatic, data-driven, authoritative",Yes,18.9,fluff words detected,On-brand
+https://lumenflow.demo/case-study/self-serve-analytics-umbrella,84,84%,pragmatic,No,15.7,,On-brand
+https://lumenflow.demo/case-study/user-behavior-tracking-umbrella,85,85%,authoritative,No,16.2,passive voice,On-brand
+https://lumenflow.demo/guide/data-pipeline-architecture-explained,85,85%,pragmatic,No,14.0,,On-brand
+https://lumenflow.demo/blog/user-behavior-tracking-best-practices,86,86%,concise,No,17.5,fluff words detected,On-brand
+https://lumenflow.demo/post/user-behavior-tracking-tutorial-11,87,87%,"pragmatic, concise",Yes,13.1,jargon detected,On-brand
+https://lumenflow.demo/blog/churn-prediction-best-practices,87,87%,"data-driven, concise",Yes,18.5,passive voice,On-brand
+https://lumenflow.demo/post/self-serve-analytics-tutorial-6,88,88%,concise,Yes,14.6,,On-brand
+https://lumenflow.demo/post/session-replay-tutorial-1,90,90%,"concise, pragmatic",Yes,13.8,passive voice,On-brand
+https://lumenflow.demo/guide/mobile-app-analytics-explained,91,91%,data-driven,No,13.9,fluff words detected,On-brand
+https://lumenflow.demo/post/how-to-funnel-analysis-4,92,92%,"authoritative, data-driven, concise",No,11.9,fluff words detected,On-brand
+https://lumenflow.demo/blog/onboarding-optimization-best-practices,92,92%,data-driven,Yes,14.3,fluff words detected,On-brand
+https://lumenflow.demo/post/how-to-onboarding-optimization-4,92,92%,"pragmatic, concise, authoritative",Yes,15.0,passive voice,On-brand
+https://lumenflow.demo/guide/web-analytics-explained,92,92%,concise,No,11.8,fluff words detected,On-brand
+https://lumenflow.demo/post/how-to-retention-metrics-9,93,93%,authoritative,No,12.8,fluff words detected,On-brand
+https://lumenflow.demo/post/dashboard-building-tutorial-6,93,93%,"pragmatic, concise",Yes,16.0,fluff words detected,On-brand
+https://lumenflow.demo/case-study/marketing-attribution-umbrella,94,94%,"concise, pragmatic",No,11.5,jargon detected,On-brand
+https://lumenflow.demo/post/product-telemetry-tutorial-6,95,95%,"authoritative, data-driven, pragmatic",Yes,11.2,jargon detected,On-brand

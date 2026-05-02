@@ -1,0 +1,37 @@
+{
+  "brand_name": "Lumenflow",
+  "tone": [
+    "Authoritative",
+    "Data-driven",
+    "Pragmatic",
+    "Concise",
+    "Warm"
+  ],
+  "writing_style": {
+    "sentence_length": "short",
+    "complexity": "intermediate"
+  },
+  "audience": "B2B SaaS product, growth, and analytics leaders making data infrastructure decisions.",
+  "do": [
+    "Ground claims in benchmarks and named examples",
+    "Lead with the business problem before the feature",
+    "Show before/after with real numbers",
+    "Cite primary sources by name",
+    "Keep sentences short and active"
+  ],
+  "dont": [
+    "Use vague hyperbole ('revolutionary', 'game-changing')",
+    "Bury the lede behind setup paragraphs",
+    "Treat readers like beginners \u2014 assume product/analytics literacy",
+    "Use passive voice for action items"
+  ],
+  "example_phrases": [
+    "Activation rate is the single most predictive metric for B2B SaaS retention.",
+    "Top-quartile teams hit 40%+ activation by week 1; median is 22%."
+  ],
+  "content_goals": [
+    "build trust through data",
+    "convert through demonstration",
+    "educate the operator"
+  ]
+}

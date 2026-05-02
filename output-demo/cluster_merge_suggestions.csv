@@ -1,0 +1,5 @@
+cluster_a_id,cluster_a_name,cluster_b_id,cluster_b_name,similarity,recommendation
+4,Cohort Reporting,5,Retention Metrics,0.86,MERGE
+16,Mobile App Analytics,17,Web Analytics,0.74,REVIEW for merge
+3,Funnel Analysis,28,Conversion Optimization,0.72,REVIEW for merge
+10,Event Schema Design,1,Product Telemetry,0.71,REVIEW for merge

@@ -1,0 +1,48 @@
+{
+  "composite": 71,
+  "composite_label": "yellow",
+  "subscores": {
+    "coverage": {
+      "score": 88,
+      "label": "green",
+      "detail": "30 clusters across ~190 URLs"
+    },
+    "cannibalization": {
+      "score": 55,
+      "label": "yellow",
+      "detail": "8 of 30 clusters cannibalized"
+    },
+    "freshness": {
+      "score": 64,
+      "label": "yellow",
+      "detail": "32 of 120 pages 6+ months old"
+    },
+    "brand": {
+      "score": 65,
+      "label": "yellow",
+      "detail": "avg 65/100 across 140 pages"
+    },
+    "competitive": {
+      "score": 68,
+      "label": "yellow",
+      "detail": "covers 78 of 115 unique topics vs competitors"
+    }
+  },
+  "deltas": {
+    "composite": 4,
+    "coverage": 2,
+    "cannibalization": 6,
+    "freshness": -1,
+    "brand": 0,
+    "competitive": 3
+  },
+  "sparkline": [
+    56,
+    61,
+    64,
+    67,
+    71
+  ],
+  "site_name": "Lumenflow",
+  "site_domain": "lumenflow.demo"
+}

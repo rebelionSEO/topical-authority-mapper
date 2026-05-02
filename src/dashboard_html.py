@@ -46,6 +46,10 @@ def build_html(
     enhancements=None,
     health=None,
     thin_groups=None,
+    vector_map=None,
+    ask_examples=None,
+    agent_run=None,
+    agent_lessons_md="",
 ):
     if enhancements is None:
         enhancements = {}
@@ -53,6 +57,10 @@ def build_html(
         health = {}
     if thin_groups is None:
         thin_groups = []
+    if vector_map is None:
+        vector_map = {"points": [], "cluster_legend": {}}
+    if ask_examples is None:
+        ask_examples = []
 
     site_name = escape(site_config.name) if site_config else "Site"
     site_domain = site_config.domain if site_config else ""
@@ -306,6 +314,10 @@ a:hover{{ text-decoration:underline; }}
   <div class="nav-tab" data-tab="brand">Brand Voice</div>
   <div class="nav-tab" data-tab="competitors">Competitors</div>
   <div class="nav-tab" data-tab="ideas">Content Ideas <span class="nbadge nbadge-b">{enhancements.get("content_ideas_stats", {}).get("total", 0)}</span></div>
+  <div class="nav-tab" data-tab="vmap">Vector Map <span class="nbadge nbadge-b">{len(vector_map.get("points", []))}</span></div>
+  <div class="nav-tab" data-tab="ask">Ask the Audit</div>
+  <div class="nav-tab" data-tab="agent">Recommend Agent</div>
+  <div class="nav-tab" data-tab="lessons">Lessons</div>
   <div class="nav-tab" data-tab="merges">Cluster Merges</div>
   <div class="nav-tab" data-tab="explorer">URL Explorer</div>
 </div>
@@ -417,6 +429,30 @@ a:hover{{ text-decoration:underline; }}
   <div id="ideas-content"></div>
 </div>
 
+<!-- ==================== TAB: VECTOR MAP ==================== -->
+<div class="tab-pane" id="tab-vmap">
+  <div class="card">
+    <h3>Embedding Space (2D projection) <span data-tip="Each dot is one URL. Coordinates come from a UMAP projection of the page's average chunk embedding. Pages near each other share semantic content.">ⓘ</span></h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">The same FAISS index that drove cluster discovery during the audit is reused as a RAG retrieval store after. <strong>Two jobs, one artifact.</strong> Each dot below is one URL. Color = cluster. Hover for details.</p>
+    <div id="vmap-chart" style="height:520px"></div>
+  </div>
+</div>
+
+<!-- ==================== TAB: ASK THE AUDIT ==================== -->
+<div class="tab-pane" id="tab-ask">
+  <div id="ask-content"></div>
+</div>
+
+<!-- ==================== TAB: RECOMMEND AGENT ==================== -->
+<div class="tab-pane" id="tab-agent">
+  <div id="agent-content"></div>
+</div>
+
+<!-- ==================== TAB: LESSONS ==================== -->
+<div class="tab-pane" id="tab-lessons">
+  <div id="lessons-content"></div>
+</div>
+
 <!-- ==================== TAB: MERGES ==================== -->
 <div class="tab-pane" id="tab-merges">
   <div id="merges-content"></div>
@@ -460,6 +496,10 @@ const THIN_TOOLS={json.dumps(thin_tools)};
 const THIN_LOCAL={json.dumps(thin_local)};
 const THIN_OTHER={json.dumps(thin_other)};
 const THIN_GROUPS={json.dumps(thin_groups)};
+const VECTOR_MAP={json.dumps(vector_map)};
+const ASK_EXAMPLES={json.dumps(ask_examples)};
+const AGENT_RUN={json.dumps(agent_run)};
+const AGENT_LESSONS_MD={json.dumps(agent_lessons_md)};
 const ENH={json.dumps(enhancements)};
 const HEALTH={json.dumps(health)};
 const ACTIONS={json.dumps(actions)};
@@ -1285,6 +1325,212 @@ registerLazy('ideas',()=>{{
   }}
   renderIdeas();
   document.getElementById('idea-search').addEventListener('input',debounce(e=>renderIdeas(e.target.value),150));
+}});
+
+// ============================================================================
+// VECTOR MAP TAB — 2D embedding projection per URL (one dot = one URL)
+// ============================================================================
+registerLazy('vmap',()=>{{
+  const root=document.getElementById('vmap-chart');
+  const points=(VECTOR_MAP&&VECTOR_MAP.points)||[];
+  if(!points.length){{ root.innerHTML=emptyState('No vector map data','Run a full pipeline (no --skip-pipeline) to build the embedding projection.'); return; }}
+
+  // Group by cluster_id so we can color-code + show a legend
+  const byCluster={{}};
+  points.forEach(p=>{{
+    const k=p.cluster_id;
+    if(!byCluster[k]) byCluster[k]={{name:p.cluster_name||('Cluster '+k),x:[],y:[],urls:[],intent:[],ptype:[]}};
+    byCluster[k].x.push(p.x); byCluster[k].y.push(p.y);
+    byCluster[k].urls.push(p.url); byCluster[k].intent.push(p.intent||''); byCluster[k].ptype.push(p.page_type||'');
+  }});
+
+  const palette=['#6366f1','#8b5cf6','#3b82f6','#22c55e','#eab308','#ef4444','#f97316','#06b6d4','#a78bfa','#84cc16','#ec4899','#14b8a6','#f59e0b','#10b981','#6b7280'];
+  const traces=Object.entries(byCluster).map(([cid,g],i)=>{{
+    const isOrphan=parseInt(cid)===-1;
+    const color=isOrphan?'#4b5563':palette[i%palette.length];
+    return {{
+      type:'scattergl',mode:'markers',name:g.name,
+      x:g.x,y:g.y,
+      text:g.urls.map((u,idx)=>{{ const slug=stripUrl(u); const intent=g.intent[idx]?` · ${{g.intent[idx]}}`:''; const pt=g.ptype[idx]?` · ${{g.ptype[idx]}}`:''; return `<b>${{g.name}}</b><br>${{slug}}${{pt}}${{intent}}`; }}),
+      hovertemplate:'%{{text}}<extra></extra>',
+      marker:{{size:isOrphan?5:8,color:color,line:{{width:0.5,color:'#0f1117'}},opacity:isOrphan?0.5:0.85}},
+    }};
+  }});
+  Plotly.newPlot('vmap-chart',traces,{{
+    ...PL,height:520,
+    margin:{{t:10,b:10,l:10,r:10}},
+    xaxis:{{showgrid:false,zeroline:false,showticklabels:false}},
+    yaxis:{{showgrid:false,zeroline:false,showticklabels:false}},
+    showlegend:true,legend:{{font:{{size:11,color:'#e4e4e7'}},bgcolor:'rgba(0,0,0,0)',orientation:'v'}},
+    hovermode:'closest',
+  }},{{responsive:true,displayModeBar:false}});
+}});
+
+// ============================================================================
+// ASK THE AUDIT TAB — RAG Q&A (pre-rendered at build time)
+// ============================================================================
+registerLazy('ask',()=>{{
+  const root=document.getElementById('ask-content');
+  const examples=ASK_EXAMPLES||[];
+  const intro=`<div class="card">
+    <h3>Ask the Audit <span data-tip="Same FAISS index that drove cluster discovery during the audit is reused as a RAG retrieval store. The pipeline produces this side-effect-free.">ⓘ</span></h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">During the audit we build a vector index of every page chunk for clustering. That same index doubles as a <strong>RAG retrieval store</strong> — meaning you can ask questions about your own content and get grounded answers with citations.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px"><strong>One artifact, two jobs.</strong> Audit runs once a quarter; Q&amp;A is daily.</p>
+    <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:ui-monospace,SF Mono,Menlo,monospace;font-size:12px;color:var(--text)">
+      <span style="color:var(--muted)">$</span> python -m src.site_chat <span style="color:var(--green)">"What does our site say about activation rate benchmarks?"</span>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">Add <code style="background:var(--surface-alt);padding:1px 6px;border-radius:3px">--json</code> for machine-readable output. Costs ~$0.001/question with Claude Haiku.</p>
+  </div>`;
+
+  if(!examples.length){{
+    root.innerHTML=intro+emptyState('No pre-rendered examples','Re-run the pipeline with <code>--use-llm</code> and ANTHROPIC_API_KEY set to embed sample Q&amp;A in the dashboard.');
+    return;
+  }}
+
+  function renderExample(ex,i){{
+    const cites=(ex.citations||[]).map(c=>`<li><a href="${{c.url}}" target="_blank" style="font-size:12px">[${{c.n}}] ${{stripUrl(c.url)}}</a><div style="font-size:11px;color:var(--muted);margin-left:18px;font-style:italic">${{(c.snippet||'').replace(/[<>]/g,'')}}</div></li>`).join('');
+    const answerHtml=(ex.answer||'').split(/\\n\\n+/).map(p=>`<p style="margin:0 0 10px 0">${{p.replace(/\\n/g,'<br>')}}</p>`).join('');
+    return `<div class="card">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Sample Q${{i+1}} — pre-rendered at build time</div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:10px;color:var(--text)">${{ex.q}}</div>
+      <div style="font-size:13px;line-height:1.6;color:var(--text)">${{answerHtml}}</div>
+      <div style="margin-top:12px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Sources (${{ex.used_chunks||0}} chunks retrieved)</div>
+      <ul style="padding-left:18px;margin:0">${{cites}}</ul>
+    </div>`;
+  }}
+
+  root.innerHTML=intro+examples.map(renderExample).join('');
+}});
+
+// ============================================================================
+// RECOMMEND AGENT TAB — pre-rendered latest run trace
+// ============================================================================
+registerLazy('agent',()=>{{
+  const root=document.getElementById('agent-content');
+  const intro=`<div class="card">
+    <h3>Recommendation Agent <span data-tip="A real agent (not a function call) — Sonnet 4.6 with 10 tools over the audit data + RAG retrieval. Includes self-critique pass + a learning loop that records lessons to memory after every run.">ⓘ</span></h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">Built on top of the audit, not inside it. The pipeline produces structured artifacts; this agent treats them as a toolset to answer real operator questions like <em>"What should we publish next month?"</em></p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">After each run, a self-critique pass writes lessons to <code>runs/&lt;site&gt;/agent_lessons.md</code>. Future runs read the latest 30 — so the agent literally gets sharper over time.</p>
+    <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:ui-monospace,SF Mono,Menlo,monospace;font-size:12px;color:var(--text)">
+      <span style="color:var(--muted)">$</span> python -m src.agent.recommend <span style="color:var(--green)">"What should we publish next month?"</span>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">Cost: ~$0.30-0.50/run with Claude Sonnet 4.6. Streams reasoning + tool calls live. Trace persisted to <code>runs/&lt;site&gt;/agent_runs/</code>.</p>
+  </div>`;
+
+  if(!AGENT_RUN){{
+    root.innerHTML=intro+emptyState('No agent runs yet','Run <code>python -m src.agent.recommend "your question"</code> to capture a trace. The next dashboard render will show it here.');
+    return;
+  }}
+
+  const r=AGENT_RUN;
+  const final=r.final_recommendation||{{}};
+  const actions=final.actions||[];
+  const calls=r.tool_calls||[];
+
+  // Action color by type
+  const actionColors={{write:'var(--green)',refresh:'var(--yellow)',skip:'var(--muted)',investigate:'var(--accent)'}};
+
+  function renderAction(a,i){{
+    const color=actionColors[(a.action||'').toLowerCase()]||'var(--muted)';
+    const label=(a.action||'').toUpperCase();
+    const sources=(a.sources||[]).map(s=>`<code style="background:var(--surface-alt);padding:1px 5px;border-radius:3px;font-size:10px">${{s}}</code>`).join(' ');
+    return `<div class="card" style="border-left:3px solid ${{color}}">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+        <span class="b" style="background:${{color}}22;color:${{color}}">${{label}}</span>
+        <strong style="font-size:14px">${{i+1}}. ${{a.title||'(no title)'}}</strong>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px">${{a.reason||''}}</div>
+      ${{sources?`<div style="font-size:10px;color:var(--muted);margin-top:4px">Sources: ${{sources}}</div>`:''}}
+    </div>`;
+  }}
+
+  function renderCall(c,i){{
+    const args=JSON.stringify(c.arguments||{{}}).slice(0,150);
+    const isFinal=c.name==='final_recommend';
+    const isLesson=c.name==='note_lesson';
+    const color=isFinal?'var(--green)':isLesson?'var(--yellow)':'var(--accent)';
+    return `<div style="border-left:2px solid ${{color}};padding:6px 12px;margin-bottom:6px;font-size:12px;background:var(--surface-alt);border-radius:0 4px 4px 0">
+      <div style="display:flex;justify-content:space-between"><strong style="color:${{color}}">${{i+1}}. ${{c.name}}</strong><span style="color:var(--muted);font-size:10px">${{(c.result_preview||'').length}} chars</span></div>
+      <code style="font-size:10px;color:var(--muted);word-break:break-all">${{args}}</code>
+    </div>`;
+  }}
+
+  const risksHtml=(final.risks||[]).map(r=>`<li>${{r}}</li>`).join('');
+
+  root.innerHTML=intro+`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <strong>Latest run</strong>
+        <span style="font-size:11px;color:var(--muted)">${{r.run_id}} · ${{r.model}} · ${{calls.length}} tool calls · ${{r.self_critique_lessons_captured||0}} lessons captured</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px"><strong>Question:</strong> ${{r.question}}</div>
+      <div style="font-size:13px;line-height:1.5;margin-bottom:6px"><strong>Summary:</strong> ${{final.summary||'(no summary)'}}</div>
+      <div style="font-size:11px;color:var(--muted)">Confidence: <strong>${{(final.confidence||'unknown').toUpperCase()}}</strong></div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+      <div>
+        <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Recommended Actions (${{actions.length}})</h3>
+        ${{actions.map(renderAction).join('')||emptyState('No actions in this run')}}
+        ${{risksHtml?`<div class="card" style="border-left:3px solid var(--orange)"><h3 style="margin-bottom:6px;color:var(--orange);font-size:12px">Risks &amp; caveats</h3><ul style="font-size:12px;line-height:1.7;padding-left:18px;color:var(--text)">${{risksHtml}}</ul></div>`:''}}
+      </div>
+      <div>
+        <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Tool Trace</h3>
+        ${{calls.map(renderCall).join('')}}
+      </div>
+    </div>`;
+}});
+
+// ============================================================================
+// LESSONS TAB — read the agent_lessons.md ledger
+// ============================================================================
+registerLazy('lessons',()=>{{
+  const root=document.getElementById('lessons-content');
+  const intro=`<div class="card">
+    <h3>Agent Lessons <span data-tip="Append-only markdown file at runs/<site>/agent_lessons.md. The latest 30 lessons get prepended to the agent's system prompt on every run, so it gets smarter over time.">ⓘ</span></h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">After every recommendation run, the agent does a self-critique pass and writes lessons to memory. Operators can also append manual lessons via the feedback CLI.</p>
+    <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:ui-monospace,SF Mono,Menlo,monospace;font-size:11px;color:var(--text)">
+      <div style="color:var(--muted)"># Reject a specific recommendation</div>
+      <div><span style="color:var(--muted)">$</span> python -m src.agent.feedback --reject <span style="color:var(--green)">"What is PQL?"</span> --reason <span style="color:var(--green)">"already at /post/pql-guide"</span></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">The file is human-editable — fix wrong lessons or delete bad ones directly. The agent picks up your edits next run.</p>
+  </div>`;
+
+  if(!AGENT_LESSONS_MD||!AGENT_LESSONS_MD.trim()){{
+    root.innerHTML=intro+emptyState('No lessons captured yet','Run the agent (<code>python -m src.agent.recommend</code>) — the self-critique pass will start populating the ledger.');
+    return;
+  }}
+
+  // Render markdown crudely (we don't bundle a full markdown lib for file:// safety).
+  // Convert ## -> h3, **bold** -> strong, _italic_ -> em, paragraphs by blank lines.
+  function escape(s){{ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }}
+  function md(s){{
+    let out=escape(s);
+    out=out.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>');
+    out=out.replace(/_([^_]+)_/g,'<em>$1</em>');
+    out=out.replace(/`([^`]+)`/g,'<code style="background:var(--surface-alt);padding:1px 5px;border-radius:3px;font-size:11px">$1</code>');
+    return out;
+  }}
+  const lines=AGENT_LESSONS_MD.split('\\n');
+  let html='';
+  let i=0;
+  // Skip the intro until we hit the first ## entry
+  while(i<lines.length&&!lines[i].startsWith('## ')) i++;
+  // Render each lesson as a card
+  while(i<lines.length){{
+    if(!lines[i].startsWith('## ')){{ i++; continue; }}
+    const header=lines[i].slice(3);
+    i++;
+    let body='';
+    while(i<lines.length&&!lines[i].startsWith('## ')){{
+      body+=lines[i]+'\\n';
+      i++;
+    }}
+    const headerMd=md(header);
+    const bodyHtml=body.split(/\\n\\n+/).map(p=>p.trim()).filter(Boolean).map(p=>`<p style="margin:0 0 8px 0">${{md(p)}}</p>`).join('');
+    html+=`<div class="card"><div style="font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">${{headerMd}}</div>${{bodyHtml}}</div>`;
+  }}
+  if(!html) html=emptyState('No parseable lessons found','Check the raw file at runs/&lt;site&gt;/agent_lessons.md');
+  root.innerHTML=intro+html;
 }});
 
 // ============================================================================

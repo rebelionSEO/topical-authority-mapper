@@ -198,6 +198,15 @@ def run(
     labels = cluster_embeddings(reduced)
     chunks_df["cluster_id"] = labels
 
+    # Persist chunks_df + the embedding row index so the RAG retrieval layer can
+    # look up actual chunk text for any URL or cluster. The chunks_df row order
+    # matches the embeddings array row order — we save that ordering explicitly.
+    try:
+        chunks_df.reset_index(drop=True).to_pickle(os.path.join(cache_dir(), "chunks_df.pkl"))
+        logger.info("Persisted chunks_df.pkl for RAG retrieval (%d chunks)", len(chunks_df))
+    except Exception:
+        logger.exception("Could not persist chunks_df (RAG features may degrade)")
+
     # --- 5. Extract keywords & name clusters ---
     logger.info("Step 4/6: Extracting cluster keywords...")
     cluster_info = extract_cluster_keywords(chunks_df)
@@ -205,6 +214,39 @@ def run(
     if cluster_info.empty:
         logger.warning("No clusters found. All points classified as noise.")
         cluster_info = pd.DataFrame(columns=["cluster_id", "cluster_name", "keywords"])
+
+    # --- 5b. RAG-enhanced cluster naming — replaces TF-IDF top-phrase noise ---
+    # ("make sure", "according cox", "octopus deploy") with clean human-readable names.
+    try:
+        from src import llm_advisor as _llm
+        if _llm.is_enabled() and not cluster_info.empty:
+            from src.retrieval import RetrievalIndex
+            # Build a lightweight in-memory retrieval object directly from current chunks/embeddings
+            # (we already have them in scope — no need to round-trip through cache).
+            tmp_idx = RetrievalIndex(chunks_df=chunks_df, embeddings=embeddings, faiss_index=None)
+            renamed = 0
+            for i, row in cluster_info.iterrows():
+                cid = int(row["cluster_id"])
+                if cid < 0:
+                    continue
+                samples = tmp_idx.search_by_cluster(cid, k=4)
+                if not samples:
+                    continue
+                kw_list = [k.strip() for k in str(row.get("keywords", "")).split(",")][:8]
+                suggestion = _llm.suggest_cluster_name(
+                    current_name=str(row["cluster_name"]),
+                    keywords=kw_list,
+                    sample_chunks=[s.text for s in samples],
+                )
+                if suggestion and suggestion.get("cluster_name"):
+                    new_name = str(suggestion["cluster_name"]).strip()
+                    if new_name and new_name.lower() != str(row["cluster_name"]).lower():
+                        cluster_info.at[i, "cluster_name"] = new_name
+                        renamed += 1
+            if renamed:
+                logger.info("LLM cluster naming: renamed %d/%d clusters from TF-IDF defaults", renamed, len(cluster_info))
+    except Exception:
+        logger.exception("LLM cluster naming failed (non-fatal — TF-IDF names retained)")
 
     # --- 6. URL-level mapping ---
     logger.info("Step 5/6: Mapping clusters to URLs...")
@@ -342,6 +384,14 @@ def run(
         )
     except Exception:
         logger.exception("Site health / exec summary / artifact generation failed (non-fatal)")
+
+    # --- 13b-2. Vector map (2D embedding projection per URL) ---
+    try:
+        from src.vector_map import build_vector_map
+        logger.info("Building vector map (2D embedding projection)...")
+        build_vector_map(chunks_df=chunks_df, embeddings=embeddings, cluster_info=cluster_info)
+    except Exception:
+        logger.exception("Vector map build failed (non-fatal)")
 
     # --- 13c. Render the interactive dashboard + PDF report ---
     # These read from the output dir, so they need to run after exports + health are done.

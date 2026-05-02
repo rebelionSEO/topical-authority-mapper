@@ -1,0 +1,16 @@
+{
+  "name": "Lumenflow",
+  "domain": "lumenflow.demo",
+  "sitemaps": [
+    "https://lumenflow.demo/sitemap.xml"
+  ],
+  "competitors": [
+    "BeaconAnalytics",
+    "PulseGrid",
+    "Insightspark"
+  ],
+  "output_dir": "/Users/gmejia/topical-authority-mapper/output-demo",
+  "industry": "b2b-saas",
+  "skip_patterns": [],
+  "listing_patterns": []
+}

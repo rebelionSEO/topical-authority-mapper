@@ -326,6 +326,22 @@ def generate_dashboard(site_config: SiteConfig | None = None):
     if llm_on:
         logger.info("LLM cannibalization advisor enabled (%d clusters to analyze)", len(cannib_full))
 
+    # RAG: load the retrieval index once so we can fetch actual chunk text per URL
+    # for the cannibalization advisor. The advisor stops guessing from URL patterns
+    # and starts judging from real page content.
+    rag_index = None
+    if llm_on:
+        try:
+            from src.retrieval import get_index as _get_rag_index
+            rag_index = _get_rag_index()
+            if rag_index:
+                logger.info("RAG retrieval index loaded (%d chunks, %d URLs) — cannib advisor will see actual content",
+                            rag_index.n_chunks, rag_index.n_urls)
+            else:
+                logger.info("RAG index not available — cannib advisor will judge from URL patterns only")
+        except Exception:
+            logger.exception("Could not load RAG index (cannib advisor degrades to URL-only)")
+
     for cidx, (_, row) in enumerate(cannib_full.iterrows()):
         urls = [u.strip() for u in str(row["urls"]).split(" | ") if u.strip()]
         url_details_list = []
@@ -344,14 +360,24 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         kw_row = clusters[clusters["cluster_id"] == row["cluster_id"]]
         keywords_list = (kw_row.iloc[0]["keywords"].split(", ") if len(kw_row) > 0 else [])
 
-        # Try LLM advisor first
+        # Try LLM advisor first — with RAG context if the index is available
         llm_verdict = None
         if llm_on:
             try:
+                # RAG: pull a representative chunk per URL in this cluster
+                chunks_by_url = None
+                if rag_index:
+                    chunks_by_url = {}
+                    for u in url_details_list:
+                        per_url_chunks = rag_index.search_by_url(u["url"], k=1)
+                        if per_url_chunks:
+                            chunks_by_url[u["url"]] = per_url_chunks[0].text
+
                 llm_verdict = llm_advisor.advise_cannibalization(
                     cluster_name=str(row["cluster_name"]),
                     keywords=keywords_list,
                     urls=url_details_list,
+                    chunks_by_url=chunks_by_url,
                 )
                 if llm_verdict:
                     logger.info("  [%d/%d] LLM verdict on '%s': %s",
@@ -714,6 +740,61 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         except Exception:
             logger.exception("Could not compute site health for dashboard")
 
+    # Vector map (2D embedding projection per URL) — built by main.py Step 13b-2
+    vector_map_data = {"points": [], "cluster_legend": {}}
+    vmap_path = os.path.join(out, "vector_map.json")
+    if os.path.exists(vmap_path):
+        try:
+            import json as _json
+            with open(vmap_path) as f:
+                vector_map_data = _json.load(f)
+        except Exception:
+            logger.exception("Could not load vector_map.json")
+
+    # Latest agent run + lessons (for the Recommend + Lessons tabs)
+    agent_run = None
+    agent_lessons_md = ""
+    try:
+        from src.agent import memory as _agent_mem
+        from src.agent import lessons as _agent_lessons
+        recent = _agent_mem.recent_runs(site_config.name, limit=1)
+        if recent:
+            full = _agent_mem.load_run_trace(site_config.name, recent[0]["run_id"])
+            if full:
+                agent_run = full
+        lpath = _agent_lessons.lessons_path(
+            site_config.name,
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "../runs")),
+        )
+        if os.path.exists(lpath):
+            with open(lpath) as f:
+                agent_lessons_md = f.read()
+    except Exception:
+        logger.exception("Could not load agent run / lessons (non-fatal)")
+
+    # Pre-render sample RAG Q&A for the Ask tab (file:// dashboards can't invoke the CLI live).
+    ask_examples = []
+    try:
+        from src import llm_advisor as _llm
+        if _llm.is_enabled():
+            from src.site_chat import ask as _ask
+            sample_questions = [
+                f"What does {site_config.name} say about its main differentiator?",
+                "Where does the site's content overlap most with competitors?",
+                "Which topics on this site are written for product marketers vs growth teams?",
+            ]
+            for q in sample_questions:
+                a = _ask(q, k=5)
+                ask_examples.append({
+                    "q": q,
+                    "answer": a.answer,
+                    "citations": a.citations[:5],
+                    "used_chunks": a.used_chunks,
+                })
+            logger.info("Pre-rendered %d Ask-the-Audit examples", len(ask_examples))
+    except Exception:
+        logger.exception("Could not pre-render Ask examples (non-fatal)")
+
     # Spoke cluster lookup for the URL Explorer (rename "Secondary" → "Spoke cluster")
     cluster_name_by_id = {int(r["cluster_id"]): r["cluster_name"] for _, r in clusters.iterrows()}
     for u in url_table:
@@ -748,6 +829,10 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         top_cannib_summary=top_cannib_summary,
         enhancements=enh,
         health=health_data,
+        vector_map=vector_map_data,
+        ask_examples=ask_examples,
+        agent_run=agent_run,
+        agent_lessons_md=agent_lessons_md,
     )
 
     out_path = os.path.join(out, "dashboard.html")

@@ -1,0 +1,18 @@
+{
+  "started_at": 1777755802.867527,
+  "checks_run": 9,
+  "summary": {
+    "critical": 0,
+    "warn": 1,
+    "info": 0
+  },
+  "findings": [
+    {
+      "severity": "WARN",
+      "check": "freshness.stale_files",
+      "message": "0 output files predate this run",
+      "file": null,
+      "sample": null
+    }
+  ]
+}

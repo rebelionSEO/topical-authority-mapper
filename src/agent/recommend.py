@@ -10,7 +10,7 @@ Orchestration:
 
 Run via:
     python -m src.agent.recommend "What should we publish next month?"
-    python -m src.agent.recommend --site Wynter "What should we refresh first?"
+    python -m src.agent.recommend --site Acme "What should we refresh first?"
 """
 
 import argparse

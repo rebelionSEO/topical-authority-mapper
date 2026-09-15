@@ -37,6 +37,7 @@ from src.config import (
 from src.embedding import build_faiss_index, compute_embeddings
 from src.ingestion import ingest_urls, parse_sitemap
 from src.output import detect_cannibalization, export_all
+from src.execution import isolated_audit, stage, note_stage, coverage
 
 
 def setup_logging(debug: bool = False):
@@ -106,6 +107,7 @@ def _load_yaml_config(path: str) -> dict:
     }
 
 
+@isolated_audit
 def run(
     input_file: Optional[str] = None,
     sitemap_url: Optional[str] = None,
@@ -134,10 +136,10 @@ def run(
     # --- 1. Load URLs ---
     if sitemap_url:
         logger.info("Parsing sitemap: %s", sitemap_url)
-        urls = parse_sitemap(sitemap_url)
+        urls = stage("sitemap", parse_sitemap, sitemap_url)
     elif input_file:
         logger.info("Loading URLs from %s", input_file)
-        urls = load_urls(input_file)
+        urls = stage("input", load_urls, input_file)
     else:
         logger.error("Provide either --input or --sitemap (or use --config). Exiting.")
         sys.exit(1)
@@ -176,7 +178,15 @@ def run(
 
     # --- 2. Ingest content ---
     logger.info("Step 1/6: Ingesting content...")
-    chunks_df, skipped = ingest_urls(urls)
+    chunks_df, skipped = stage("ingestion", ingest_urls, urls)
+    crawl_records = chunks_df.attrs.get("crawl_records", [])
+    pd.DataFrame(crawl_records, columns=["requested_url", "url", "final_url", "status_code", "canonical",
+                 "title", "h1", "robots", "indexability", "outcome", "reason", "word_count", "fetched_at"]).to_csv(
+        os.path.join(OUT, "crawl.csv"), index=False)
+    coverage(requested_urls=len(urls), analyzed_urls=chunks_df["url"].nunique(), skipped_requests=len(skipped),
+             failed_requests=sum(r["outcome"] == "failed" for r in crawl_records))
+    if any(r["outcome"] == "failed" for r in crawl_records):
+        note_stage("crawl_coverage", "partial", reason="Some pages could not be fetched or extracted")
 
     if chunks_df.empty:
         logger.error("No content extracted from any URL. Exiting.")
@@ -187,15 +197,15 @@ def run(
     # --- 3. Generate embeddings ---
     logger.info("Step 2/6: Generating embeddings...")
     cache_path = os.path.join(cache_dir(), "embeddings.pkl")
-    embeddings = compute_embeddings(
+    embeddings = stage("embeddings", compute_embeddings,
         texts=chunks_df["chunk_text"].tolist(),
         cache_path=cache_path if not debug else None,
     )
 
     # --- 4. Cluster ---
     logger.info("Step 3/6: Clustering...")
-    reduced = reduce_dimensions(embeddings)
-    labels = cluster_embeddings(reduced)
+    reduced = stage("dimensionality_reduction", reduce_dimensions, embeddings)
+    labels = stage("clustering", cluster_embeddings, reduced)
     chunks_df["cluster_id"] = labels
 
     # Persist chunks_df + the embedding row index so the RAG retrieval layer can
@@ -209,7 +219,7 @@ def run(
 
     # --- 5. Extract keywords & name clusters ---
     logger.info("Step 4/6: Extracting cluster keywords...")
-    cluster_info = extract_cluster_keywords(chunks_df)
+    cluster_info = stage("cluster_keywords", extract_cluster_keywords, chunks_df)
 
     if cluster_info.empty:
         logger.warning("No clusters found. All points classified as noise.")
@@ -251,6 +261,7 @@ def run(
     # --- 6. URL-level mapping ---
     logger.info("Step 5/6: Mapping clusters to URLs...")
     url_mapping = assign_url_clusters(chunks_df)
+    coverage(clusters=len(cluster_info), unassigned_urls=int((url_mapping["main_cluster"] == -1).sum()))
     url_mapping = url_mapping.merge(
         cluster_info[["cluster_id", "cluster_name"]].rename(columns={"cluster_id": "main_cluster"}),
         on="main_cluster",
@@ -291,7 +302,7 @@ def run(
         except Exception:
             logger.exception("Brand profile auto-generation failed (non-fatal)")
 
-    if brand_profile.get("tone") or brand_voice_pdf:
+    if (brand_profile.get("tone") or brand_voice_pdf) and not cluster_info.empty:
         logger.info("Step 6/6: Generating content recommendations...")
         recs = []
         for _, row in cluster_info.iterrows():
@@ -318,20 +329,28 @@ def run(
         from src.enhancements import score_content_freshness
         # Use the URLs we just analyzed as the HTML-scrape fallback
         target_urls = chunks_df["url"].drop_duplicates().tolist() if not chunks_df.empty else []
-        score_content_freshness(sitemap_urls=sitemap_list, fallback_urls=target_urls)
+        stage("freshness", score_content_freshness, sitemap_urls=sitemap_list, fallback_urls=target_urls)
     except Exception:
         logger.exception("Freshness scoring failed (non-fatal)")
 
     # --- 9c. Search intent classification ---
     try:
         from src.enhancements import classify_search_intent
-        classify_search_intent(chunks_df)
+        stage("intent", classify_search_intent, chunks_df)
     except Exception:
         logger.exception("Intent classification failed (non-fatal)")
 
     # --- 10. Export base outputs ---
+    from src.enhancements import compute_similarity_scores, detect_cluster_merges, score_brand_voice
+    stage("similarity", compute_similarity_scores, chunks_df, embeddings)
+    stage("cluster_merges", detect_cluster_merges, cluster_info, chunks_df, embeddings)
+    if os.path.exists(os.path.join(cache_dir(), "brand_profile.json")):
+        stage("brand_voice", score_brand_voice, chunks_df)
+    else:
+        score_brand_voice(chunks_df)
+        note_stage("brand_voice", "skipped", reason="No brand profile supplied")
     logger.info("Exporting results...")
-    export_all(cluster_info, url_mapping, cannibalization, skipped, recommendations)
+    stage("exports", export_all, cluster_info, url_mapping, cannibalization, skipped, recommendations)
 
     # --- 11. Competitor analysis (optional) ---
     content_ideas_df = pd.DataFrame()
@@ -339,12 +358,14 @@ def run(
         from src.competitor import run_competitor_analyses
 
         logger.info("Step 7: Competitor analysis (%d competitors)...", len(competitors))
-        succeeded = run_competitor_analyses(
+        succeeded = stage("competitors", run_competitor_analyses,
             competitors, cluster_info, name, max_urls_per_competitor=max_urls_per_competitor
         )
         # Persist resolved competitor list back into site config so downstream modules know
         site_config.competitors = succeeded
         save_site_config(site_config)
+        if len(succeeded) != len(competitors):
+            note_stage("competitors", "partial", requested=competitors, succeeded=succeeded)
         logger.info("Competitor analysis complete: %s", ", ".join(succeeded) if succeeded else "(none succeeded)")
 
         # --- 12. Generate content ideas from gap data ---
@@ -352,20 +373,25 @@ def run(
             from src.content_ideas import generate_content_ideas
 
             logger.info("Step 8: Generating content briefs from gap data...")
-            content_ideas_df = generate_content_ideas(site_config=site_config)
+            content_ideas_df = stage("content_ideas", generate_content_ideas, site_config=site_config)
             logger.info("Content ideas: %d briefs generated", len(content_ideas_df))
+
+    else:
+        note_stage("competitors", "skipped", reason="No competitors supplied")
 
     # --- 13. QA pass (must run before any render) ---
     from src.qa import run_qa, print_summary
 
     logger.info("Step 9: Running QA validation...")
-    qa_report = run_qa(run_started_at=run_started_at)
+    qa_report = stage("qa", run_qa, run_started_at=run_started_at)
     print_summary(qa_report)
     if qa_report.critical_count() > 0:
+        note_stage("qa", "failed", critical=qa_report.critical_count())
         logger.error(
             "QA found %d CRITICAL issues. Review output/qa_report.json before rendering the dashboard or PDF.",
             qa_report.critical_count(),
         )
+        raise RuntimeError("Audit validation failed; see qa_report.json. Reports were not rendered.")
 
     # --- 13b. Compute site health + 1-page exec summary + Claude artifact ---
     try:
@@ -374,10 +400,10 @@ def run(
         from src.dashboard_artifact import generate_artifact
 
         logger.info("Step 9b: Computing site health + exec summary + Claude artifact...")
-        health_snap = compute_health(site_config=site_config)
+        health_snap = stage("health", compute_health, site_config=site_config)
         write_health(health_snap)
-        exec_path = generate_exec_summary(site_config=site_config, health=health_snap)
-        artifact_path = generate_artifact(site_config=site_config)
+        exec_path = stage("executive_summary", generate_exec_summary, site_config=site_config, health=health_snap)
+        artifact_path = stage("dashboard_artifact", generate_artifact, site_config=site_config)
         logger.info(
             "Site Health: %d/100 (%s) -> exec %s, artifact %s",
             health_snap.composite, health_snap.composite_label, exec_path, artifact_path,
@@ -389,7 +415,7 @@ def run(
     try:
         from src.vector_map import build_vector_map
         logger.info("Building vector map (2D embedding projection)...")
-        build_vector_map(chunks_df=chunks_df, embeddings=embeddings, cluster_info=cluster_info)
+        stage("vector_map", build_vector_map, chunks_df=chunks_df, embeddings=embeddings, cluster_info=cluster_info)
     except Exception:
         logger.exception("Vector map build failed (non-fatal)")
 
@@ -399,7 +425,7 @@ def run(
         from src.dashboard import generate_dashboard
 
         logger.info("Step 9c: Rendering interactive dashboard...")
-        dash_path = generate_dashboard(site_config=site_config)
+        dash_path = stage("dashboard", generate_dashboard, site_config=site_config)
         logger.info("Dashboard rendered: %s", dash_path)
     except Exception:
         logger.exception("Dashboard render failed (non-fatal)")
@@ -408,7 +434,7 @@ def run(
         from src.report import generate_pdf
 
         logger.info("Step 9d: Rendering PDF report...")
-        pdf_path = generate_pdf(site_config=site_config)
+        pdf_path = stage("pdf", generate_pdf, site_config=site_config)
         logger.info("PDF report: %s", pdf_path)
     except Exception:
         logger.exception("PDF report render failed (non-fatal — wkhtmltopdf or Chrome may be missing)")
@@ -419,7 +445,7 @@ def run(
         from src.run_history import snapshot_run, diff_against_previous
 
         try:
-            metadata = snapshot_run(site_config, runs_root=runs_root or os.path.abspath("./runs"))
+            metadata = stage("snapshot", snapshot_run, site_config, runs_root=runs_root or os.path.abspath("./runs"))
             snapshot_path = metadata.snapshot_dir
             logger.info("Run snapshot saved: %s", snapshot_path)
             delta = diff_against_previous(site_config.name, runs_root=runs_root or os.path.abspath("./runs"))
@@ -433,8 +459,9 @@ def run(
 
     # --- Summary ---
     print("\n" + "=" * 60)
-    print("TOPICAL AUTHORITY MAPPER - COMPLETE")
+    print("TOPICAL AUTHORITY MAPPER - RESULTS")
     print("=" * 60)
+
     print(f"  Site:            {name} ({domain})")
     if industry:
         print(f"  Industry:        {industry}")
@@ -442,7 +469,7 @@ def run(
     print(f"  URLs skipped:    {len(skipped)}")
     print(f"  Total chunks:    {len(chunks_df)}")
     print(f"  Clusters found:  {len(cluster_info)}")
-    print(f"  Cannibalization: {len(cannibalization)} clusters flagged")
+    print(f"  Topic overlap:   {len(cannibalization)} clusters to review (unconfirmed)")
     if competitors:
         print(f"  Competitors:     {', '.join(site_config.competitors) or '(none)'}")
     if not content_ideas_df.empty:
@@ -456,6 +483,7 @@ def run(
         print(f"  Snapshot:        {snapshot_path}")
     print(f"  Output dir:      {OUT}/")
     print("=" * 60)
+    return {"snapshot_path": snapshot_path}
 
 
 def main():

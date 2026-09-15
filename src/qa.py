@@ -203,11 +203,11 @@ def check_similarity(report: QAReport, out_dir: str) -> None:
     df = _read_csv(os.path.join(out_dir, "similarity_scores.csv"))
     if df is None or df.empty:
         return
-    out_of_range = df[(df["similarity"] < 0) | (df["similarity"] > 1)]
+    out_of_range = df[(df["similarity"] < -1) | (df["similarity"] > 1)]
     if not out_of_range.empty:
         report.add(
             "CRITICAL", "similarity.out_of_range",
-            f"{len(out_of_range)} similarity scores outside [0, 1]",
+            f"{len(out_of_range)} similarity scores outside [-1, 1]",
             file="similarity_scores.csv", sample=out_of_range.head(3).to_dict("records"),
         )
     self_pairs = df[df["url_a"] == df["url_b"]]

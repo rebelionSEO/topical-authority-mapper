@@ -13,7 +13,7 @@ Takes any website's sitemaps (or a list of URLs), extracts all page content, con
 AI embeddings, clusters pages by topic, then layers on multiple analysis passes:
 
 - **Topic Clustering** — groups pages into semantic clusters (UMAP + HDBSCAN)
-- **Cannibalization Detection** — flags clusters where multiple URLs compete for the same keywords
+- **Potential Topic Overlap** — flags related URL groups for query/intent review; cluster membership alone does not confirm cannibalization
 - **Conversion Risk Analysis** — flags blog posts competing against service/money pages
 - **Near-Duplicate Detection** — page pairs with 80%+ content similarity
 - **Search Intent Classification** — informational, commercial, transactional, navigational
@@ -23,7 +23,60 @@ AI embeddings, clusters pages by topic, then layers on multiple analysis passes:
 - **Cluster Merge Suggestions** — fragmented clusters that should be combined
 - **Page Type Classification** — labels every URL (service, blog, case study, etc.)
 
-All ingestion + clustering uses local sentence-transformers. No LLM API calls. Zero token cost.
+Ingestion and clustering use local sentence-transformers, without LLM token charges.
+Optional LLM advisors and the recommendation agent use Anthropic and incur API costs.
+
+## Reliability improvements
+
+The pipeline now generates similarity, cluster-merge and brand-voice outputs explicitly.
+Missing brand data produces an empty table. Semantic similarity and topic membership
+are review signals, not proof of duplicate content or harmful search competition.
+`potential_topic_overlap.csv` is the descriptive export; `cannibalization.csv` remains
+a compatibility alias for existing consumers. Unconfirmed overlap does not contribute
+to Site Health. Other health dimensions remain heuristics, not ranking predictions.
+
+Run regression tests with `python -m pytest -q` after installing `requirements-test.txt`.
+Tests use a local encoder fixture and do not call paid APIs or download embedding models.
+See [implementation notes](docs/reliability.md) for scope and remaining work.
+
+## Isolated audit runs
+
+Each invocation creates `<output-dir>/audits/<site-key>/<run-id>/`, with a matching
+cache directory under `<cache-dir>/audits/`. Existing audit files are preserved.
+`--output-dir` and `--cache-dir` now specify roots, not the final audit folder.
+The CLI prints the exact output directory; Python callers receive it in the result.
+
+- `run_status.html`: execution state, configuration, coverage and failed/skipped analyses.
+- `run_manifest.json`: timestamps, stage states, source fingerprint and artifact hashes.
+- `crawl.csv`: one row per requested URL, including HTTP status, redirect destination,
+  canonical, robots directives, title/H1, word count and extraction outcome.
+
+The root cache stores `active_run.json`, pointing to the most recently started audit
+(including a failed audit, so older reports are not mistaken for current ones).
+Reusable embeddings and brand profiles are scoped by domain. For standalone commands
+with a custom cache root, set `TAM_CACHE_DIR=/path/to/cache`.
+
+The crawler uses sequential requests with connection reuse, two retries for transient
+HTTP failures, a five-redirect limit, robots.txt checks and bounded response sizes.
+Sitemap discovery handles nested indexes, gzip, duplicate URLs and cycles, with limits
+of 100 documents, eight levels and 50,000 URLs. Canonical hints are recorded, not treated
+as verified Google selections. `eligible` means no blocking directive was observed;
+it does not establish that a page is indexed. No JavaScript rendering is performed.
+
+Freshness uses the same recursive sitemap reader. Missing dates get an HTML fallback
+(up to 100 URLs), then `Unknown`; unknown dates do not count as fresh in Site Health.
+
+### Live smoke test (explicit network access)
+
+```bash
+TAM_LLM_PROVIDER=none python -m src.main --input examples/smoke-urls.txt \
+  --site-name "Python tutorial smoke test" \
+  --cache-dir .local/smoke-cache --output-dir .local/smoke-output --no-snapshot
+```
+
+This reads eight public Python documentation pages and downloads the local embedding
+model if necessary. It does not invoke a paid LLM. Open the output directory printed
+by the command. Regular CI tests use controlled fixtures without external network calls.
 
 ## Quick Start
 
@@ -78,7 +131,7 @@ See [`examples/site.yaml`](examples/site.yaml) for the full schema.
 
 ## Output Files
 
-All outputs go to `--output-dir` (default `./output/`):
+Outputs go to a new audit subdirectory inside `--output-dir` (default root `./output/`):
 
 | File | Description |
 |------|-------------|
@@ -196,27 +249,26 @@ In `src/config.py`:
 
 ## Caching
 
-Embeddings are cached at `<cache_dir>/embeddings.pkl`. Delete the cache directory to force a
-full recomputation:
-
-```bash
-rm -rf cache/
-```
+Embeddings are cached at `<cache_dir>/embeddings.pkl.npz`, with a fingerprint of
+the ordered input texts and model identity. Changed inputs, changed model IDs and corrupt
+caches trigger recomputation. Old embedding pickles are ignored and never deserialized.
+Custom encoders must supply a stable `model_id` to opt into persistent caching.
+Changing files requires rerunning the main pipeline before using retrieval or reports.
 
 The site config (`site_config.json`) and brand profile (`brand_profile.json`) also live in
 the cache directory.
 
 ## Hosted weekly audits via GitHub Actions
 
-The repo ships with a workflow that runs the pipeline weekly against every site config
-in `examples/sites/*.yaml`, commits the snapshot back to the repo, and publishes the
-dashboards to GitHub Pages.
+The repo ships with a workflow that runs the pipeline weekly against every configured
+site in `examples/sites/*.yaml` and uploads outputs as workflow artifacts. It does not
+commit snapshots or deploy GitHub Pages. Artifact access follows repository visibility
+and GitHub permissions; use a private repository for confidential audit data.
 
 ### One-time setup
 
 1. **Push this repo to GitHub** (it must be a GitHub-hosted repo).
-2. **Enable Pages:** repo → Settings → Pages → Source: **GitHub Actions**.
-3. **Allow Actions to write to the repo:** Settings → Actions → General → Workflow permissions: **Read and write permissions**.
+2. Enable GitHub Actions. The workflow only requires read access to repository contents.
 
 ### Add sites
 
@@ -229,7 +281,8 @@ Drop one YAML per site into [`examples/sites/`](examples/sites/). See [`examples
 
 ### Where the dashboards live
 
-After the first successful run, your dashboards are at:
+Download the audit artifact and open the dashboard inside `output/audits/<site-key>/<run-id>/`.
+The following Pages paths are examples for a future, separately configured deployment:
 
 ```
 https://<github-username>.github.io/<repo-name>/                 # Index of all sites
@@ -244,14 +297,13 @@ artifact `.tsx` (downloadable).
 
 ### Run snapshots
 
-Each weekly run uploads its outputs as a workflow artifact (private to the repo,
-14-day retention). Snapshots are NOT committed back to the repo — keeping per-site
+Each weekly run uploads its outputs as a workflow artifact (14-day retention).
+Artifact visibility follows repository permissions. Snapshots are NOT committed back to the repo — keeping per-site
 audit data out of a public repo is a hard rule (`runs/` is gitignored). If you
 need persistent history, push snapshots to a private sibling repo via deploy key
 or PAT.
 
 ### Cost
 
-Free tier covers it: ~5-8 min per site per run with the model + pip cache warm. With
-4 sites running weekly that's ~25 min/month, well under the GitHub Actions free
-allotment (2,000 minutes/month for free accounts).
+Runtime depends on site size, extraction latency and enabled analyses. Measure actual
+workflow duration before estimating runner costs; optional LLM calls are billed separately.

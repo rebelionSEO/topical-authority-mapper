@@ -16,7 +16,8 @@ def detect_cannibalization(url_mapping: pd.DataFrame, cluster_info: pd.DataFrame
 
     Flags clusters with more URLs than CANNIBALIZATION_URL_THRESHOLD.
     """
-    cluster_url_counts = url_mapping.groupby("main_cluster")["url"].apply(list).reset_index()
+    eligible = url_mapping[url_mapping["main_cluster"] != -1].drop_duplicates("url")
+    cluster_url_counts = eligible.groupby("main_cluster")["url"].apply(list).reset_index()
     cluster_url_counts.columns = ["cluster_id", "urls"]
 
     # Filter to clusters with potential cannibalization
@@ -44,11 +45,8 @@ def detect_cannibalization(url_mapping: pd.DataFrame, cluster_info: pd.DataFrame
 
 def _recommend_action(url_count: int) -> str:
     """Generate recommendation based on cannibalization severity."""
-    if url_count <= 3:
-        return "Review: differentiate content angles or consolidate into single authoritative page"
-    if url_count <= 5:
-        return "High priority: merge weaker pages into strongest performer, redirect others"
-    return "Critical: significant topic overlap — consolidate aggressively, keep 1-2 pages max"
+    return ("Potential topic overlap, not confirmed cannibalization. Review query and intent "
+            "overlap before changing pages; related supporting pages can be healthy.")
 
 
 def export_all(
@@ -75,6 +73,7 @@ def export_all(
     # 3. cannibalization.csv
     cannib_path = os.path.join(OUT, "cannibalization.csv")
     cannibalization.to_csv(cannib_path, index=False)
+    cannibalization.to_csv(os.path.join(OUT, "potential_topic_overlap.csv"), index=False)
     logger.info("Exported cannibalization report to %s", cannib_path)
 
     # 4. recommendations.csv (if brand voice is available)
@@ -93,5 +92,10 @@ def export_all(
         skipped_df.drop(columns=["details"], inplace=True)
         skipped_df.to_csv(skipped_path, index=False)
         logger.info("Exported skipped URLs to %s", skipped_path)
+    else:
+        pd.DataFrame(columns=["url", "reason"]).to_csv(os.path.join(OUT, "skipped_urls.csv"), index=False)
+    if recommendations is None or recommendations.empty:
+        pd.DataFrame(columns=["cluster_id", "cluster_name", "content_type", "tone", "angle", "cta_style"]).to_csv(
+            os.path.join(OUT, "recommendations.csv"), index=False)
 
     logger.info("All outputs exported to %s/", OUT)

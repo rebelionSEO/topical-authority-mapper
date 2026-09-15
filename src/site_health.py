@@ -139,6 +139,9 @@ def _score_freshness(out: str) -> Optional[Subscore]:
     fresh = _read_csv(os.path.join(out, "content_freshness.csv"))
     if fresh is None or fresh.empty:
         return None
+    fresh = fresh[fresh["freshness"].notna() & (fresh["freshness"] != "Unknown")]
+    if fresh.empty:
+        return None
     total = len(fresh)
     stale = ((fresh["freshness"].astype(str).str.contains("Stale|Decaying", na=False)).sum())
     pct_healthy = (total - stale) / total if total else 1
@@ -221,7 +224,8 @@ def compute_health(site_config: Optional[SiteConfig] = None) -> HealthSnapshot:
     out = output_dir()
     raw = {
         "coverage": _score_coverage(out),
-        "cannibalization": _score_cannibalization(out),
+        # Cluster membership cannot establish harmful search competition.
+        "cannibalization": None,
         "freshness": _score_freshness(out),
         "brand": _score_brand(out),
         "competitive": _score_competitive(out),

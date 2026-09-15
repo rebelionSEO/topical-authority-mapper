@@ -185,15 +185,15 @@ def generate_dashboard(site_config: SiteConfig | None = None):
 
     from src.enhancements import is_intentionally_thin, classify_page_type
     thin = skipped[skipped["reason"].str.contains("thin", na=False)].copy()
-    thin["is_listing"] = thin["url"].apply(is_intentionally_thin)
+    thin["is_listing"] = thin["url"].apply(is_intentionally_thin).astype(bool)
     thin["page_type"] = thin["url"].apply(classify_page_type)
     thin_actionable = thin[~thin["is_listing"]].copy()
     thin_listings = thin[thin["is_listing"]].copy()
 
     thin_actionable["category"] = thin_actionable["url"].apply(_classify_thin)
-    thin_actionable["recommendation"] = thin_actionable.apply(
-        lambda r: _thin_recommendation(r["url"], r["category"]), axis=1
-    )
+    thin_actionable["recommendation"] = [
+        _thin_recommendation(r["url"], r["category"]) for _, r in thin_actionable.iterrows()
+    ]
     thin_actionable["word_count"] = thin_actionable["reason"].str.extract(r"(\d+)").astype(float).fillna(0).astype(int)
 
     # LLM thin-content judgment — drops false positives the regex couldn't catch
@@ -401,32 +401,17 @@ def generate_dashboard(site_config: SiteConfig | None = None):
             for u in url_details_list:
                 v = per_url_lookup.get(u["slug"]) or per_url_lookup.get(u["url"])
                 if v:
-                    u["recommendation"] = v.get("verdict", "MERGE")
-                    u["action"] = v.get("action") or "Consolidate per LLM advisor"
+                    u["recommendation"] = v.get("verdict", "REVIEW")
+                    u["action"] = v.get("action") or "Review query and intent evidence"
                 else:
-                    u["recommendation"] = "MERGE"
-                    u["action"] = "Consolidate (no per-URL verdict from advisor)"
+                    u["recommendation"] = "REVIEW"
+                    u["action"] = "Insufficient evidence: no per-URL verdict from advisor"
             winner_slug = llm_verdict.get("winner_url")
         else:
             # Rule-based fallback
-            winner_idx = _pick_winner(url_details_list)
-            winner_slug = url_details_list[winner_idx]["slug"] if winner_idx is not None else None
-            for i, u in enumerate(url_details_list):
-                if i == winner_idx:
-                    u["recommendation"] = "WINNER"
-                    u["action"] = f"KEEP — strongest candidate (page type: {u['type']}, intent: {u['intent_primary'] or 'n/a'}). Consolidate the others into this URL."
-                else:
-                    winner_intent = url_details_list[winner_idx]["intent_primary"] if winner_idx is not None else ""
-                    same_intent = u["intent_primary"] == winner_intent if winner_intent else True
-                    if u["type"] == "service" and url_details_list[winner_idx]["type"] == "service":
-                        u["recommendation"] = "REVIEW"
-                        u["action"] = "REVIEW — two service pages on the same topic. Pick the one with stronger rankings; consolidate the other."
-                    elif same_intent:
-                        u["recommendation"] = "MERGE"
-                        u["action"] = f"MERGE INTO winner via 301 → {winner_slug}"
-                    else:
-                        u["recommendation"] = "DIFFERENTIATE"
-                        u["action"] = f"DIFFERENTIATE — different intent ({u['intent_primary'] or 'n/a'}) than winner. Re-target with unique angle, or merge."
+            for u in url_details_list:
+                u["recommendation"] = "REVIEW"
+                u["action"] = "Potential overlap: verify queries and intent. Supporting pages may be complementary."
 
         # Sort: winner first, then non-exclude, then exclude (false-positives last)
         rec_order = {"WINNER": 0, "REVIEW": 1, "DIFFERENTIATE": 2, "MERGE": 3, "EXCLUDE": 9}
@@ -469,6 +454,12 @@ def generate_dashboard(site_config: SiteConfig | None = None):
         elif row["url_count"] >= 6:
             severity = "high"
         else:
+            severity = "moderate"
+
+        if not llm_verdict:
+            analysis = "Potential topic overlap only. Shared cluster membership does not establish search competition."
+            is_real_cannib = None
+            has_conversion_risk = False
             severity = "moderate"
 
         cannib_detail.append({

@@ -200,8 +200,8 @@ Top cannibalization offenders: {worst_offenders}.</p>
 
 <div class="issue critical-issue">
   <h4>C-001: Content Cannibalization ({total_cannib} clusters affected)</h4>
-  <p><span class="label">Problem:</span> {total_cannib} of {total_clusters} topic clusters have multiple URLs competing
-  for the same keywords. {len(critical_cannib)} clusters have 10+ competing pages. The top offenders:</p>
+  <p><span class="label">Evidence:</span> {total_cannib} of {total_clusters} topic clusters contain multiple related URLs.
+  This is potential overlap, not confirmed cannibalization. Query and intent evidence is required.</p>
   <table>
     <thead><tr><th>Cluster</th><th>Competing URLs</th><th>Severity</th></tr></thead>
     <tbody>"""
@@ -215,9 +215,8 @@ Top cannibalization offenders: {worst_offenders}.</p>
     html += """
     </tbody>
   </table>
-  <p><span class="label">Fix:</span> Audit each cannibalized cluster. For each, identify the strongest performing URL
-  (by traffic, backlinks, conversions) and consolidate the rest via 301 redirects or content merges.
-  Differentiate remaining pages with unique angles, keywords, and search intent.</p>
+  <p><span class="label">Next step:</span> Review queries, intent, traffic and conversions for each candidate.
+  Related pages may support each other. Do not merge or redirect based on cluster membership alone.</p>
   <p><span class="label">Growth Impact:</span> Consolidated authority on pillar pages improves rankings, reduces
   crawl waste, and concentrates link equity.</p>
   <p><span class="label">Effort:</span> High | 4-6 weeks (phased by cluster priority)</p>
@@ -545,7 +544,7 @@ core questions a strong piece must answer.</p>"""
 The structural issues that most directly impact rankings, in priority order:</p>
 
 <ol style="margin:8px 0 12px 20px;font-size:11px;line-height:1.8;">
-  <li><strong>Cannibalization &mdash; {total_cannib} clusters</strong>{' (priority #1: this is the biggest lever).' if has_critical_cannib else '.'} Consolidate competing pages into single pillars per topic. Largest gains come from clusters with 10+ competing URLs.</li>
+  <li><strong>Potential topic overlap &mdash; {total_cannib} clusters.</strong> Validate queries and intent before recommending consolidation. Impact is not measured.</li>
   <li><strong>Thin content &mdash; {len(thin)} pages</strong>{' (significant crawl waste).' if has_thin else '.'} Expand to 500+ words or noindex.</li>
   <li><strong>Orphan pages &mdash; {noise_count} pages</strong> with no semantic cluster. Either build supporting content, merge, or noindex.</li>
 </ol>

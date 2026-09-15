@@ -4,9 +4,10 @@ import json
 import logging
 import os
 import re
+import copy
 from typing import Optional
 
-from src.config import CACHE_DIR
+from src.config import cache_dir
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ def extract_brand_voice_from_pdf(pdf_path: str) -> dict:
 
 def _parse_brand_text(text: str) -> dict:
     """Parse extracted text into structured brand profile."""
-    profile = BRAND_PROFILE_TEMPLATE.copy()
+    profile = copy.deepcopy(BRAND_PROFILE_TEMPLATE)
     profile["writing_style"] = BRAND_PROFILE_TEMPLATE["writing_style"].copy()
 
     lines = text.split("\n")
@@ -157,10 +158,10 @@ def load_or_create_brand_profile(pdf_path: Optional[str] = None, profile_path: O
     3. Return empty template
     """
     if profile_path is None:
-        profile_path = os.path.join(CACHE_DIR, "brand_profile.json")
+        profile_path = os.path.join(cache_dir(), "brand_profile.json")
 
     # Check for existing profile
-    if os.path.exists(profile_path):
+    if not pdf_path and os.path.exists(profile_path):
         logger.info("Loading existing brand profile from %s", profile_path)
         with open(profile_path, "r") as f:
             return json.load(f)
@@ -179,7 +180,7 @@ def load_or_create_brand_profile(pdf_path: Optional[str] = None, profile_path: O
 def save_brand_profile(profile: dict, path: Optional[str] = None):
     """Save brand profile to JSON."""
     if path is None:
-        path = os.path.join(CACHE_DIR, "brand_profile.json")
+        path = os.path.join(cache_dir(), "brand_profile.json")
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:

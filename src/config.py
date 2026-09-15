@@ -147,7 +147,17 @@ def set_runtime_cache_dir(path: Optional[str]) -> None:
 
 def cache_dir() -> str:
     """Resolve the active cache directory."""
-    return _RUNTIME_CACHE_DIR or CACHE_DIR
+    root = cache_root()
+    pointer = os.path.join(root, "active_run.json")
+    if os.path.isfile(pointer):
+        with open(pointer) as f:
+            return json.load(f)["cache_dir"]
+    return root
+
+
+def cache_root() -> str:
+    """Configured root, before resolving the latest audit pointer."""
+    return _RUNTIME_CACHE_DIR or os.environ.get("TAM_CACHE_DIR") or CACHE_DIR
 
 
 def output_dir() -> str:

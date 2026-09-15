@@ -84,7 +84,7 @@ def build_html(
     # Action items — dedupe what's already shown in nav badges + key findings
     actions = []
     if critical_count:
-        actions.append({"priority": "P1", "action": f"Consolidate {critical_count} critical cannibalized clusters (10+ competing URLs)", "impact": "High", "effort": "2 weeks"})
+        actions.append({"priority": "P1", "action": f"Validate query and intent overlap in {critical_count} large topic clusters", "impact": "Unverified", "effort": "Review"})
     near_dupes = len([s for s in enhancements.get("similarity", []) if s.get("similarity", 0) >= 0.92])
     if near_dupes:
         actions.append({"priority": "P1", "action": f"Merge {near_dupes} near-duplicate page pairs (92%+ similarity)", "impact": "High", "effort": "1 week"})
@@ -289,6 +289,7 @@ a:hover{{ text-decoration:underline; }}
 </style>
 </head>
 <body>
+<p style="padding:8px 32px"><a href="run_status.html">Execution status, data coverage and failures</a></p>
 
 <div id="toast"></div>
 
@@ -306,7 +307,7 @@ a:hover{{ text-decoration:underline; }}
 <div class="nav" id="nav" role="tablist">
   <div class="nav-tab active" data-tab="summary">Summary</div>
   <div class="nav-tab" data-tab="clusters">Topic Clusters <span class="nbadge nbadge-b">{stats['total_clusters']}</span></div>
-  <div class="nav-tab" data-tab="cannib">Cannibalization <span class="nbadge nbadge-r">{stats['cannib_flags']}</span></div>
+  <div class="nav-tab" data-tab="cannib">Potential overlap <span class="nbadge nbadge-r">{stats['cannib_flags']}</span></div>
   <div class="nav-tab" data-tab="duplicates">Duplicates <span class="nbadge nbadge-r">{len(enhancements.get('similarity',[]))}</span></div>
   <div class="nav-tab" data-tab="thin">Thin Content <span class="nbadge nbadge-r">{total_thin}</span></div>
   <div class="nav-tab" data-tab="intent">Search Intent</div>
@@ -387,7 +388,7 @@ a:hover{{ text-decoration:underline; }}
 <!-- ==================== TAB: CANNIBALIZATION ==================== -->
 <div class="tab-pane" id="tab-cannib">
   <div class="card">
-    <h3>Cannibalization by cluster <span data-tip="Pages competing for the same keywords. Tall bars = strongest consolidation candidates.">ⓘ</span></h3>
+    <h3>Potential overlap by cluster <span data-tip="Shared topics are not proof of competing queries. Validate intent and search data before changing pages.">ⓘ</span></h3>
     <div id="cannib-bar-wrap" style="max-height:600px;overflow-y:auto"><div id="cannib-bar"></div></div>
   </div>
   <input type="text" class="srch" id="cannib-search" placeholder="Search cannibalized clusters...">

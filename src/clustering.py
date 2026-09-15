@@ -25,9 +25,11 @@ logger = logging.getLogger(__name__)
 def reduce_dimensions(embeddings: np.ndarray) -> np.ndarray:
     """Reduce embedding dimensions with UMAP."""
     logger.info("Reducing dimensions with UMAP (%d -> %d)", embeddings.shape[1], UMAP_N_COMPONENTS)
+    if len(embeddings) < 4:
+        return embeddings.copy()
     reducer = umap.UMAP(
-        n_neighbors=UMAP_N_NEIGHBORS,
-        n_components=UMAP_N_COMPONENTS,
+        n_neighbors=min(UMAP_N_NEIGHBORS, len(embeddings) - 1),
+        n_components=min(UMAP_N_COMPONENTS, len(embeddings) - 2),
         min_dist=UMAP_MIN_DIST,
         metric=UMAP_METRIC,
         random_state=42,
@@ -39,6 +41,8 @@ def reduce_dimensions(embeddings: np.ndarray) -> np.ndarray:
 def cluster_embeddings(reduced: np.ndarray) -> np.ndarray:
     """Cluster reduced embeddings with HDBSCAN. Returns cluster labels (-1 = noise)."""
     logger.info("Clustering with HDBSCAN (min_cluster_size=%d)", HDBSCAN_MIN_CLUSTER_SIZE)
+    if len(reduced) < HDBSCAN_MIN_CLUSTER_SIZE:
+        return np.full(len(reduced), -1, dtype=int)
     clusterer = hdbscan.HDBSCAN(
         min_cluster_size=HDBSCAN_MIN_CLUSTER_SIZE,
         min_samples=HDBSCAN_MIN_SAMPLES,
@@ -95,12 +99,14 @@ def extract_cluster_keywords(
     # Two-pass: extract 2-3 word phrases for keywords, but also 1-grams for cluster naming fallback
     tfidf_phrases = TfidfVectorizer(
         ngram_range=(2, 3),
+        token_pattern=r"(?u)\b[^\W\d_]\w+\b",
         stop_words="english",
         max_features=5000,
         min_df=1,
     )
     tfidf_singles = TfidfVectorizer(
         ngram_range=(1, 1),
+        token_pattern=r"(?u)\b[^\W\d_]\w+\b",
         stop_words="english",
         max_features=3000,
         min_df=1,

@@ -2,12 +2,16 @@
 
 import logging
 import re
-import xml.etree.ElementTree as ET
 from typing import Optional
+from urllib.parse import urljoin
+from urllib.robotparser import RobotFileParser
+from datetime import datetime, timezone
+from bs4 import BeautifulSoup
 
 import pandas as pd
 import requests
 import trafilatura
+from src.crawl import create_session, fetch, normalize_url, read_sitemaps, USER_AGENT
 
 from src.config import (
     BOILERPLATE_PHRASES,
@@ -19,10 +23,7 @@ from src.config import (
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-}
+HEADERS = {"User-Agent": USER_AGENT}
 
 
 def parse_sitemap(sitemap_url: str) -> list[str]:
@@ -32,47 +33,11 @@ def parse_sitemap(sitemap_url: str) -> list[str]:
     Handles both sitemap index files (pointing to child sitemaps)
     and regular sitemaps with <url> entries.
     """
-    urls = []
-    logger.info("Fetching sitemap: %s", sitemap_url)
-
-    try:
-        resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-    except requests.RequestException as e:
-        logger.error("Failed to fetch sitemap %s: %s", sitemap_url, e)
-        return urls
-
-    try:
-        root = ET.fromstring(resp.content)
-    except ET.ParseError as e:
-        logger.error("Failed to parse sitemap XML: %s", e)
-        return urls
-
-    # Strip namespace for easier parsing
-    ns = ""
-    if root.tag.startswith("{"):
-        ns = root.tag.split("}")[0] + "}"
-
-    # Check if this is a sitemap index (contains <sitemap> entries)
-    sitemap_entries = root.findall(f"{ns}sitemap")
-    if sitemap_entries:
-        logger.info("Sitemap index detected with %d child sitemaps", len(sitemap_entries))
-        for entry in sitemap_entries:
-            loc = entry.find(f"{ns}loc")
-            if loc is not None and loc.text:
-                child_urls = parse_sitemap(loc.text.strip())
-                urls.extend(child_urls)
-        return urls
-
-    # Regular sitemap with <url> entries
-    url_entries = root.findall(f"{ns}url")
-    for entry in url_entries:
-        loc = entry.find(f"{ns}loc")
-        if loc is not None and loc.text:
-            urls.append(loc.text.strip())
-
-    logger.info("Parsed %d URLs from sitemap", len(urls))
-    return urls
+    result = read_sitemaps([sitemap_url])
+    from src.execution import note_stage
+    note_stage("sitemap_discovery", "partial" if result.issues else "completed",
+               urls=len(result.pages), documents=result.visited, issues=result.issues)
+    return list(result.pages)
 
 
 def should_skip_url(url: str) -> bool:
@@ -84,10 +49,9 @@ def should_skip_url(url: str) -> bool:
 def fetch_page(url: str, timeout: int = 15) -> Optional[str]:
     """Fetch raw HTML from a URL."""
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=timeout)
-        resp.raise_for_status()
-        return resp.text
-    except requests.RequestException as e:
+        with create_session() as session:
+            return fetch(session, url, timeout=timeout).text
+    except (requests.RequestException, ValueError) as e:
         logger.warning("Failed to fetch %s: %s", url, e)
         return None
 
@@ -154,7 +118,7 @@ def chunk_text(text: str, url: str) -> list[dict]:
     return chunks
 
 
-def ingest_urls(urls: list[str]) -> tuple[pd.DataFrame, list[str]]:
+def _ingest_urls(urls: list[str], session) -> tuple[pd.DataFrame, list[str]]:
     """
     Main ingestion pipeline.
 
@@ -164,35 +128,107 @@ def ingest_urls(urls: list[str]) -> tuple[pd.DataFrame, list[str]]:
     """
     all_chunks = []
     skipped = []
+    records = []
+    seen = set()
+    fetched = set()
+    robots = {}
 
-    for url in urls:
-        url = url.strip()
+    def allowed(url):
+        from urllib.parse import urlsplit
+        parsed = urlsplit(url)
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        if origin not in robots:
+            parser = RobotFileParser(origin + "/robots.txt")
+            try:
+                response = fetch(session, parser.url)
+                parser.parse(response.text.splitlines())
+            except requests.HTTPError as exc:
+                code = exc.response.status_code if exc.response is not None else 0
+                parser.parse([] if code in (404, 410) else ["User-agent: *", "Disallow: /"])
+            except (requests.RequestException, ValueError):
+                parser.parse(["User-agent: *", "Disallow: /"])
+            robots[origin] = parser
+        return robots[origin].can_fetch(USER_AGENT, url)
+
+    for raw_url in urls:
+        url = normalize_url(raw_url)
+        record = {"requested_url": raw_url, "url": url, "final_url": "", "status_code": None,
+                  "canonical": "", "title": "", "h1": "", "robots": "", "indexability": "unknown",
+                  "outcome": "skipped", "reason": "", "word_count": 0,
+                  "fetched_at": datetime.now(timezone.utc).isoformat()}
+        records.append(record)
         if not url:
+            record["reason"] = "invalid_url"
+            skipped.append(f"{raw_url} | Skipped: invalid HTTP(S) URL")
             continue
+        if url in seen:
+            record["reason"] = "duplicate_url"
+            skipped.append(f"{url} | Skipped: duplicate URL")
+            continue
+        seen.add(url)
 
         # Check skip patterns
         if should_skip_url(url):
+            record["reason"] = "skip_pattern"
             skipped.append(f"{url} | Skipped: matches skip pattern (legal/nav page)")
             logger.info("Skipping URL (pattern match): %s", url)
             continue
 
         # Fetch
-        html = fetch_page(url)
-        if not html:
-            skipped.append(f"{url} | Failed: could not fetch page")
+        if not allowed(url):
+            record.update(reason="robots_disallowed_or_unavailable", indexability="unknown")
+            skipped.append(f"{url} | Skipped: robots disallowed or unavailable")
             continue
+        try:
+            response = fetch(session, url, timeout=15)
+            final_url = normalize_url(response.url)
+            record.update(final_url=final_url, status_code=response.status_code)
+            if "html" not in response.headers.get("Content-Type", "text/html").lower():
+                record["reason"] = "non_html"
+                skipped.append(f"{url} | Skipped: non-HTML response")
+                continue
+            html = response.text
+        except (requests.RequestException, ValueError) as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            record.update(status_code=status, outcome="failed", reason=str(exc))
+            skipped.append(f"{url} | Failed: {exc}")
+            continue
+        soup = BeautifulSoup(html, "html.parser")
+        canonical = soup.find("link", rel=lambda value: value and "canonical" in value)
+        canonical_url = normalize_url(urljoin(final_url, canonical.get("href", ""))) if canonical else ""
+        directives = [response.headers.get("X-Robots-Tag", "")]
+        directives.extend(tag.get("content", "") for tag in soup.find_all("meta")
+                          if tag.get("name", "").lower() in ("robots", "googlebot"))
+        directive_text = ", ".join(directives).lower()
+        record.update(canonical=canonical_url, robots=directive_text,
+                      title=soup.title.get_text(" ", strip=True) if soup.title else "",
+                      h1=soup.h1.get_text(" ", strip=True) if soup.h1 else "")
+        noindex = bool(re.search(r"\b(noindex|none)\b", directive_text))
+        record["indexability"] = "noindex" if noindex else "canonicalized" if canonical_url and canonical_url != final_url else "eligible"
+        if noindex:
+            record["reason"] = "noindex"
+            skipped.append(f"{url} | Skipped: noindex directive")
+            continue
+        if final_url in fetched:
+            record["reason"] = "duplicate_redirect_target"
+            skipped.append(f"{url} | Skipped: duplicate redirect target")
+            continue
+        fetched.add(final_url)
 
         # Extract
         text = extract_text(html)
         if not text:
+            record.update(outcome="failed", reason="extraction_failed")
             skipped.append(f"{url} | Failed: no content extracted")
             continue
 
         # Clean
         text = clean_text(text)
+        record["word_count"] = len(text.split())
 
         # Thin content check
         if is_thin_content(text):
+            record["reason"] = "thin_content"
             skipped.append(f"{url} | Skipped: thin content ({len(text.split())} words)")
             logger.info("Skipping URL (thin content): %s", url)
             continue
@@ -203,7 +239,15 @@ def ingest_urls(urls: list[str]) -> tuple[pd.DataFrame, list[str]]:
         # Chunk
         chunks = chunk_text(text, url)
         all_chunks.extend(chunks)
+        record.update(outcome="analyzed", reason="")
 
     df = pd.DataFrame(all_chunks, columns=["url", "chunk_id", "chunk_text"])
+    df.attrs["crawl_records"] = records
     logger.info("Ingested %d chunks from %d URLs (%d skipped)", len(df), len(urls) - len(skipped), len(skipped))
     return df, skipped
+
+
+def ingest_urls(urls: list[str]) -> tuple[pd.DataFrame, list[str]]:
+    """Extract eligible HTML pages and attach per-request crawl evidence."""
+    with create_session() as session:
+        return _ingest_urls(urls, session)

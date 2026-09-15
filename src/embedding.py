@@ -2,28 +2,34 @@
 
 import logging
 import os
-import pickle
+import hashlib
+import json
+import tempfile
+from typing import TYPE_CHECKING
 
 import faiss
 import numpy as np
-from sentence_transformers import SentenceTransformer
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
-from src.config import CACHE_DIR, EMBEDDING_MODEL
+from src.config import EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
 
-def get_model() -> SentenceTransformer:
+def get_model() -> "SentenceTransformer":
     """Load the sentence-transformer model."""
     logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
+    from sentence_transformers import SentenceTransformer
     return SentenceTransformer(EMBEDDING_MODEL)
 
 
 def compute_embeddings(
     texts: list[str],
-    model: SentenceTransformer | None = None,
+    model: "SentenceTransformer | None" = None,
     cache_path: str | None = None,
     batch_size: int = 64,
+    model_id: str | None = None,
 ) -> np.ndarray:
     """
     Compute normalized embeddings for a list of texts.
@@ -31,10 +37,22 @@ def compute_embeddings(
     Uses cached embeddings if available and cache_path is provided.
     """
     # Check cache
-    if cache_path and os.path.exists(cache_path):
-        logger.info("Loading cached embeddings from %s", cache_path)
-        with open(cache_path, "rb") as f:
-            return pickle.load(f)
+    # Custom encoders must declare a stable identity to reuse persistent results.
+    identity = model_id or (EMBEDDING_MODEL if model is None else None)
+    fingerprint = hashlib.sha256(json.dumps(
+        {"version": 1, "model": identity, "texts": texts},
+        ensure_ascii=False, separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()
+    safe_path = cache_path + ".npz" if cache_path and identity else None
+    if safe_path and os.path.exists(safe_path):
+        try:
+            with np.load(safe_path, allow_pickle=False) as cached:
+                values = cached["embeddings"]
+                if (str(cached["fingerprint"]) == fingerprint and values.ndim == 2
+                        and len(values) == len(texts) and np.isfinite(values).all()):
+                    return values
+        except (ValueError, OSError, KeyError):
+            logger.warning("Invalid embedding cache; recomputing %s", safe_path)
 
     if model is None:
         model = get_model()
@@ -49,11 +67,19 @@ def compute_embeddings(
     embeddings = np.array(embeddings, dtype=np.float32)
 
     # Cache
-    if cache_path:
-        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-        with open(cache_path, "wb") as f:
-            pickle.dump(embeddings, f)
-        logger.info("Cached embeddings to %s", cache_path)
+    if embeddings.ndim != 2 or len(embeddings) != len(texts) or not np.isfinite(embeddings).all():
+        raise ValueError("Encoder returned invalid embeddings")
+    if safe_path:
+        directory = os.path.dirname(os.path.abspath(safe_path))
+        os.makedirs(directory, exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=directory, suffix=".npz", delete=False) as f:
+            tmp_path = f.name
+        try:
+            np.savez(tmp_path, embeddings=embeddings, fingerprint=fingerprint)
+            os.replace(tmp_path, safe_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
     return embeddings
 

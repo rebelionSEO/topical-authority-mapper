@@ -311,7 +311,7 @@ def compute_similarity_scores(chunks_df: pd.DataFrame, embeddings: np.ndarray) -
                 money_pages = {"service", "industry", "local-landing", "homepage"}
                 info_pages = {"blog", "tool-review", "webinar"}
                 types = {type_a, type_b}
-                is_conversion_risk = bool(types & money_pages) and bool(types & info_pages)
+                is_conversion_risk = score >= 0.80 and bool(types & money_pages) and bool(types & info_pages)
 
                 results.append({
                     "cluster_id": cluster_id,
@@ -324,7 +324,7 @@ def compute_similarity_scores(chunks_df: pd.DataFrame, embeddings: np.ndarray) -
                     "action": action,
                 })
 
-    df = pd.DataFrame(results)
+    df = pd.DataFrame(results, columns=["cluster_id", "url_a", "url_b", "type_a", "type_b", "similarity", "conversion_risk", "action"])
     if not df.empty:
         # Sort: conversion risks first, then by similarity
         df = df.sort_values(["conversion_risk", "similarity"], ascending=[False, False])
@@ -343,13 +343,13 @@ def _similarity_action(score: float, type_a: str = "", type_b: str = "") -> str:
     types = {type_a, type_b}
     is_conversion_risk = bool(types & money_pages) and bool(types & info_pages)
 
-    if is_conversion_risk:
+    if is_conversion_risk and score >= 0.80:
         money = type_a if type_a in money_pages else type_b
         info = type_a if type_a in info_pages else type_b
-        return f"CRITICAL: {info} page may outrank {money} page — cannibalizing conversions"
+        return f"REVIEW: similar {info} and {money} pages; verify query overlap and intent"
 
     if score >= 0.92:
-        return "MERGE: near-duplicate content — consolidate into one page"
+        return "REVIEW: high semantic similarity; verify duplication and intent before consolidation"
     if score >= 0.80:
         return "REVIEW: very similar — differentiate angles or merge"
     if score >= 0.65:
@@ -501,8 +501,11 @@ def detect_cluster_merges(clusters: pd.DataFrame, chunks_df: pd.DataFrame, embed
             centroids[cid] = centroid / (np.linalg.norm(centroid) + 1e-10)
 
     cluster_ids = list(centroids.keys())
+    columns = ["cluster_a_id", "cluster_a_name", "cluster_b_id", "cluster_b_name", "similarity", "recommendation"]
     if len(cluster_ids) < 2:
-        return pd.DataFrame()
+        empty = pd.DataFrame(columns=columns)
+        empty.to_csv(os.path.join(output_dir(), "cluster_merge_suggestions.csv"), index=False)
+        return empty
 
     vecs = np.array([centroids[cid] for cid in cluster_ids], dtype=np.float32)
     sim_matrix = np.dot(vecs, vecs.T)
@@ -525,7 +528,7 @@ def detect_cluster_merges(clusters: pd.DataFrame, chunks_df: pd.DataFrame, embed
                     "recommendation": "MERGE" if score >= 0.85 else "REVIEW for merge",
                 })
 
-    df = pd.DataFrame(results).sort_values("similarity", ascending=False) if results else pd.DataFrame()
+    df = pd.DataFrame(results, columns=columns).sort_values("similarity", ascending=False)
 
     out_path = os.path.join(output_dir(), "cluster_merge_suggestions.csv")
     df.to_csv(out_path, index=False)
@@ -566,52 +569,33 @@ def score_content_freshness(
         logger.warning("No sitemap URLs provided and none in SiteConfig — skipping freshness scoring")
         return pd.DataFrame()
 
-    url_dates = {}
-    for sm_url in sitemap_urls:
+    from src.crawl import read_sitemaps, normalize_url
+    from src.execution import note_stage
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).date()
+    discovered = read_sitemaps(sitemap_urls or [])
+    targets = list(dict.fromkeys(normalize_url(u) for u in (fallback_urls if fallback_urls is not None else discovered.pages)))
+    targets = [u for u in targets if u]
+    def valid_date(value):
         try:
-            resp = requests.get(sm_url, timeout=15)
-            root = ET.fromstring(resp.content)
-            ns = ""
-            if root.tag.startswith("{"):
-                ns = root.tag.split("}")[0] + "}"
-
-            for entry in root.findall(f"{ns}url"):
-                loc = entry.find(f"{ns}loc")
-                lastmod = entry.find(f"{ns}lastmod")
-                if loc is not None and loc.text and lastmod is not None and lastmod.text:
-                    url_dates[loc.text.strip()] = lastmod.text.strip()[:10]
-        except Exception as e:
-            logger.warning("Failed to parse sitemap %s: %s", sm_url, e)
-
-    # If sitemap had no lastmod data, fall back to scraping HTML for publish dates.
-    if not url_dates and fallback_urls:
-        logger.info("Sitemap had no lastmod — scraping HTML for publish dates on %d URLs (capped at 100)...",
-                    len(fallback_urls))
-        url_dates = _extract_dates_from_html(fallback_urls[:100])
-
-    if not url_dates:
-        logger.warning("No lastmod data found in sitemaps and no HTML fallback succeeded")
-        return pd.DataFrame()
-
-    from datetime import datetime, timedelta
-    today = datetime.now()
-
+            date = datetime.strptime(value[:10], "%Y-%m-%d").date()
+            return date if date <= today else None
+        except (ValueError, TypeError):
+            return None
+    url_dates = {u: d for u, value in discovered.pages.items() if (d := valid_date(value))}
+    missing = [u for u in targets if u not in url_dates]
+    html_dates = _extract_dates_from_html(missing[:100]) if missing else {}
     results = []
-    for url, date_str in url_dates.items():
-        try:
-            lastmod = datetime.strptime(date_str, "%Y-%m-%d")
-            age_days = (today - lastmod).days
-            freshness = _freshness_label(age_days)
-            results.append({
-                "url": url,
-                "lastmod": date_str,
-                "age_days": age_days,
-                "freshness": freshness,
-            })
-        except ValueError:
-            continue
-
-    df = pd.DataFrame(results).sort_values("age_days", ascending=False)
+    for url in targets:
+        date = url_dates.get(url) or valid_date(html_dates.get(url, ""))
+        age = (today - date).days if date else None
+        results.append({"url": url, "lastmod": date.isoformat() if date else "",
+                        "age_days": age, "freshness": _freshness_label(age) if date else "Unknown",
+                        "date_source": "sitemap" if url in url_dates else "html" if date else "unknown"})
+    df = pd.DataFrame(results, columns=["url", "lastmod", "age_days", "freshness", "date_source"]).sort_values("age_days", ascending=False)
+    known = sum(row["date_source"] != "unknown" for row in results)
+    note_stage("freshness_coverage", "completed" if known == len(targets) and not discovered.issues else "partial",
+               known_dates=known, total_urls=len(targets), issues=discovered.issues)
 
     out_path = os.path.join(output_dir(), "content_freshness.csv")
     df.to_csv(out_path, index=False)
@@ -743,7 +727,9 @@ def score_brand_voice(chunks_df: pd.DataFrame) -> pd.DataFrame:
     profile_path = os.path.join(cache_dir(), "brand_profile.json")
     if not os.path.exists(profile_path):
         logger.warning("No brand profile found at %s — skipping brand voice scoring", profile_path)
-        return pd.DataFrame()
+        empty = pd.DataFrame(columns=["url", "brand_score", "rating"])
+        empty.to_csv(os.path.join(output_dir(), "brand_voice_scores.csv"), index=False)
+        return empty
 
     with open(profile_path, "r") as f:
         profile = json.load(f)

@@ -1,0 +1,11 @@
+numpy
+pandas
+pytest
+scikit-learn
+umap-learn
+hdbscan
+requests
+trafilatura
+beautifulsoup4
+PyYAML
+faiss-cpu

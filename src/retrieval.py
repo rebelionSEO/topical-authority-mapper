@@ -9,7 +9,7 @@ retrieval modes:
                                        (most "representative" of the cluster)
 
 The pipeline saves three artifacts to the cache dir:
-  - cache/embeddings.pkl   (numpy ndarray, normalized)
+  - cache/embeddings.pkl.npz (numpy ndarray + input fingerprint)
   - cache/embeddings.faiss (FAISS IndexFlatIP)
   - cache/chunks_df.pkl    (pandas DataFrame: url, chunk_id, chunk_text, cluster_id)
 
@@ -21,7 +21,6 @@ Returns a list of `Chunk` records ready to be inlined in an LLM prompt.
 
 import logging
 import os
-import pickle
 from dataclasses import dataclass
 from typing import Optional
 
@@ -74,15 +73,18 @@ class RetrievalIndex:
         """Try to load the retrieval index from cache. Returns None if any artifact is missing."""
         cdir = cache_dir_path or cache_dir()
         chunks_path = os.path.join(cdir, "chunks_df.pkl")
-        emb_path = os.path.join(cdir, "embeddings.pkl")
+        emb_path = os.path.join(cdir, "embeddings.pkl.npz")
         faiss_path = os.path.join(cdir, "embeddings.faiss")
         if not (os.path.exists(chunks_path) and os.path.exists(emb_path)):
             logger.info("RetrievalIndex unavailable: missing chunks_df.pkl or embeddings.pkl")
             return None
         try:
             chunks_df = pd.read_pickle(chunks_path)
-            with open(emb_path, "rb") as f:
-                embeddings = pickle.load(f)
+            with np.load(emb_path, allow_pickle=False) as data:
+                embeddings = data["embeddings"].copy()
+            if len(chunks_df) != len(embeddings):
+                logger.error("Chunk and embedding counts differ; rerun the audit")
+                return None
         except Exception:
             logger.exception("Could not load RAG cache files")
             return None

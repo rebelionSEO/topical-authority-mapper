@@ -38,7 +38,7 @@ def _normalize_input(competitor: str) -> tuple[str, str]:
     Accepts: 'acme.com', 'https://acme.com', 'https://acme.com/sitemap.xml'.
     """
     raw = competitor.strip()
-    if raw.endswith(".xml"):
+    if raw.endswith((".xml", ".xml.gz")):
         parsed = urlparse(raw)
         domain = parsed.netloc or raw
     else:
@@ -47,12 +47,12 @@ def _normalize_input(competitor: str) -> tuple[str, str]:
 
     bare = domain.replace("www.", "")
     name = bare.split(".")[0].title() if bare else domain
-    return name, raw if raw.endswith(".xml") else domain
+    return name, raw if raw.endswith((".xml", ".xml.gz")) else domain
 
 
 def _resolve_sitemap(domain_or_url: str) -> Optional[str]:
     """Return a working sitemap URL, or None if none of the candidates respond."""
-    if domain_or_url.endswith(".xml"):
+    if domain_or_url.endswith((".xml", ".xml.gz")):
         return domain_or_url
 
     domain = domain_or_url

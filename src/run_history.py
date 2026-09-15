@@ -65,7 +65,8 @@ def slugify(name: str) -> str:
 
 
 def generate_run_id() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d-%H%M")
+    from uuid import uuid4
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d-%H%M%S") + "-" + uuid4().hex[:8]
 
 
 def _site_dir(runs_root: str, site_name: str) -> str:
@@ -137,11 +138,9 @@ def snapshot_run(
     site_dir = _site_dir(runs_root, site_config.name)
     snap_dir = os.path.join(site_dir, rid)
     snap_output = os.path.join(snap_dir, "output")
-    os.makedirs(snap_dir, exist_ok=True)
+    os.makedirs(snap_dir, exist_ok=False)
 
-    # Copy output (overwrite-safe)
-    if os.path.exists(snap_output):
-        shutil.rmtree(snap_output)
+    # Never overwrite an existing audit snapshot.
     shutil.copytree(out, snap_output)
 
     # Copy small cache files (skip embeddings — too large, regenerable)

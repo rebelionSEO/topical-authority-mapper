@@ -101,8 +101,619 @@ def _discover_competitor_csvs() -> list[tuple[str, pd.DataFrame]]:
     return results
 
 
-def generate_dashboard(site_config: SiteConfig | None = None):
-    """Build a self-contained interactive HTML dashboard."""
+# ---------------------------------------------------------------------------
+# Visual payloads (Cluster Map, Overlap, Gaps, Actions)
+#
+# Every number below is read from a pipeline CSV; nothing is estimated. Each
+# clickable item carries a "panel" (what's wrong / why it matters / suggested
+# action + the CSV it came from) that the dashboard renders in its side panel.
+# ---------------------------------------------------------------------------
+
+OVERLAP_THRESHOLD = 0.80          # same cut-off the Duplicates view already uses
+NEAR_DUPLICATE_THRESHOLD = 0.92   # same cut-off as enhancements._similarity_action
+MAX_GRAPH_URLS = 600              # keeps the force layout interactive in < 2 s
+MAX_SIMILARITY_EDGES = 300
+MAX_HEATMAP_URLS = 25
+MAX_ACTION_ITEMS = 40
+
+_MONEY_TYPES = {"service", "industry", "local-landing", "homepage"}
+_PILLAR_HINTS = ("/guide/", "/guides/", "/pillar", "ultimate-guide", "complete-guide")
+_PAGE_KIND_LABELS = {
+    "service": "Service page",
+    "pillar": "Pillar / hub page",
+    "blog": "Blog post",
+    "case-study": "Case study",
+    "other": "Other page",
+}
+_STATUS_LABELS = {"fix": "Fix", "update": "Update", "ok": "Healthy", "opportunity": "Opportunity", "none": "Unclustered"}
+
+
+def _page_kind(url: str, page_type: str) -> str:
+    """Collapse classify_page_type output into the five groups the map colors by."""
+    if page_type == "service":
+        return "service"
+    if page_type in ("industry-hub", "homepage") or any(h in url.lower() for h in _PILLAR_HINTS):
+        return "pillar"
+    if page_type in ("blog", "tool-review", "webinar"):
+        return "blog"
+    if page_type == "case-study":
+        return "case-study"
+    return "other"
+
+
+def _is_stale(label) -> bool:
+    s = str(label)
+    return "Stale" in s or "Decaying" in s
+
+
+def _bool_series(series: pd.Series) -> pd.Series:
+    return series.astype(str).str.strip().str.lower().isin({"true", "1", "yes"})
+
+
+def _pct(value: float) -> str:
+    return f"{round(float(value) * 100)}%"
+
+
+def _parse_cluster_ids(value) -> list[int]:
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return []
+    ids = []
+    for part in str(value).replace("|", ",").split(","):
+        part = part.strip()
+        if not part or part.lower() == "nan":
+            continue
+        try:
+            ids.append(int(float(part)))
+        except ValueError:
+            continue
+    return ids
+
+
+def _panel(kicker, title, status, what, why, action, facts=None, url=None,
+           list_title="", items=None, source=""):
+    return {
+        "kicker": kicker, "title": title, "status": status,
+        "status_label": _STATUS_LABELS.get(status, status.title()),
+        "url": url or "", "what": what, "why": why, "action": action,
+        "facts": [[k, v] for k, v in (facts or []) if v not in (None, "")],
+        "list_title": list_title, "list": items or [], "source": source,
+    }
+
+
+def _pair_advice(pair: dict) -> tuple[str, str, str, str]:
+    """(bucket, what, why, action) for a URL pair at or above OVERLAP_THRESHOLD."""
+    a, b, pct = pair["a_slug"], pair["b_slug"], _pct(pair["sim"])
+    if pair["risk"]:
+        money = pair["type_a"] if pair["type_a"] in _MONEY_TYPES else pair["type_b"]
+        return (
+            "retitle",
+            f"{a} and {b} read {pct} alike, and one of them is a {money} page.",
+            "An informational page this close to a page that sells can rank in its place, "
+            "so searchers land on content that doesn't convert.",
+            "Retitle the informational page around a different question and link it to the "
+            f"{money} page. Confirm in Search Console that both show for the same queries first.",
+        )
+    if pair["sim"] >= NEAR_DUPLICATE_THRESHOLD:
+        return (
+            "consolidate",
+            f"{a} and {b} read {pct} alike, close to duplicates.",
+            "Near-identical pages split links and ranking signals, so neither ranks as well "
+            "as one strong page would.",
+            "Consolidate candidate: if both rank for the same queries, merge the weaker page "
+            "into the stronger one and 301-redirect it.",
+        )
+    return (
+        "retitle",
+        f"{a} and {b} read {pct} alike.",
+        "Pages that cover the same angle can end up competing for the same searches.",
+        "Differentiate: give each page its own angle, title and target question.",
+    )
+
+
+def build_visuals(
+    url_map: pd.DataFrame,
+    clusters: pd.DataFrame,
+    similarity: pd.DataFrame,
+    merges: pd.DataFrame,
+    intent: pd.DataFrame,
+    freshness: pd.DataFrame,
+    competitor_table: list,
+    competitor_names: list,
+    content_ideas: pd.DataFrame,
+    thin: pd.DataFrame,
+    site_config: SiteConfig,
+) -> dict:
+    """Build the data behind the Overview, Cluster Map, Overlap, Gaps and Actions views."""
+    from src.enhancements import classify_page_type
+
+    strip = site_config.strip_url
+    cluster_names = {int(r["cluster_id"]): str(r["cluster_name"]) for _, r in clusters.iterrows()}
+    cluster_keywords = {int(r["cluster_id"]): str(r.get("keywords", "") or "") for _, r in clusters.iterrows()}
+
+    intent_by_url = {}
+    if not intent.empty and "primary_intent" in intent.columns:
+        intent_by_url = dict(zip(intent["url"], intent["primary_intent"].astype(str)))
+    fresh_by_url = {}
+    if not freshness.empty and "freshness" in freshness.columns:
+        for _, r in freshness.iterrows():
+            age = r.get("age_days")
+            fresh_by_url[r["url"]] = {
+                "label": str(r["freshness"]),
+                "lastmod": "" if pd.isna(r.get("lastmod")) else str(r.get("lastmod")),
+                "age": None if age is None or pd.isna(age) else int(age),
+            }
+
+    # ---- URLs -------------------------------------------------------------
+    urls: list[dict] = []
+    index_by_url: dict[str, int] = {}
+    for _, r in url_map.drop_duplicates("url").iterrows():
+        url = str(r["url"])
+        cid = int(r["main_cluster"]) if pd.notna(r["main_cluster"]) else -1
+        ptype = classify_page_type(url)
+        kind = _page_kind(url, ptype)
+        fr = fresh_by_url.get(url, {})
+        index_by_url[url] = len(urls)
+        urls.append({
+            "url": url, "slug": strip(url), "cid": cid,
+            "cluster": cluster_names.get(cid, "Unclustered" if cid == -1 else f"Cluster {cid}"),
+            "page_type": ptype, "kind": kind, "hub": kind in ("service", "pillar"),
+            "intent": intent_by_url.get(url, ""),
+            "freshness": fr.get("label", ""), "lastmod": fr.get("lastmod", ""), "age": fr.get("age"),
+            "stale": _is_stale(fr.get("label", "")),
+            "secondary": [c for c in _parse_cluster_ids(r.get("secondary_clusters")) if c != cid and c in cluster_names],
+            "pairs": [],
+        })
+
+    # ---- Similarity pairs ---------------------------------------------------
+    sim = similarity.copy() if similarity is not None else pd.DataFrame()
+    if not sim.empty:
+        sim["similarity"] = pd.to_numeric(sim["similarity"], errors="coerce")
+        sim = sim.dropna(subset=["similarity"])
+        sim["conversion_risk"] = _bool_series(sim["conversion_risk"]) if "conversion_risk" in sim.columns else False
+        if "cluster_id" not in sim.columns:
+            sim["cluster_id"] = sim["url_a"].map(lambda u: urls[index_by_url[u]]["cid"] if u in index_by_url else -1)
+        for col in ("type_a", "type_b", "action"):
+            if col not in sim.columns:
+                sim[col] = ""
+        sim = sim.drop_duplicates(subset=["url_a", "url_b"])
+
+    pairs: list[dict] = []
+    if not sim.empty:
+        flagged = sim[sim["similarity"] >= OVERLAP_THRESHOLD].sort_values(
+            ["conversion_risk", "similarity"], ascending=[False, False])
+        for _, r in flagged.iterrows():
+            a, b = str(r["url_a"]), str(r["url_b"])
+            type_a = str(r["type_a"]) if str(r["type_a"]) not in ("", "nan") else classify_page_type(a)
+            type_b = str(r["type_b"]) if str(r["type_b"]) not in ("", "nan") else classify_page_type(b)
+            pair = {
+                "a": a, "b": b, "a_slug": strip(a), "b_slug": strip(b),
+                "ai": index_by_url.get(a), "bi": index_by_url.get(b),
+                "sim": round(float(r["similarity"]), 4), "risk": bool(r["conversion_risk"]),
+                "type_a": type_a, "type_b": type_b, "cid": int(r["cluster_id"]),
+                "csv_action": "" if pd.isna(r["action"]) else str(r["action"]),
+            }
+            bucket, what, why, action = _pair_advice(pair)
+            pair["bucket"] = bucket
+            pair["panel"] = _panel(
+                "Page pair", f"{pair['a_slug']}  ↔  {pair['b_slug']}", "fix", what, why, action,
+                facts=[
+                    ("Similarity", _pct(pair["sim"])),
+                    ("Topic cluster", cluster_names.get(pair["cid"], f"Cluster {pair['cid']}")),
+                    ("Page types", f"{type_a} / {type_b}"),
+                    ("Money page involved", "Yes" if pair["risk"] else "No"),
+                    ("Audit note", pair["csv_action"]),
+                ],
+                source="similarity_scores.csv (similarity, conversion_risk, action)",
+            )
+            pi = len(pairs)
+            pairs.append(pair)
+            for idx in (pair["ai"], pair["bi"]):
+                if idx is not None:
+                    urls[idx]["pairs"].append(pi)
+
+    # ---- Per-URL status + panel ----------------------------------------------
+    for u in urls:
+        if u["pairs"]:
+            u["status"] = "fix"
+        elif u["stale"]:
+            u["status"] = "update"
+        else:
+            u["status"] = "ok"
+        overlap_items = []
+        for pi in u["pairs"][:8]:
+            p = pairs[pi]
+            other = p["b_slug"] if p["a"] == u["url"] else p["a_slug"]
+            overlap_items.append(f"{other} · {_pct(p['sim'])} alike" + (" · money page" if p["risk"] else ""))
+        if u["pairs"]:
+            p = pairs[u["pairs"][0]]
+            _, what, why, action = _pair_advice(p)
+        elif u["stale"]:
+            what = f"Last updated {u['lastmod'] or 'over 6 months ago'}" + (f" ({u['age']} days ago)." if u["age"] is not None else ".")
+            why = "Outdated pages tend to lose rankings and reader trust over time."
+            action = "Update: refresh facts, examples and screenshots, then update the modified date."
+        else:
+            what = "No overlap or freshness issues in this audit."
+            why = "This page has a clear place in its topic cluster."
+            action = "No action needed. Link to it from related pages in the same cluster."
+        u["panel"] = _panel(
+            "Page", u["slug"], u["status"], what, why, action, url=u["url"],
+            facts=[
+                ("Topic cluster", u["cluster"]),
+                ("Page type", _PAGE_KIND_LABELS[u["kind"]] + ("" if u["kind"] == "pillar" else f" ({u['page_type']})")),
+                ("Search intent", u["intent"]),
+                ("Freshness", f"{u['freshness']} · {u['lastmod']}" if u["freshness"] else ""),
+                ("Also relates to", ", ".join(cluster_names[c] for c in u["secondary"])),
+                ("Overlapping pages", str(len(u["pairs"])) if u["pairs"] else ""),
+            ],
+            list_title="Pages it overlaps with" if overlap_items else "",
+            items=overlap_items,
+            source="url_mapping.csv · similarity_scores.csv · content_freshness.csv · search_intent.csv",
+        )
+
+    # ---- Clusters ---------------------------------------------------------------
+    merge_rows = []
+    if merges is not None and not merges.empty:
+        for _, r in merges.iterrows():
+            merge_rows.append({
+                "a": int(r["cluster_a_id"]), "b": int(r["cluster_b_id"]),
+                "a_name": str(r.get("cluster_a_name", "")) or cluster_names.get(int(r["cluster_a_id"]), ""),
+                "b_name": str(r.get("cluster_b_name", "")) or cluster_names.get(int(r["cluster_b_id"]), ""),
+                "sim": round(float(r["similarity"]), 4), "rec": str(r.get("recommendation", "")),
+            })
+    for m in merge_rows:
+        strong = m["rec"].upper() == "MERGE"
+        m["status"] = "fix" if strong else "update"
+        m["panel"] = _panel(
+            "Cluster merge suggestion", f"{m['a_name']}  +  {m['b_name']}", m["status"],
+            f"These two topic clusters are {_pct(m['sim'])} similar overall.",
+            "Two clusters this close usually mean one subject is split across two hubs, "
+            "which weakens both.",
+            ("Consolidate: combine them under one pillar page; keep separate pages only where "
+             "search intent differs.") if strong else
+            "Review whether these should share one pillar page.",
+            facts=[("Centroid similarity", _pct(m["sim"])), ("Recommendation", m["rec"])],
+            source="cluster_merge_suggestions.csv",
+        )
+
+    pair_stats: dict[int, dict] = {}
+    if not sim.empty:
+        for cid, g in sim.groupby("cluster_id"):
+            pair_stats[int(cid)] = {
+                "n_pairs": int(len(g)),
+                "avg_sim": round(float(g["similarity"].mean()), 4),
+                "flagged": int((g["similarity"] >= OVERLAP_THRESHOLD).sum()),
+                "risk": int((g["conversion_risk"] & (g["similarity"] >= OVERLAP_THRESHOLD)).sum()),
+            }
+
+    cluster_info: dict[int, dict] = {}
+    by_cluster: dict[int, list[int]] = {}
+    for i, u in enumerate(urls):
+        by_cluster.setdefault(u["cid"], []).append(i)
+    for cid, idxs in by_cluster.items():
+        ps = pair_stats.get(cid, {"n_pairs": 0, "avg_sim": None, "flagged": 0, "risk": 0})
+        known = [urls[i] for i in idxs if urls[i]["freshness"]]
+        stale = sum(1 for u in known if u["stale"])
+        cm = [m for m in merge_rows if cid in (m["a"], m["b"])]
+        if cid == -1:
+            status = "none"
+        elif ps["flagged"] or any(m["status"] == "fix" for m in cm):
+            status = "fix"
+        elif (known and stale / len(known) >= 0.5) or cm:
+            status = "update"
+        else:
+            status = "ok"
+        name = cluster_names.get(cid, "Unclustered pages" if cid == -1 else f"Cluster {cid}")
+        if cid == -1:
+            what = f"{len(idxs)} pages did not fit any topic cluster."
+            why = "Pages without a topic home get few internal links and little topical authority."
+            action = "Review: link each into the closest cluster, or retire it if it has no purpose."
+        elif ps["flagged"]:
+            what = f"{ps['flagged']} page pairs in this topic read {_pct(OVERLAP_THRESHOLD)}+ alike"
+            what += f", {ps['risk']} of them against a money page." if ps["risk"] else "."
+            why = "Potential topic overlap: several pages may compete for the same searches. Not confirmed cannibalization."
+            action = "Open the Overlap view for this cluster, pick one primary page per search intent, then differentiate or merge the rest."
+        elif cm:
+            m = max(cm, key=lambda x: x["sim"])
+            other = m["b_name"] if m["a"] == cid else m["a_name"]
+            what = f"This topic is {_pct(m['sim'])} similar to “{other}”."
+            why = "Two hubs for one subject split authority between them."
+            action = "Consider merging both clusters under one pillar page."
+        elif known and stale / len(known) >= 0.5:
+            what = f"{stale} of {len(known)} pages are 6+ months old."
+            why = "A topic where most pages are outdated looks abandoned to readers and search engines."
+            action = "Update the highest-value pages in this cluster first."
+        else:
+            what = "No overlap, merge or freshness issues found."
+            why = "A healthy cluster: distinct pages around one subject."
+            action = "Keep building: add supporting pages and link them to the hub."
+        hubs = [urls[i]["slug"] for i in idxs if urls[i]["hub"]]
+        cluster_info[cid] = {
+            "cid": cid, "name": name, "url_count": len(idxs), "status": status,
+            "n_pairs": ps["n_pairs"], "avg_sim": ps["avg_sim"], "flagged": ps["flagged"], "risk": ps["risk"],
+            "stale": stale, "fresh_known": len(known),
+            "panel": _panel(
+                "Topic cluster", name, status, what, why, action,
+                facts=[
+                    ("Pages", str(len(idxs))),
+                    ("Hub pages", ", ".join(hubs[:3])),
+                    ("Avg similarity between its pages", f"{_pct(ps['avg_sim'])} across {ps['n_pairs']} pairs" if ps["avg_sim"] is not None else ""),
+                    ("Pairs ≥ 80% alike", str(ps["flagged"]) if cid != -1 else ""),
+                    ("Stale pages", f"{stale} of {len(known)}" if known else ""),
+                    ("Keywords", cluster_keywords.get(cid, "")),
+                ],
+                list_title="Pages", items=[urls[i]["slug"] for i in idxs[:12]] + (
+                    [f"+ {len(idxs) - 12} more"] if len(idxs) > 12 else []),
+                source="url_mapping.csv · clusters.csv · similarity_scores.csv · cluster_merge_suggestions.csv",
+            ),
+        }
+
+    # ---- Graph ---------------------------------------------------------------------
+    order = sorted(range(len(urls)), key=lambda i: (
+        urls[i]["status"] != "fix", urls[i]["status"] != "update", not urls[i]["hub"], i))
+    keep = set(order[:MAX_GRAPH_URLS])
+    nodes, edges = [], []
+    kept_clusters = sorted({urls[i]["cid"] for i in keep})
+    for cid in kept_clusters:
+        ci = cluster_info[cid]
+        nodes.append({"id": f"c{cid}", "type": "cluster", "cid": cid, "label": ci["name"],
+                      "size": ci["url_count"], "status": ci["status"]})
+    for i in sorted(keep):
+        u = urls[i]
+        nodes.append({"id": f"u{i}", "type": "url", "ui": i, "cid": u["cid"], "label": u["slug"],
+                      "kind": u["kind"], "hub": u["hub"], "status": u["status"]})
+        edges.append({"from": f"c{u['cid']}", "to": f"u{i}", "type": "member"})
+        for sc in u["secondary"]:
+            if sc in kept_clusters:
+                edges.append({"from": f"u{i}", "to": f"c{sc}", "type": "secondary"})
+    sim_edges_total = 0
+    for p in sorted(range(len(pairs)), key=lambda k: -pairs[k]["sim"]):
+        pr = pairs[p]
+        if pr["ai"] in keep and pr["bi"] in keep:
+            sim_edges_total += 1
+            if sim_edges_total <= MAX_SIMILARITY_EDGES:
+                edges.append({"from": f"u{pr['ai']}", "to": f"u{pr['bi']}", "type": "similar",
+                              "sim": pr["sim"], "risk": pr["risk"], "pi": p})
+    for mi, m in enumerate(merge_rows):
+        if m["a"] in kept_clusters and m["b"] in kept_clusters:
+            edges.append({"from": f"c{m['a']}", "to": f"c{m['b']}", "type": "merge",
+                          "sim": m["sim"], "status": m["status"], "mi": mi})
+    graph = {
+        "nodes": nodes, "edges": edges,
+        "meta": {
+            "url_nodes": len(keep), "url_total": len(urls),
+            "similar_edges": min(sim_edges_total, MAX_SIMILARITY_EDGES), "similar_total": sim_edges_total,
+            "threshold": OVERLAP_THRESHOLD,
+            "truncated": len(keep) < len(urls) or sim_edges_total > MAX_SIMILARITY_EDGES,
+        },
+    }
+
+    # ---- Overlap heatmaps --------------------------------------------------------------
+    overlap_clusters = []
+    if not sim.empty:
+        pair_index = {(p["a"], p["b"]): k for k, p in enumerate(pairs)}
+        for cid, g in sim.groupby("cluster_id"):
+            cid = int(cid)
+            members = pd.unique(pd.concat([g["url_a"], g["url_b"]])).tolist()
+            truncated = len(members) > MAX_HEATMAP_URLS
+            if truncated:
+                peak = pd.concat([g[["url_a", "similarity"]].rename(columns={"url_a": "u"}),
+                                  g[["url_b", "similarity"]].rename(columns={"url_b": "u"})])
+                members = peak.groupby("u")["similarity"].max().sort_values(ascending=False).index[:MAX_HEATMAP_URLS].tolist()
+            pos = {u: k for k, u in enumerate(members)}
+            n = len(members)
+            z = [[None] * n for _ in range(n)]
+            pidx = [[None] * n for _ in range(n)]
+            risk_cells = []
+            for _, r in g.iterrows():
+                a, b = r["url_a"], r["url_b"]
+                if a not in pos or b not in pos:
+                    continue
+                i, j = pos[a], pos[b]
+                v = round(float(r["similarity"]), 3)
+                z[i][j] = z[j][i] = v
+                k = pair_index.get((a, b))
+                pidx[i][j] = pidx[j][i] = k
+                if bool(r["conversion_risk"]) and v >= OVERLAP_THRESHOLD:
+                    risk_cells.append([i, j])
+            ci = cluster_info.get(cid)
+            ps = pair_stats[cid]
+            overlap_clusters.append({
+                "cid": cid, "name": cluster_names.get(cid, f"Cluster {cid}"),
+                "url_count": ci["url_count"] if ci else n,
+                "n_pairs": ps["n_pairs"], "avg_sim": ps["avg_sim"],
+                "flagged": ps["flagged"], "risk": ps["risk"],
+                "stale": ci["stale"] if ci else 0, "fresh_known": ci["fresh_known"] if ci else 0,
+                "slugs": [strip(u) for u in members], "z": z, "pairs": pidx,
+                "risk_cells": risk_cells, "truncated": truncated,
+            })
+        overlap_clusters.sort(key=lambda c: (-c["flagged"], -c["risk"], -(c["avg_sim"] or 0)))
+    overlap = {"threshold": OVERLAP_THRESHOLD, "clusters": overlap_clusters}
+
+    # ---- Gap matrix ---------------------------------------------------------------------
+    ideas = []
+    if content_ideas is not None and not content_ideas.empty:
+        ideas = content_ideas.fillna("").to_dict("records")
+    idea_by_topic = {}
+    for k, idea in enumerate(ideas):
+        topic = str(idea.get("gap_topic", "")).strip().lower()
+        if topic and topic not in idea_by_topic:
+            idea_by_topic[topic] = k
+
+    def _idea_panel(idea: dict) -> dict:
+        questions = [q.strip() for q in str(idea.get("key_questions", "")).split("|") if q.strip()]
+        return _panel(
+            "Content idea", str(idea.get("title", "")), "opportunity",
+            f"Competitors cover “{idea.get('gap_topic', '')}”" +
+            (f" ({idea.get('covered_by')})" if idea.get("covered_by") else "") + "; you don't.",
+            "Topics competitors already publish on are proven demand you currently can't capture.",
+            f"Create: {idea.get('title', '')}",
+            facts=[
+                ("Priority", str(idea.get("priority", ""))),
+                ("Format", str(idea.get("content_type", ""))),
+                ("Audience", str(idea.get("target_audience", ""))),
+                ("Length", f"~{idea.get('est_word_count')} words" if idea.get("est_word_count") else ""),
+                ("Closest existing cluster", str(idea.get("spoke_cluster", ""))),
+            ],
+            list_title="Questions the page should answer" if questions else "",
+            items=questions[:6],
+            source="content_ideas.csv",
+        )
+
+    gap_rows = []
+    for row in competitor_table:
+        covered = [c for c in competitor_names if row["competitors"].get(c)]
+        status = row["status"]
+        idea_idx = idea_by_topic.get(row["topic"].strip().lower())
+        if status == "GAP":
+            pstatus = "opportunity"
+            what = f"{len(covered)} of {len(competitor_names)} competitors cover “{row['topic']}”; {site_config.name} doesn't."
+            why = "Topics competitors already rank for are traffic you can't win without a page."
+            if idea_idx is not None:
+                idea = ideas[idea_idx]
+                action = f"Create: {idea.get('title', '')} ({idea.get('content_type', '')})."
+            else:
+                action = "Create a page for this topic, or extend the closest existing cluster to cover it."
+        elif status == "ADVANTAGE":
+            pstatus = "ok"
+            what = f"Only {site_config.name} covers “{row['topic']}”."
+            why = "Unique topics are a moat: no competitor is fighting you for them."
+            action = "Keep it fresh and link to it from related pages."
+        else:
+            pstatus = "ok"
+            what = f"{site_config.name} and {len(covered)} competitor(s) cover “{row['topic']}”."
+            why = "Shared topics are table stakes; depth and freshness decide who ranks."
+            action = "Check your page is the most complete and up to date."
+        panel = _panel("Competitor topic", row["topic"], pstatus, what, why, action,
+                       facts=[("Covered by competitors", ", ".join(covered) or "None"),
+                              ("Covered by you", "Yes" if row["target"] else "No"),
+                              ("Status", status)],
+                       source="competitor_gap_*.csv" + (" · content_ideas.csv" if idea_idx is not None else ""))
+        if idea_idx is not None:
+            panel["idea"] = _idea_panel(ideas[idea_idx])
+        gap_rows.append({"topic": row["topic"], "you": bool(row["target"]), "comps": [bool(row["competitors"].get(c)) for c in competitor_names],
+                         "n_comp": len(covered), "status": status, "has_idea": idea_idx is not None, "panel": panel})
+    status_rank = {"GAP": 0, "SHARED": 1, "ADVANTAGE": 2}
+    gap_rows.sort(key=lambda r: (-r["n_comp"], status_rank.get(r["status"], 3), r["topic"]))
+    gap_counts = {s: sum(1 for r in gap_rows if r["status"] == s) for s in ("GAP", "SHARED", "ADVANTAGE")}
+    gaps = {"competitors": list(competitor_names), "rows": gap_rows, "counts": gap_counts}
+
+    # ---- Action board --------------------------------------------------------------------------
+    def _item(title, sub, panel):
+        return {"title": title, "sub": sub, "panel": panel}
+
+    consolidate = [_item(f"{m['a_name']} + {m['b_name']}", f"Clusters {_pct(m['sim'])} similar · {m['rec']}", m["panel"])
+                   for m in sorted(merge_rows, key=lambda m: (m["status"] != "fix", -m["sim"]))]
+    consolidate += [_item(f"{p['a_slug']} ↔ {p['b_slug']}", f"Pages {_pct(p['sim'])} alike", p["panel"])
+                    for p in pairs if p["bucket"] == "consolidate"]
+    retitle = [_item(f"{p['a_slug']} ↔ {p['b_slug']}",
+                     f"{_pct(p['sim'])} alike" + (" · money page involved" if p["risk"] else ""), p["panel"])
+               for p in pairs if p["bucket"] == "retitle"]
+    stale_urls = sorted([u for u in urls if u["stale"]], key=lambda u: -(u["age"] or 0))
+    update = [_item(u["slug"], f"{u['freshness']} · last updated {u['lastmod']}", u["panel"]) for u in stale_urls]
+    expand = []
+    if thin is not None and not thin.empty:
+        prio = {key: p for key, _label, p in _THIN_CATEGORIES}
+        label_of = {key: label for key, label, _p in _THIN_CATEGORIES}
+        for _, r in thin.sort_values(["category", "word_count"], key=lambda s: s.map(prio) if s.name == "category" else s).iterrows():
+            words = int(r["word_count"])
+            expand.append(_item(strip(r["url"]), f"{words} words · {label_of.get(r['category'], '')}", _panel(
+                "Thin page", strip(r["url"]), "update",
+                f"Only {words} words of content.",
+                "Very short pages rarely rank and can drag down how search engines judge the site's depth.",
+                str(r["recommendation"]), url=r["url"],
+                facts=[("Page category", label_of.get(r["category"], "")), ("Word count", str(words))],
+                source="skipped_urls.csv (reason)",
+            )))
+    prio_rank = {"P1": 0, "P2": 1, "P3": 2}
+    create = [_item(str(i.get("title", "")),
+                    f"{i.get('priority', '')} · {i.get('content_type', '')} · covered by {i.get('covered_by', '')}",
+                    _idea_panel(i))
+              for i in sorted(ideas, key=lambda i: (prio_rank.get(str(i.get("priority")), 9),
+                                                     -int(float(i.get("num_competitors") or 0))))]
+    if not create:
+        create = [_item(r["topic"], f"Covered by {r['n_comp']} competitor(s)", r["panel"])
+                  for r in gap_rows if r["status"] == "GAP"]
+
+    def _column(key, label, status, blurb, items, source):
+        return {"key": key, "label": label, "status": status, "blurb": blurb,
+                "count": len(items), "items": items[:MAX_ACTION_ITEMS], "source": source}
+
+    actions = [
+        _column("consolidate", "Consolidate", "fix",
+                "Near-duplicate pages and look-alike clusters that may be better as one.",
+                consolidate, "cluster_merge_suggestions.csv · similarity_scores.csv"),
+        _column("retitle", "Retitle", "fix",
+                "Similar pages that need distinct angles, starting with ones that touch a money page.",
+                retitle, "similarity_scores.csv"),
+        _column("update", "Update", "update",
+                "Pages last modified 6+ months ago.", update, "content_freshness.csv"),
+        _column("expand", "Expand", "update",
+                "Pages with too little content to rank.", expand, "skipped_urls.csv"),
+        _column("create", "Create", "opportunity",
+                "New pages for topics competitors cover and you don't.", create,
+                "content_ideas.csv" if ideas else "competitor_gap_*.csv"),
+    ]
+
+    # ---- KPIs + headline ----------------------------------------------------------------------------
+    real_clusters = [c for c in cluster_info.values() if c["cid"] != -1]
+    risk_pairs = sum(1 for p in pairs if p["risk"])
+    kpis = [
+        {"key": "clusters", "label": "Topic clusters", "value": len(real_clusters), "status": "ok", "tab": "map",
+         "sub": f"{sum(c['url_count'] for c in real_clusters)} pages grouped by meaning",
+         "tip": "Groups of pages about the same subject, found by comparing what each page says."},
+        {"key": "overlap", "label": "Overlap issues", "value": len(pairs), "status": "fix" if pairs else "ok", "tab": "overlap",
+         "sub": f"page pairs {_pct(OVERLAP_THRESHOLD)}+ alike" + (f" · {risk_pairs} touch a money page" if risk_pairs else ""),
+         "tip": "Two pages whose text is at least 80% similar. They may compete for the same searches; this is not confirmed cannibalization."},
+        {"key": "gaps", "label": "Competitor gaps", "value": gap_counts["GAP"] if competitor_names else None,
+         "status": "opportunity", "tab": "gaps",
+         "sub": (f"topics {len(competitor_names)} competitors cover that you don't" if competitor_names
+                 else "No competitor data in this run"),
+         "tip": "Topics at least one competitor publishes on that this site has no page for."},
+    ]
+    findings = []
+    # Same ordering as the Overlap view's default cluster, so the headline and that view agree.
+    worst = max(real_clusters, key=lambda c: (c["flagged"], c["risk"], c["avg_sim"] or 0), default=None)
+    if pairs and worst and worst["flagged"]:
+        findings.append({"status": "fix", "tab": "overlap", "cid": worst["cid"],
+                         "text": f"{len(pairs)} pairs of pages read {_pct(OVERLAP_THRESHOLD)}+ alike. Worst: “{worst['name']}” ({worst['flagged']} pairs).",
+                         "sub": "These pages may compete for the same searches" +
+                                (f"; {risk_pairs} pairs put an article against a money page." if risk_pairs else ".")})
+    if stale_urls:
+        findings.append({"status": "update", "tab": "actions",
+                         "text": f"{len(stale_urls)} pages haven't been updated in 6+ months.",
+                         "sub": "Refreshing them is the cheapest ranking win."})
+    if expand:
+        findings.append({"status": "update", "tab": "actions",
+                         "text": f"{len(expand)} pages are too thin to rank.", "sub": ""})
+    if competitor_names and gap_counts["GAP"]:
+        findings.append({"status": "opportunity", "tab": "gaps",
+                         "text": f"{gap_counts['GAP']} topics competitors cover that you don't.",
+                         "sub": f"{sum(1 for r in gap_rows if r['status'] == 'GAP' and r['has_idea'])} already have a content brief."})
+    if not findings:
+        findings.append({"status": "ok", "tab": "map", "text": "No overlap, freshness or gap issues found in this run.", "sub": ""})
+
+    return {
+        "urls": [{k: u[k] for k in ("url", "slug", "cid", "cluster", "kind", "hub", "intent",
+                                     "freshness", "status", "panel")} | {"n_pairs": len(u["pairs"])}
+                 for u in urls],
+        "clusters": {str(cid): {k: v for k, v in c.items()} for cid, c in cluster_info.items()},
+        "pairs": [{"panel": p["panel"], "sim": p["sim"], "risk": p["risk"], "cid": p["cid"]} for p in pairs],
+        "merges": [{"panel": m["panel"]} for m in merge_rows],
+        "graph": graph,
+        "overlap": overlap,
+        "gaps": gaps,
+        "actions": actions,
+        "kpis": kpis,
+        "findings": findings,
+    }
+
+
+def generate_dashboard(site_config: SiteConfig | None = None, sample_data: bool = False):
+    """Build a self-contained interactive HTML dashboard.
+
+    sample_data=True marks the output as synthetic (badge in the header) — used by
+    scripts/generate_demo_data.py.
+    """
     if site_config is None:
         site_config = load_site_config() or SiteConfig(name="Site", domain="")
 
@@ -803,8 +1414,24 @@ def generate_dashboard(site_config: SiteConfig | None = None):
             u["spoke_cluster"] = ""
             u["spoke_id"] = ""
 
+    visuals = build_visuals(
+        url_map=url_map,
+        clusters=clusters,
+        similarity=_load("similarity_scores.csv"),
+        merges=_load("cluster_merge_suggestions.csv"),
+        intent=intent_df,
+        freshness=freshness_df,
+        competitor_table=competitor_table,
+        competitor_names=competitor_names,
+        content_ideas=content_ideas_df,
+        thin=thin_actionable,
+        site_config=site_config,
+    )
+
     from src.dashboard_html import build_html
     html = build_html(
+        visuals=visuals,
+        sample_data=sample_data,
         site_config=site_config,
         treemap_data=treemap_data,
         cannib_chart_data=cannib_chart_data,
@@ -827,7 +1454,7 @@ def generate_dashboard(site_config: SiteConfig | None = None):
     )
 
     out_path = os.path.join(out, "dashboard.html")
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
     logger.info("Dashboard saved to %s", out_path)
     return out_path

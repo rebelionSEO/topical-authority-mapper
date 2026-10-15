@@ -30,23 +30,23 @@ const DATA = {
     "p1_ideas": 5
   },
   "health": {
-    "composite": 71,
+    "composite": 58,
     "composite_label": "yellow",
     "subscores": {
       "coverage": {
-        "score": 88,
+        "score": 90,
         "label": "green",
-        "detail": "30 clusters across ~190 URLs"
+        "detail": "30 clusters across 198 URLs"
       },
       "cannibalization": {
-        "score": 55,
-        "label": "yellow",
-        "detail": "8 of 30 clusters cannibalized"
+        "score": 0,
+        "label": "unknown",
+        "detail": "no data \u2014 feature not enabled"
       },
       "freshness": {
-        "score": 64,
+        "score": 72,
         "label": "yellow",
-        "detail": "32 of 120 pages 6+ months old"
+        "detail": "54 of 190 pages 6+ months old"
       },
       "brand": {
         "score": 65,
@@ -54,25 +54,14 @@ const DATA = {
         "detail": "avg 65/100 across 140 pages"
       },
       "competitive": {
-        "score": 68,
-        "label": "yellow",
-        "detail": "covers 78 of 115 unique topics vs competitors"
+        "score": 25,
+        "label": "red",
+        "detail": "covers 12 of 48 unique topics vs competitors"
       }
     },
-    "deltas": {
-      "composite": 4,
-      "coverage": 2,
-      "cannibalization": 6,
-      "freshness": -1,
-      "brand": 0,
-      "competitive": 3
-    },
+    "deltas": {},
     "sparkline": [
-      56,
-      61,
-      64,
-      67,
-      71
+      58
     ],
     "site_name": "Lumenflow",
     "site_domain": "lumenflow.demo"
@@ -296,11 +285,11 @@ const DATA = {
       "count": 12,
       "severity": "critical",
       "urls": [
-        "/post/customer-analytics-platform-tutorial-1",
-        "/blog/customer-analytics-platform-best-practices",
-        "/guide/customer-analytics-platform-explained",
-        "/post/how-to-customer-analytics-platform-4",
-        "/case-study/customer-analytics-platform-umbrella"
+        "/services/customer-analytics-platform",
+        "/post/how-to-customer-analytics-platform-1",
+        "/case-study/customer-analytics-platform-initech",
+        "/blog/customer-analytics-platform-mistakes-to-avoid-3",
+        "/post/customer-analytics-platform-checklist-4"
       ],
       "more": 7
     },
@@ -310,11 +299,11 @@ const DATA = {
       "count": 11,
       "severity": "critical",
       "urls": [
-        "/post/user-behavior-tracking-tutorial-1",
-        "/blog/user-behavior-tracking-best-practices",
-        "/guide/user-behavior-tracking-explained",
-        "/post/how-to-user-behavior-tracking-4",
-        "/case-study/user-behavior-tracking-umbrella"
+        "/services/user-behavior-tracking",
+        "/post/how-to-user-behavior-tracking-1",
+        "/case-study/user-behavior-tracking-initech",
+        "/blog/user-behavior-tracking-mistakes-to-avoid-3",
+        "/post/user-behavior-tracking-checklist-4"
       ],
       "more": 6
     },
@@ -324,11 +313,11 @@ const DATA = {
       "count": 10,
       "severity": "critical",
       "urls": [
-        "/post/a-b-testing-framework-tutorial-1",
-        "/blog/a-b-testing-framework-best-practices",
-        "/guide/a-b-testing-framework-explained",
-        "/post/how-to-a-b-testing-framework-4",
-        "/case-study/a-b-testing-framework-umbrella"
+        "/services/a-b-testing-framework",
+        "/post/how-to-a-b-testing-framework-1",
+        "/case-study/a-b-testing-framework-initech",
+        "/blog/a-b-testing-framework-mistakes-to-avoid-3",
+        "/post/a-b-testing-framework-checklist-4"
       ],
       "more": 5
     },
@@ -338,11 +327,11 @@ const DATA = {
       "count": 9,
       "severity": "high",
       "urls": [
-        "/post/retention-metrics-tutorial-1",
-        "/blog/retention-metrics-best-practices",
-        "/guide/retention-metrics-explained",
-        "/post/how-to-retention-metrics-4",
-        "/case-study/retention-metrics-umbrella"
+        "/guide/retention-metrics",
+        "/post/how-to-retention-metrics-1",
+        "/case-study/retention-metrics-initech",
+        "/blog/retention-metrics-mistakes-to-avoid-3",
+        "/post/retention-metrics-checklist-4"
       ],
       "more": 4
     },
@@ -352,11 +341,11 @@ const DATA = {
       "count": 8,
       "severity": "high",
       "urls": [
-        "/post/dashboard-building-tutorial-1",
-        "/blog/dashboard-building-best-practices",
-        "/guide/dashboard-building-explained",
-        "/post/how-to-dashboard-building-4",
-        "/case-study/dashboard-building-umbrella"
+        "/services/dashboard-building",
+        "/post/how-to-dashboard-building-1",
+        "/case-study/dashboard-building-initech",
+        "/blog/dashboard-building-mistakes-to-avoid-3",
+        "/post/dashboard-building-checklist-4"
       ],
       "more": 3
     },
@@ -366,11 +355,11 @@ const DATA = {
       "count": 8,
       "severity": "high",
       "urls": [
-        "/post/conversion-optimization-tutorial-1",
-        "/blog/conversion-optimization-best-practices",
-        "/guide/conversion-optimization-explained",
-        "/post/how-to-conversion-optimization-4",
-        "/case-study/conversion-optimization-umbrella"
+        "/guide/conversion-optimization",
+        "/post/how-to-conversion-optimization-1",
+        "/case-study/conversion-optimization-initech",
+        "/blog/conversion-optimization-mistakes-to-avoid-3",
+        "/post/conversion-optimization-checklist-4"
       ],
       "more": 3
     },
@@ -380,11 +369,11 @@ const DATA = {
       "count": 7,
       "severity": "high",
       "urls": [
-        "/post/funnel-analysis-tutorial-1",
-        "/blog/funnel-analysis-best-practices",
-        "/guide/funnel-analysis-explained",
-        "/post/how-to-funnel-analysis-4",
-        "/case-study/funnel-analysis-umbrella"
+        "/guide/funnel-analysis",
+        "/post/how-to-funnel-analysis-1",
+        "/case-study/funnel-analysis-initech",
+        "/blog/funnel-analysis-mistakes-to-avoid-3",
+        "/post/funnel-analysis-checklist-4"
       ],
       "more": 2
     },
@@ -394,11 +383,11 @@ const DATA = {
       "count": 7,
       "severity": "high",
       "urls": [
-        "/post/feature-adoption-tutorial-1",
-        "/blog/feature-adoption-best-practices",
-        "/guide/feature-adoption-explained",
-        "/post/how-to-feature-adoption-4",
-        "/case-study/feature-adoption-umbrella"
+        "/guide/feature-adoption",
+        "/post/how-to-feature-adoption-1",
+        "/case-study/feature-adoption-initech",
+        "/blog/feature-adoption-mistakes-to-avoid-3",
+        "/post/feature-adoption-checklist-4"
       ],
       "more": 2
     }
@@ -537,7 +526,7 @@ const DATA = {
     {
       "priority": "P2",
       "title": "How to Set Up Funnel Analysis: A Practical Guide for Product Marketing + Content Teams",
-      "topic": "funnel analysis setup",
+      "topic": "how to set up funnel analysis",
       "type": "How-to guide",
       "intent": "howto",
       "audience": "Product marketing + content teams",

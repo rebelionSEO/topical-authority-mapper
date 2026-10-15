@@ -20,7 +20,6 @@ Read by dashboard.py + rendered as a Plotly scatter in dashboard_html.py.
 import json
 import logging
 import os
-import pickle
 from typing import Optional
 
 import numpy as np
@@ -49,12 +48,22 @@ def build_vector_map(
         chunks_df = pd.read_pickle(path)
 
     if embeddings is None:
-        path = os.path.join(cdir, "embeddings.pkl")
+        # src/embedding.py caches to "<cache_path>.npz" (cache_path = cache/embeddings.pkl);
+        # the legacy pickle is never loaded.
+        path = os.path.join(cdir, "embeddings.pkl.npz")
         if not os.path.exists(path):
-            logger.warning("vector_map: embeddings.pkl missing")
+            logger.warning("vector_map: embeddings.pkl.npz missing")
             return {"points": [], "cluster_legend": {}}
-        with open(path, "rb") as f:
-            embeddings = pickle.load(f)
+        try:
+            with np.load(path, allow_pickle=False) as cached:
+                embeddings = cached["embeddings"].copy()
+        except (ValueError, OSError, KeyError):
+            logger.warning("vector_map: unreadable embedding cache %s", path)
+            return {"points": [], "cluster_legend": {}}
+        if len(embeddings) != len(chunks_df):
+            logger.warning("vector_map: %d embeddings for %d chunks; rerun the audit",
+                           len(embeddings), len(chunks_df))
+            return {"points": [], "cluster_legend": {}}
 
     if cluster_info is None:
         path = os.path.join(out, "clusters.csv")

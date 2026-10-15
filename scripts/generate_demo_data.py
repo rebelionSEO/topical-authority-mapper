@@ -1,12 +1,12 @@
 """Generate a synthetic demo dataset + render the dashboard, for screenshots / blog posts.
 
-No real client data, no live crawl, no LLM calls. Hardcoded fictional brand
-("Lumenflow" — a made-up B2B SaaS product analytics platform) with believable
-clusters, cannibalization, content ideas, competitors, brand voice, etc.
+No real client data, no live crawl, no LLM calls, no API keys. Hardcoded fictional
+brand ("Lumenflow" — a made-up B2B SaaS product analytics platform) with believable
+clusters, overlap, content ideas, competitors, brand voice, etc. Every CSV has the
+same columns the real pipeline writes, so every dashboard view is populated, and the
+dashboard is rendered with a visible "SAMPLE DATA" badge.
 
 Usage:
-    cd /Users/gmejia/topical-authority-mapper
-    source venv/bin/activate
     python scripts/generate_demo_data.py
     open output-demo/dashboard.html
 """
@@ -94,7 +94,7 @@ CONTENT_IDEAS = [
     {"priority": "P1", "title": "Activation Rate Benchmarks: What B2B SaaS Product Teams Should Be Hitting", "topic": "activation rate benchmarks", "type": "Benchmark + data report", "intent": "metrics", "audience": "Product-led growth teams", "words": 1400, "covered_by": "BeaconAnalytics, PulseGrid", "n_comp": 2, "spoke": "Onboarding Optimization", "spoke_sim": 0.638, "kws": "activation rate benchmarks | average activation rate | b2b saas activation benchmark", "questions": "What are the current benchmarks for activation rate? | How do top-quartile teams compare to median? | How does this benchmark vary by company size, industry, GTM motion? | What's the right cadence to measure and recalibrate? | What concise definition would an LLM cite? | What PAA questions does Google surface? | What schema.org applies? | Which sources to cite? | What internal pages to link?"},
     {"priority": "P1", "title": "What Is Product-Qualified Lead (PQL)? A Complete Guide for PLG Teams", "topic": "what is pql", "type": "Pillar / definitive guide", "intent": "definition", "audience": "Product-led growth teams", "words": 2000, "covered_by": "PulseGrid, BeaconAnalytics", "n_comp": 2, "spoke": "Product-Led Growth", "spoke_sim": 0.722, "kws": "what is pql | product qualified lead | pql definition", "questions": "What does 'PQL' actually mean (and what isn't it)? | Why does it matter for PLG teams right now? | How do leading teams use it in practice — with one named example? | What's the most common misconception worth correcting upfront? | What concise LLM-citable definition? | What PAA questions does Google surface? | What schema.org? | Which sources to cite? | What internal pages?"},
     # P2 (1 competitor, mostly with spoke matches) — 18 ideas
-    {"priority": "P2", "title": "How to Set Up Funnel Analysis: A Practical Guide for Product Marketing + Content Teams", "topic": "funnel analysis setup", "type": "How-to guide", "intent": "howto", "audience": "Product marketing + content teams", "words": 1800, "covered_by": "BeaconAnalytics", "n_comp": 1, "spoke": "Funnel Analysis", "spoke_sim": 0.701, "kws": "funnel analysis setup | how to set up funnel | conversion funnel tutorial", "questions": "What's the step-by-step process? | Common mistakes to avoid? | Templates and tools that help? | Before/after numbers? | LLM-citable definition? | PAA questions? | Schema.org? | Sources to cite? | Internal links?"},
+    {"priority": "P2", "title": "How to Set Up Funnel Analysis: A Practical Guide for Product Marketing + Content Teams", "topic": "how to set up funnel analysis", "type": "How-to guide", "intent": "howto", "audience": "Product marketing + content teams", "words": 1800, "covered_by": "BeaconAnalytics", "n_comp": 1, "spoke": "Funnel Analysis", "spoke_sim": 0.701, "kws": "funnel analysis setup | how to set up funnel | conversion funnel tutorial", "questions": "What's the step-by-step process? | Common mistakes to avoid? | Templates and tools that help? | Before/after numbers? | LLM-citable definition? | PAA questions? | Schema.org? | Sources to cite? | Internal links?"},
     {"priority": "P2", "title": "The Cohort Analysis Framework: How Product Teams Use It", "topic": "cohort analysis framework", "type": "Framework explainer", "intent": "framework", "audience": "Product + UX research teams", "words": 1500, "covered_by": "Insightspark", "n_comp": 1, "spoke": "Cohort Reporting", "spoke_sim": 0.689, "kws": "cohort analysis framework | cohort framework | cohort model", "questions": "What is the cohort framework? | When to apply / avoid? | Steps + outputs at each stage? | Worked example? | LLM definition? | PAA questions? | Schema.org? | Sources? | Internal links?"},
     {"priority": "P2", "title": "Best Session Replay Tools: A B2B SaaS Buyer's Guide", "topic": "best session replay tools", "type": "Comparison page", "intent": "comparison", "audience": "Product marketing + content teams", "words": 2500, "covered_by": "PulseGrid", "n_comp": 1, "spoke": "Session Replay", "spoke_sim": 0.598, "kws": "best session replay tools | session replay alternatives | top session replay", "questions": "Top alternatives? | How do they differ on pricing/features/use case? | Which fits SMB / mid-market / enterprise? | Strongest case for the runner-up? | LLM-citable summary? | PAA? | Schema.org? | Sources? | Internal links?"},
     {"priority": "P2", "title": "Churn Rate Benchmarks: What SaaS Product Teams Should Be Hitting", "topic": "churn rate benchmarks", "type": "Benchmark + data report", "intent": "metrics", "audience": "Customer success + retention teams", "words": 1400, "covered_by": "BeaconAnalytics", "n_comp": 1, "spoke": "Churn Prediction", "spoke_sim": 0.654, "kws": "churn rate benchmarks | average churn rate | b2b saas churn benchmark", "questions": "Current benchmarks (top-quartile, median, bottom)? | What drives the gap? | Variation by size/industry/motion? | Right cadence to measure? | LLM definition? | PAA? | Schema.org? | Sources? | Internal links?"},
@@ -161,6 +161,39 @@ def gen_clusters():
     ]
 
 
+# Clusters whose hub is a service (money) page; the rest with 6+ pages get a pillar guide.
+SERVICE_HUB_CLUSTERS = {0, 2, 9, 14, 20}
+# Clusters with deliberate near-duplicate groups (drives the Overlap view). Each entry is
+# a list of page-index groups inside the cluster; pages in the same group read alike.
+# Index 0 is the hub, so a group containing 0 in a service cluster is a money-page overlap.
+OVERLAP_GROUPS = {
+    0: [[0, 3, 8], [1, 6, 11]],
+    2: [[0, 1, 4], [5, 9, 10]],
+    9: [[0, 3, 7], [2, 5, 8]],
+    3: [[1, 4, 6], [2, 5]],
+    14: [[1, 3, 5], [2, 6]],
+}
+# Clusters with a single mild look-alike pair.
+LIGHT_OVERLAP = {5: (2, 7), 7: (1, 4), 20: (3, 6), 28: (2, 5)}
+COMPANIES = ["acme", "globex", "initech", "sterling", "umbrella", "hooli", "vandelay"]
+
+
+def demo_url(cid, slug_root, i, n):
+    """Unique, realistic URL for page i of a cluster (index 0 is the cluster's hub)."""
+    if i == 0 and cid in SERVICE_HUB_CLUSTERS:
+        return f"https://{SITE_DOMAIN}/services/{slug_root}"
+    if i == 0 and n >= 6:
+        return f"https://{SITE_DOMAIN}/guide/{slug_root}"
+    shapes = [
+        f"https://{SITE_DOMAIN}/blog/{slug_root}-best-practices-{i}",
+        f"https://{SITE_DOMAIN}/post/how-to-{slug_root}-{i}",
+        f"https://{SITE_DOMAIN}/case-study/{slug_root}-{COMPANIES[i % len(COMPANIES)]}",
+        f"https://{SITE_DOMAIN}/blog/{slug_root}-mistakes-to-avoid-{i}",
+        f"https://{SITE_DOMAIN}/post/{slug_root}-checklist-{i}",
+    ]
+    return shapes[i % len(shapes)]
+
+
 def gen_url_mapping():
     rows = []
     seq = 1
@@ -168,15 +201,7 @@ def gen_url_mapping():
         cid = c["id"]
         slug_root = slugify(c["name"])
         for i in range(n):
-            # Mix of post / guide / case-study / service URL shapes
-            shapes = [
-                f"https://{SITE_DOMAIN}/post/{slug_root}-tutorial-{i+1}",
-                f"https://{SITE_DOMAIN}/blog/{slug_root}-best-practices",
-                f"https://{SITE_DOMAIN}/guide/{slug_root}-explained",
-                f"https://{SITE_DOMAIN}/post/how-to-{slug_root}-{i+1}",
-                f"https://{SITE_DOMAIN}/case-study/{slug_root}-{['acme','globex','initech','sterling','umbrella'][i % 5]}",
-            ]
-            url = shapes[i % len(shapes)]
+            url = demo_url(cid, slug_root, i, n)
             secondary = ""
             # Add a spoke (secondary) cluster ID for ~30% of pages
             if random.random() < 0.3:
@@ -296,7 +321,7 @@ def gen_content_freshness(url_map):
         ("Stale (6-12 months)", 240, 0.20),
         ("Decaying (12+ months)", 540, 0.14),
     ]
-    indexed_urls = [u for u in url_map if u["main_cluster"] != -1][:120]
+    indexed_urls = [u for u in url_map if u["main_cluster"] != -1]
     for u in indexed_urls:
         bucket = random.choices(age_buckets, [w for _, _, w in age_buckets])[0]
         label, base_age, _ = bucket
@@ -339,48 +364,80 @@ def gen_brand_voice_scores(url_map):
 
 
 def gen_similarity_scores(url_map):
-    rows = []
-    # Pick 20 same-cluster pairs with high similarity
+    """Every intra-cluster URL pair, like enhancements.compute_similarity_scores writes.
+
+    Scores are synthetic; page types, conversion_risk and action use the pipeline's own
+    rules so the demo behaves exactly like a real run.
+    """
+    from src.enhancements import _similarity_action, classify_page_type
+
+    money_pages = {"service", "industry", "local-landing", "homepage"}
+    info_pages = {"blog", "tool-review", "webinar"}
     by_cluster = {}
     for u in url_map:
-        if u["main_cluster"] == -1:
-            continue
-        by_cluster.setdefault(u["main_cluster"], []).append(u["url"])
-    pairs = []
+        if u["main_cluster"] != -1:
+            by_cluster.setdefault(u["main_cluster"], []).append(u["url"])
+    rows = []
     for cid, urls in by_cluster.items():
-        if len(urls) < 2:
-            continue
-        for i in range(min(3, len(urls) - 1)):
-            pairs.append((cid, urls[i], urls[i + 1]))
-    pairs = pairs[:25]
-    for cid, a, b in pairs:
-        sim = round(random.uniform(0.78, 0.96), 4)
-        a_type = "service" if "/services/" in a else "case-study" if "/case-study/" in a else "blog"
-        b_type = "service" if "/services/" in b else "case-study" if "/case-study/" in b else "blog"
-        types = {a_type, b_type}
-        money = {"service"}
-        info = {"blog"}
-        is_conv = bool(types & money) and bool(types & info)
-        if is_conv:
-            action = "CRITICAL: blog page may outrank service page — cannibalizing conversions"
-        elif sim >= 0.92:
-            action = "MERGE: near-duplicate content — consolidate into one page"
-        elif sim >= 0.80:
-            action = "REVIEW: very similar — differentiate angles or merge"
-        else:
-            action = "DIFFERENTIATE: overlap exists — ensure unique intent per page"
-        rows.append({
-            "cluster_id": cid,
-            "url_a": a,
-            "url_b": b,
-            "type_a": a_type,
-            "type_b": b_type,
-            "similarity": sim,
-            "conversion_risk": is_conv,
-            "action": action,
-        })
+        group_of = {}
+        for g, members in enumerate(OVERLAP_GROUPS.get(cid, [])):
+            for idx in members:
+                group_of[idx] = g
+        light = LIGHT_OVERLAP.get(cid)
+        for i in range(len(urls)):
+            for j in range(i + 1, len(urls)):
+                if i in group_of and group_of.get(j) == group_of[i]:
+                    sim = random.uniform(0.84, 0.95)
+                elif light and {i, j} == set(light):
+                    sim = random.uniform(0.80, 0.84)
+                elif cid in OVERLAP_GROUPS:
+                    sim = random.uniform(0.58, 0.78)
+                else:
+                    sim = random.uniform(0.46, 0.75)
+                a, b = urls[i], urls[j]
+                type_a, type_b = classify_page_type(a), classify_page_type(b)
+                types = {type_a, type_b}
+                rows.append({
+                    "cluster_id": cid,
+                    "url_a": a,
+                    "url_b": b,
+                    "type_a": type_a,
+                    "type_b": type_b,
+                    "similarity": round(sim, 4),
+                    "conversion_risk": sim >= 0.80 and bool(types & money_pages) and bool(types & info_pages),
+                    "action": _similarity_action(sim, type_a, type_b),
+                })
     rows.sort(key=lambda r: (not r["conversion_risk"], -r["similarity"]))
     return rows
+
+
+def gen_vector_map(url_map, intent_rows):
+    """Synthetic 2D layout in the same shape src/vector_map.py writes (topics as blobs)."""
+    import math
+    from src.enhancements import classify_page_type
+
+    intent_by_url = {r["url"]: r["primary_intent"] for r in intent_rows}
+    names = {c["id"]: c["name"] for c in CLUSTERS}
+    centers = {}
+    for k, c in enumerate(CLUSTERS):
+        angle = k * 2.39996
+        radius = 2.2 * math.sqrt(k + 1)
+        centers[c["id"]] = (radius * math.cos(angle), radius * math.sin(angle))
+    points = []
+    for u in url_map:
+        cid = u["main_cluster"]
+        cx, cy = centers.get(cid, (0.0, 0.0))
+        spread = 6.0 if cid == -1 else 0.9
+        points.append({
+            "x": round(cx + random.gauss(0, spread), 4),
+            "y": round(cy + random.gauss(0, spread), 4),
+            "url": u["url"],
+            "cluster_id": cid,
+            "cluster_name": names.get(cid, "Unclustered"),
+            "page_type": classify_page_type(u["url"]),
+            "intent": intent_by_url.get(u["url"], ""),
+        })
+    return {"points": points, "cluster_legend": {str(c["id"]): c["name"] for c in CLUSTERS}}
 
 
 def gen_competitor_clusters(competitor_name):
@@ -462,6 +519,7 @@ def gen_competitor_gap(competitor_name, target_clusters):
 def gen_cluster_merge_suggestions():
     pairs = [
         (4, 5, 0.86, "MERGE"),
+        (22, 23, 0.85, "MERGE"),
         (16, 17, 0.74, "REVIEW for merge"),
         (3, 28, 0.72, "REVIEW for merge"),
         (10, 1, 0.71, "REVIEW for merge"),
@@ -540,34 +598,18 @@ def gen_qa_report():
     }
 
 
-def gen_site_health(brand_score_avg):
-    return {
-        "composite": 71,
-        "composite_label": "yellow",
-        "subscores": {
-            "coverage": {"score": 88, "label": "green",
-                          "detail": f"{len(CLUSTERS)} clusters across ~{sum(CLUSTER_URL_COUNTS)} URLs"},
-            "cannibalization": {"score": 55, "label": "yellow",
-                                 "detail": f"{len(CANNIB)} of {len(CLUSTERS)} clusters cannibalized"},
-            "freshness": {"score": 64, "label": "yellow",
-                           "detail": "32 of 120 pages 6+ months old"},
-            "brand": {"score": int(brand_score_avg), "label": "yellow" if brand_score_avg < 75 else "green",
-                       "detail": f"avg {int(brand_score_avg)}/100 across 140 pages"},
-            "competitive": {"score": 68, "label": "yellow",
-                             "detail": "covers 78 of 115 unique topics vs competitors"},
-        },
-        "deltas": {"composite": 4, "coverage": 2, "cannibalization": 6, "freshness": -1, "brand": 0, "competitive": 3},
-        "sparkline": [56, 61, 64, 67, 71],
-        "site_name": SITE_NAME,
-        "site_domain": SITE_DOMAIN,
-    }
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
+def write_demo_dataset(output_dir=None, cache_dir=None):
+    """Write every demo CSV/JSON into output_dir (wiped first) and return the SiteConfig.
+
+    Deterministic (seeded) so the committed demo and the tests see the same data.
+    """
+    DEMO_OUTPUT = output_dir or globals()["DEMO_OUTPUT"]
+    DEMO_CACHE = cache_dir or globals()["DEMO_CACHE"]
+    random.seed(42)
     print(f"→ Generating demo dataset for fictional brand: {SITE_NAME} ({SITE_DOMAIN})")
     if os.path.exists(DEMO_OUTPUT):
         shutil.rmtree(DEMO_OUTPUT)
@@ -620,10 +662,15 @@ def main():
     brand = gen_brand_voice_scores(url_map)
     write_csv(f"{DEMO_OUTPUT}/brand_voice_scores.csv", brand)
     print(f"  • brand_voice_scores.csv ({len(brand)} URLs)")
-    avg_brand = sum(b["brand_score"] for b in brand) / max(len(brand), 1)
 
     sim = gen_similarity_scores(url_map)
     write_csv(f"{DEMO_OUTPUT}/similarity_scores.csv", sim)
+    flagged = sum(1 for r in sim if r["similarity"] >= 0.80)
+    print(f"  • similarity_scores.csv ({len(sim)} page pairs, {flagged} at 80%+)")
+
+    with open(f"{DEMO_OUTPUT}/vector_map.json", "w") as f:
+        json.dump(gen_vector_map(url_map, intent), f)
+    print("  • vector_map.json (synthetic 2D layout)")
 
     merges = gen_cluster_merge_suggestions()
     write_csv(f"{DEMO_OUTPUT}/cluster_merge_suggestions.csv", merges)
@@ -639,15 +686,21 @@ def main():
     write_csv(f"{DEMO_OUTPUT}/content_ideas.csv", ideas)
     print(f"  • content_ideas.csv ({len(ideas)} briefs)")
 
-    with open(f"{DEMO_OUTPUT}/site_health.json", "w") as f:
-        json.dump(gen_site_health(avg_brand), f, indent=2)
+    # Health is computed from the CSVs above (not hardcoded) so every score traces to data.
+    from src.site_health import compute_health, write_health
+    write_health(compute_health(site_config=cfg))
     with open(f"{DEMO_OUTPUT}/qa_report.json", "w") as f:
         json.dump(gen_qa_report(), f, indent=2)
+    return cfg
+
+
+def main():
+    cfg = write_demo_dataset()
 
     # --- Render dashboard / exec summary / artifact ---
     print("→ Rendering dashboard...")
     from src.dashboard import generate_dashboard
-    generate_dashboard(site_config=cfg)
+    generate_dashboard(site_config=cfg, sample_data=True)
 
     print("→ Rendering exec summary...")
     from src.exec_summary import generate_exec_summary

@@ -1,26 +1,581 @@
 cluster_id,url_a,url_b,type_a,type_b,similarity,conversion_risk,action
-6,https://lumenflow.demo/blog/onboarding-optimization-best-practices,https://lumenflow.demo/guide/onboarding-optimization-explained,blog,blog,0.9529,False,MERGE: near-duplicate content — consolidate into one page
-7,https://lumenflow.demo/post/feature-adoption-tutorial-1,https://lumenflow.demo/blog/feature-adoption-best-practices,blog,blog,0.9495,False,MERGE: near-duplicate content — consolidate into one page
-3,https://lumenflow.demo/blog/funnel-analysis-best-practices,https://lumenflow.demo/guide/funnel-analysis-explained,blog,blog,0.9454,False,MERGE: near-duplicate content — consolidate into one page
-2,https://lumenflow.demo/post/user-behavior-tracking-tutorial-1,https://lumenflow.demo/blog/user-behavior-tracking-best-practices,blog,blog,0.9452,False,MERGE: near-duplicate content — consolidate into one page
-5,https://lumenflow.demo/post/retention-metrics-tutorial-1,https://lumenflow.demo/blog/retention-metrics-best-practices,blog,blog,0.9451,False,MERGE: near-duplicate content — consolidate into one page
-6,https://lumenflow.demo/post/onboarding-optimization-tutorial-1,https://lumenflow.demo/blog/onboarding-optimization-best-practices,blog,blog,0.9349,False,MERGE: near-duplicate content — consolidate into one page
-5,https://lumenflow.demo/guide/retention-metrics-explained,https://lumenflow.demo/post/how-to-retention-metrics-4,blog,blog,0.9324,False,MERGE: near-duplicate content — consolidate into one page
-3,https://lumenflow.demo/guide/funnel-analysis-explained,https://lumenflow.demo/post/how-to-funnel-analysis-4,blog,blog,0.932,False,MERGE: near-duplicate content — consolidate into one page
-5,https://lumenflow.demo/blog/retention-metrics-best-practices,https://lumenflow.demo/guide/retention-metrics-explained,blog,blog,0.9194,False,REVIEW: very similar — differentiate angles or merge
-3,https://lumenflow.demo/post/funnel-analysis-tutorial-1,https://lumenflow.demo/blog/funnel-analysis-best-practices,blog,blog,0.909,False,REVIEW: very similar — differentiate angles or merge
-4,https://lumenflow.demo/guide/cohort-reporting-explained,https://lumenflow.demo/post/how-to-cohort-reporting-4,blog,blog,0.8856,False,REVIEW: very similar — differentiate angles or merge
-1,https://lumenflow.demo/blog/product-telemetry-best-practices,https://lumenflow.demo/guide/product-telemetry-explained,blog,blog,0.8748,False,REVIEW: very similar — differentiate angles or merge
-0,https://lumenflow.demo/post/customer-analytics-platform-tutorial-1,https://lumenflow.demo/blog/customer-analytics-platform-best-practices,blog,blog,0.8683,False,REVIEW: very similar — differentiate angles or merge
-7,https://lumenflow.demo/blog/feature-adoption-best-practices,https://lumenflow.demo/guide/feature-adoption-explained,blog,blog,0.8512,False,REVIEW: very similar — differentiate angles or merge
-6,https://lumenflow.demo/guide/onboarding-optimization-explained,https://lumenflow.demo/post/how-to-onboarding-optimization-4,blog,blog,0.8472,False,REVIEW: very similar — differentiate angles or merge
-4,https://lumenflow.demo/post/cohort-reporting-tutorial-1,https://lumenflow.demo/blog/cohort-reporting-best-practices,blog,blog,0.8382,False,REVIEW: very similar — differentiate angles or merge
-8,https://lumenflow.demo/post/churn-prediction-tutorial-1,https://lumenflow.demo/blog/churn-prediction-best-practices,blog,blog,0.8343,False,REVIEW: very similar — differentiate angles or merge
-0,https://lumenflow.demo/guide/customer-analytics-platform-explained,https://lumenflow.demo/post/how-to-customer-analytics-platform-4,blog,blog,0.8219,False,REVIEW: very similar — differentiate angles or merge
-1,https://lumenflow.demo/post/product-telemetry-tutorial-1,https://lumenflow.demo/blog/product-telemetry-best-practices,blog,blog,0.8194,False,REVIEW: very similar — differentiate angles or merge
-2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices,https://lumenflow.demo/guide/user-behavior-tracking-explained,blog,blog,0.8163,False,REVIEW: very similar — differentiate angles or merge
-2,https://lumenflow.demo/guide/user-behavior-tracking-explained,https://lumenflow.demo/post/how-to-user-behavior-tracking-4,blog,blog,0.8035,False,REVIEW: very similar — differentiate angles or merge
-7,https://lumenflow.demo/guide/feature-adoption-explained,https://lumenflow.demo/post/how-to-feature-adoption-4,blog,blog,0.7982,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
-0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices,https://lumenflow.demo/guide/customer-analytics-platform-explained,blog,blog,0.7962,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
-4,https://lumenflow.demo/blog/cohort-reporting-best-practices,https://lumenflow.demo/guide/cohort-reporting-explained,blog,blog,0.7839,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
-1,https://lumenflow.demo/guide/product-telemetry-explained,https://lumenflow.demo/post/how-to-product-telemetry-4,blog,blog,0.7801,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,service,blog,0.9413,True,REVIEW: similar blog and service pages; verify query overlap and intent
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,service,blog,0.885,True,REVIEW: similar blog and service pages; verify query overlap and intent
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,service,blog,0.8837,True,REVIEW: similar blog and service pages; verify query overlap and intent
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,service,blog,0.8765,True,REVIEW: similar blog and service pages; verify query overlap and intent
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,service,blog,0.8588,True,REVIEW: similar blog and service pages; verify query overlap and intent
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.9497,False,REVIEW: high semantic similarity; verify duplication and intent before consolidation
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,blog,blog,0.9356,False,REVIEW: high semantic similarity; verify duplication and intent before consolidation
+3,https://lumenflow.demo/post/how-to-funnel-analysis-1,https://lumenflow.demo/post/funnel-analysis-checklist-4,blog,blog,0.9343,False,REVIEW: high semantic similarity; verify duplication and intent before consolidation
+2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,blog,blog,0.9306,False,REVIEW: high semantic similarity; verify duplication and intent before consolidation
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,case-study,blog,0.924,False,REVIEW: high semantic similarity; verify duplication and intent before consolidation
+14,https://lumenflow.demo/post/how-to-dashboard-building-1,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,blog,blog,0.9174,False,REVIEW: very similar — differentiate angles or merge
+3,https://lumenflow.demo/post/how-to-funnel-analysis-1,https://lumenflow.demo/post/how-to-funnel-analysis-6,blog,blog,0.9145,False,REVIEW: very similar — differentiate angles or merge
+14,https://lumenflow.demo/case-study/dashboard-building-initech,https://lumenflow.demo/post/how-to-dashboard-building-6,case-study,blog,0.9139,False,REVIEW: very similar — differentiate angles or merge
+14,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,https://lumenflow.demo/blog/dashboard-building-best-practices-5,blog,blog,0.9136,False,REVIEW: very similar — differentiate angles or merge
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,case-study,blog,0.9097,False,REVIEW: very similar — differentiate angles or merge
+3,https://lumenflow.demo/post/funnel-analysis-checklist-4,https://lumenflow.demo/post/how-to-funnel-analysis-6,blog,blog,0.9061,False,REVIEW: very similar — differentiate angles or merge
+2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.8956,False,REVIEW: very similar — differentiate angles or merge
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,blog,blog,0.8922,False,REVIEW: very similar — differentiate angles or merge
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,blog,blog,0.889,False,REVIEW: very similar — differentiate angles or merge
+9,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,blog,blog,0.8779,False,REVIEW: very similar — differentiate angles or merge
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/case-study/a-b-testing-framework-acme,service,case-study,0.8748,False,REVIEW: very similar — differentiate angles or merge
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,https://lumenflow.demo/case-study/a-b-testing-framework-acme,blog,case-study,0.8619,False,REVIEW: very similar — differentiate angles or merge
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.858,False,REVIEW: very similar — differentiate angles or merge
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.8468,False,REVIEW: very similar — differentiate angles or merge
+14,https://lumenflow.demo/post/how-to-dashboard-building-1,https://lumenflow.demo/blog/dashboard-building-best-practices-5,blog,blog,0.8443,False,REVIEW: very similar — differentiate angles or merge
+3,https://lumenflow.demo/case-study/funnel-analysis-initech,https://lumenflow.demo/blog/funnel-analysis-best-practices-5,case-study,blog,0.8422,False,REVIEW: very similar — differentiate angles or merge
+5,https://lumenflow.demo/case-study/retention-metrics-initech,https://lumenflow.demo/case-study/retention-metrics-acme,case-study,case-study,0.8321,False,REVIEW: very similar — differentiate angles or merge
+28,https://lumenflow.demo/case-study/conversion-optimization-initech,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,case-study,blog,0.8299,False,REVIEW: very similar — differentiate angles or merge
+7,https://lumenflow.demo/post/how-to-feature-adoption-1,https://lumenflow.demo/post/feature-adoption-checklist-4,blog,blog,0.8298,False,REVIEW: very similar — differentiate angles or merge
+20,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-product-led-growth-6,blog,blog,0.8165,False,REVIEW: very similar — differentiate angles or merge
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,blog,blog,0.7777,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/post/how-to-dashboard-building-6,https://lumenflow.demo/case-study/dashboard-building-acme,blog,case-study,0.7777,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,blog,blog,0.7769,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,blog,blog,0.7748,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.7744,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,case-study,blog,0.7741,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,blog,blog,0.7731,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/post/how-to-funnel-analysis-1,https://lumenflow.demo/blog/funnel-analysis-mistakes-to-avoid-3,blog,blog,0.773,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/case-study/dashboard-building-initech,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,case-study,blog,0.7666,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,blog,blog,0.7636,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,blog,blog,0.7628,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/blog/funnel-analysis-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-funnel-analysis-6,blog,blog,0.7623,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-acme,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,case-study,blog,0.7622,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/case-study/dashboard-building-initech,https://lumenflow.demo/case-study/dashboard-building-acme,case-study,case-study,0.7614,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,service,blog,0.7613,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,blog,blog,0.7606,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,blog,blog,0.7601,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,service,blog,0.7594,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/guide/funnel-analysis,https://lumenflow.demo/post/how-to-funnel-analysis-1,blog,blog,0.7589,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,blog,blog,0.7571,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,blog,blog,0.7563,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.7559,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-acme,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,case-study,blog,0.7541,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/case-study/customer-analytics-platform-acme,blog,case-study,0.7534,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,case-study,blog,0.7534,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,blog,blog,0.7503,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,blog,blog,0.7493,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,service,blog,0.7488,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/guide/event-schema-design,https://lumenflow.demo/blog/event-schema-design-best-practices-5,blog,blog,0.7487,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+12,https://lumenflow.demo/blog/privacy-compliance-best-practices-0,https://lumenflow.demo/post/how-to-privacy-compliance-1,blog,blog,0.7485,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,case-study,blog,0.7482,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,blog,blog,0.7474,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,https://lumenflow.demo/post/dashboard-building-checklist-4,blog,blog,0.747,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-acme,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,case-study,blog,0.7468,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,https://lumenflow.demo/case-study/user-behavior-tracking-acme,blog,case-study,0.7466,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/case-study/retention-metrics-initech,blog,case-study,0.7466,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,blog,blog,0.7466,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/post/marketing-attribution-checklist-4,https://lumenflow.demo/post/how-to-marketing-attribution-6,blog,blog,0.7465,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,blog,blog,0.7452,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,case-study,blog,0.7448,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/case-study/a-b-testing-framework-acme,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,case-study,blog,0.7448,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/post/how-to-conversion-optimization-6,https://lumenflow.demo/case-study/conversion-optimization-acme,blog,case-study,0.7446,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,case-study,blog,0.7442,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/post/how-to-conversion-optimization-6,blog,blog,0.7441,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,blog,blog,0.7437,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/post/how-to-marketing-attribution-1,https://lumenflow.demo/case-study/marketing-attribution-initech,blog,case-study,0.7436,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/case-study/user-behavior-tracking-acme,service,case-study,0.7435,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/post/web-analytics-checklist-4,https://lumenflow.demo/blog/web-analytics-best-practices-5,blog,blog,0.7423,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.7417,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/post/how-to-conversion-optimization-1,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,blog,blog,0.7414,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/case-study/product-led-growth-initech,blog,case-study,0.7413,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+4,https://lumenflow.demo/guide/cohort-reporting,https://lumenflow.demo/post/cohort-reporting-checklist-4,blog,blog,0.7404,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,blog,blog,0.7401,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+22,https://lumenflow.demo/blog/voice-of-customer-best-practices-0,https://lumenflow.demo/blog/voice-of-customer-mistakes-to-avoid-3,blog,blog,0.7397,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/post/how-to-conversion-optimization-1,https://lumenflow.demo/post/conversion-optimization-checklist-4,blog,blog,0.7394,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+16,https://lumenflow.demo/blog/mobile-app-analytics-best-practices-0,https://lumenflow.demo/blog/mobile-app-analytics-mistakes-to-avoid-3,blog,blog,0.7391,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+29,https://lumenflow.demo/guide/saas-metrics,https://lumenflow.demo/case-study/saas-metrics-initech,blog,case-study,0.7379,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+25,https://lumenflow.demo/case-study/personalization-engine-initech,https://lumenflow.demo/blog/personalization-engine-mistakes-to-avoid-3,case-study,blog,0.7373,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/case-study/funnel-analysis-initech,https://lumenflow.demo/post/how-to-funnel-analysis-6,case-study,blog,0.7361,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,service,blog,0.7358,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/post/how-to-product-led-growth-6,https://lumenflow.demo/case-study/product-led-growth-acme,blog,case-study,0.7356,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/case-study/event-schema-design-initech,https://lumenflow.demo/blog/event-schema-design-mistakes-to-avoid-3,case-study,blog,0.7349,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/post/feature-adoption-checklist-4,https://lumenflow.demo/blog/feature-adoption-best-practices-5,blog,blog,0.7338,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/blog/funnel-analysis-mistakes-to-avoid-3,https://lumenflow.demo/post/funnel-analysis-checklist-4,blog,blog,0.7335,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/guide/web-analytics,https://lumenflow.demo/blog/web-analytics-mistakes-to-avoid-3,blog,blog,0.7333,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,case-study,blog,0.7329,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/post/how-to-product-telemetry-1,https://lumenflow.demo/blog/product-telemetry-best-practices-5,blog,blog,0.7325,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,blog,blog,0.7322,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,case-study,blog,0.7319,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,https://lumenflow.demo/case-study/customer-analytics-platform-acme,blog,case-study,0.7314,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-conversion-optimization-6,blog,blog,0.7313,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+27,https://lumenflow.demo/blog/email-engagement-best-practices-0,https://lumenflow.demo/case-study/email-engagement-initech,blog,case-study,0.7312,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,case-study,blog,0.7304,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/guide/funnel-analysis,https://lumenflow.demo/case-study/funnel-analysis-initech,blog,case-study,0.7298,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+24,https://lumenflow.demo/blog/heatmaps-best-practices-0,https://lumenflow.demo/blog/heatmaps-mistakes-to-avoid-3,blog,blog,0.7298,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,service,blog,0.7291,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+24,https://lumenflow.demo/blog/heatmaps-mistakes-to-avoid-3,https://lumenflow.demo/post/heatmaps-checklist-4,blog,blog,0.7287,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/post/how-to-product-telemetry-1,https://lumenflow.demo/post/how-to-product-telemetry-6,blog,blog,0.7282,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/case-study/user-behavior-tracking-acme,case-study,case-study,0.7282,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+27,https://lumenflow.demo/post/how-to-email-engagement-1,https://lumenflow.demo/blog/email-engagement-mistakes-to-avoid-3,blog,blog,0.7271,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+18,https://lumenflow.demo/blog/e-commerce-tracking-best-practices-0,https://lumenflow.demo/case-study/e-commerce-tracking-initech,blog,case-study,0.7269,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/case-study/event-schema-design-initech,https://lumenflow.demo/post/event-schema-design-checklist-4,case-study,blog,0.7263,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/case-study/conversion-optimization-acme,blog,case-study,0.7256,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/post/dashboard-building-checklist-4,https://lumenflow.demo/post/how-to-dashboard-building-6,blog,blog,0.7247,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,service,blog,0.7231,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,blog,blog,0.7229,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+6,https://lumenflow.demo/blog/onboarding-optimization-best-practices-0,https://lumenflow.demo/case-study/onboarding-optimization-initech,blog,case-study,0.7229,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/post/how-to-event-schema-design-1,https://lumenflow.demo/blog/event-schema-design-mistakes-to-avoid-3,blog,blog,0.7214,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,https://lumenflow.demo/case-study/user-behavior-tracking-acme,blog,case-study,0.7209,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/case-study/retention-metrics-initech,https://lumenflow.demo/blog/retention-metrics-best-practices-5,case-study,blog,0.7209,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/case-study/user-behavior-tracking-initech,blog,case-study,0.7192,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/case-study/retention-metrics-acme,blog,case-study,0.7188,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,https://lumenflow.demo/case-study/a-b-testing-framework-acme,blog,case-study,0.7187,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/post/how-to-product-telemetry-6,https://lumenflow.demo/case-study/product-telemetry-acme,blog,case-study,0.718,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/blog/feature-adoption-best-practices-5,https://lumenflow.demo/post/how-to-feature-adoption-6,blog,blog,0.7179,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/guide/funnel-analysis,https://lumenflow.demo/blog/funnel-analysis-mistakes-to-avoid-3,blog,blog,0.7178,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/guide/event-schema-design,https://lumenflow.demo/post/event-schema-design-checklist-4,blog,blog,0.7175,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,blog,blog,0.716,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.7155,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,blog,blog,0.7153,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/post/self-serve-analytics-checklist-4,https://lumenflow.demo/blog/self-serve-analytics-best-practices-5,blog,blog,0.7148,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+6,https://lumenflow.demo/post/how-to-onboarding-optimization-1,https://lumenflow.demo/post/onboarding-optimization-checklist-4,blog,blog,0.7142,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+11,https://lumenflow.demo/post/how-to-session-replay-1,https://lumenflow.demo/post/session-replay-checklist-4,blog,blog,0.7142,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,case-study,blog,0.7135,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/case-study/product-telemetry-initech,blog,case-study,0.7133,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,service,blog,0.7122,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/blog/product-led-growth-best-practices-5,service,blog,0.7121,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+8,https://lumenflow.demo/blog/churn-prediction-best-practices-0,https://lumenflow.demo/case-study/churn-prediction-initech,blog,case-study,0.7116,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/blog/feature-adoption-mistakes-to-avoid-3,https://lumenflow.demo/blog/feature-adoption-best-practices-5,blog,blog,0.7113,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/post/retention-metrics-checklist-4,blog,blog,0.7098,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,https://lumenflow.demo/post/conversion-optimization-checklist-4,blog,blog,0.7096,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/post/how-to-funnel-analysis-1,https://lumenflow.demo/blog/funnel-analysis-best-practices-5,blog,blog,0.7095,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/post/funnel-analysis-checklist-4,https://lumenflow.demo/blog/funnel-analysis-best-practices-5,blog,blog,0.7095,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,case-study,blog,0.7091,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/case-study/product-led-growth-initech,https://lumenflow.demo/blog/product-led-growth-best-practices-5,case-study,blog,0.7084,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+8,https://lumenflow.demo/case-study/churn-prediction-initech,https://lumenflow.demo/blog/churn-prediction-mistakes-to-avoid-3,case-study,blog,0.7077,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,https://lumenflow.demo/case-study/user-behavior-tracking-acme,blog,case-study,0.7071,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/case-study/self-serve-analytics-initech,https://lumenflow.demo/post/self-serve-analytics-checklist-4,case-study,blog,0.7071,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/post/product-led-growth-checklist-4,service,blog,0.707,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/case-study/feature-adoption-initech,https://lumenflow.demo/post/how-to-feature-adoption-6,case-study,blog,0.7069,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,blog,blog,0.7069,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+16,https://lumenflow.demo/post/how-to-mobile-app-analytics-1,https://lumenflow.demo/blog/mobile-app-analytics-mistakes-to-avoid-3,blog,blog,0.7067,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,blog,blog,0.7062,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,service,blog,0.7062,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+29,https://lumenflow.demo/post/saas-metrics-checklist-4,https://lumenflow.demo/blog/saas-metrics-best-practices-5,blog,blog,0.7057,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-acme,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,case-study,blog,0.7054,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,blog,blog,0.7053,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+6,https://lumenflow.demo/post/how-to-onboarding-optimization-1,https://lumenflow.demo/case-study/onboarding-optimization-initech,blog,case-study,0.7052,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/case-study/retention-metrics-initech,blog,case-study,0.7046,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.7041,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+29,https://lumenflow.demo/blog/saas-metrics-mistakes-to-avoid-3,https://lumenflow.demo/post/saas-metrics-checklist-4,blog,blog,0.704,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+6,https://lumenflow.demo/post/how-to-onboarding-optimization-1,https://lumenflow.demo/blog/onboarding-optimization-mistakes-to-avoid-3,blog,blog,0.7038,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/blog/marketing-attribution-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-marketing-attribution-6,blog,blog,0.7033,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+27,https://lumenflow.demo/blog/email-engagement-best-practices-0,https://lumenflow.demo/blog/email-engagement-mistakes-to-avoid-3,blog,blog,0.7033,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/blog/web-analytics-mistakes-to-avoid-3,https://lumenflow.demo/blog/web-analytics-best-practices-5,blog,blog,0.7032,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/case-study/a-b-testing-framework-acme,case-study,case-study,0.7029,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+25,https://lumenflow.demo/blog/personalization-engine-best-practices-0,https://lumenflow.demo/post/how-to-personalization-engine-1,blog,blog,0.7029,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+13,https://lumenflow.demo/blog/data-pipeline-architecture-mistakes-to-avoid-3,https://lumenflow.demo/post/data-pipeline-architecture-checklist-4,blog,blog,0.7009,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+22,https://lumenflow.demo/blog/voice-of-customer-best-practices-0,https://lumenflow.demo/case-study/voice-of-customer-initech,blog,case-study,0.7007,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+4,https://lumenflow.demo/case-study/cohort-reporting-initech,https://lumenflow.demo/blog/cohort-reporting-best-practices-5,case-study,blog,0.6991,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/case-study/user-behavior-tracking-acme,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,case-study,blog,0.6988,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,case-study,blog,0.6979,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,blog,blog,0.6977,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,blog,blog,0.6974,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/blog/self-serve-analytics-best-practices-5,https://lumenflow.demo/post/how-to-self-serve-analytics-6,blog,blog,0.6963,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/post/how-to-funnel-analysis-1,https://lumenflow.demo/case-study/funnel-analysis-initech,blog,case-study,0.6945,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/guide/feature-adoption,https://lumenflow.demo/case-study/feature-adoption-initech,blog,case-study,0.6944,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,service,blog,0.6939,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/case-study/retention-metrics-initech,https://lumenflow.demo/post/how-to-retention-metrics-6,case-study,blog,0.6936,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+4,https://lumenflow.demo/guide/cohort-reporting,https://lumenflow.demo/case-study/cohort-reporting-initech,blog,case-study,0.6935,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/post/how-to-web-analytics-1,https://lumenflow.demo/blog/web-analytics-mistakes-to-avoid-3,blog,blog,0.6927,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/post/how-to-self-serve-analytics-1,https://lumenflow.demo/case-study/self-serve-analytics-initech,blog,case-study,0.6925,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/case-study/product-led-growth-initech,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,case-study,blog,0.6924,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+16,https://lumenflow.demo/post/how-to-mobile-app-analytics-1,https://lumenflow.demo/post/mobile-app-analytics-checklist-4,blog,blog,0.692,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+16,https://lumenflow.demo/case-study/mobile-app-analytics-initech,https://lumenflow.demo/post/mobile-app-analytics-checklist-4,case-study,blog,0.6911,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,case-study,blog,0.6907,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/case-study/customer-analytics-platform-initech,blog,case-study,0.6888,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/post/how-to-feature-adoption-1,https://lumenflow.demo/post/how-to-feature-adoption-6,blog,blog,0.6885,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/case-study/customer-analytics-platform-acme,case-study,case-study,0.6883,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,blog,blog,0.6881,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+6,https://lumenflow.demo/blog/onboarding-optimization-best-practices-0,https://lumenflow.demo/post/how-to-onboarding-optimization-1,blog,blog,0.6876,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,blog,blog,0.6871,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+24,https://lumenflow.demo/post/how-to-heatmaps-1,https://lumenflow.demo/blog/heatmaps-mistakes-to-avoid-3,blog,blog,0.6866,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/case-study/dashboard-building-acme,service,case-study,0.6846,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+25,https://lumenflow.demo/blog/personalization-engine-best-practices-0,https://lumenflow.demo/blog/personalization-engine-mistakes-to-avoid-3,blog,blog,0.6839,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,blog,blog,0.6831,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/guide/marketing-attribution,https://lumenflow.demo/post/marketing-attribution-checklist-4,blog,blog,0.6826,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/post/dashboard-building-checklist-4,https://lumenflow.demo/blog/dashboard-building-best-practices-5,blog,blog,0.6823,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/case-study/retention-metrics-initech,https://lumenflow.demo/post/retention-metrics-checklist-4,case-study,blog,0.682,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/case-study/user-behavior-tracking-acme,blog,case-study,0.6814,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/guide/feature-adoption,https://lumenflow.demo/blog/feature-adoption-mistakes-to-avoid-3,blog,blog,0.6812,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/post/how-to-conversion-optimization-1,https://lumenflow.demo/case-study/conversion-optimization-initech,blog,case-study,0.6811,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,https://lumenflow.demo/case-study/customer-analytics-platform-acme,blog,case-study,0.6804,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+21,https://lumenflow.demo/case-study/customer-journey-mapping-initech,https://lumenflow.demo/post/customer-journey-mapping-checklist-4,case-study,blog,0.6802,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/post/how-to-product-telemetry-1,https://lumenflow.demo/post/product-telemetry-checklist-4,blog,blog,0.6799,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/post/how-to-self-serve-analytics-1,https://lumenflow.demo/post/how-to-self-serve-analytics-6,blog,blog,0.6799,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+14,https://lumenflow.demo/post/how-to-dashboard-building-1,https://lumenflow.demo/post/how-to-dashboard-building-6,blog,blog,0.6793,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,service,blog,0.6783,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,case-study,blog,0.6779,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,service,blog,0.6778,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/case-study/a-b-testing-framework-initech,blog,case-study,0.6775,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+29,https://lumenflow.demo/case-study/saas-metrics-initech,https://lumenflow.demo/blog/saas-metrics-best-practices-5,case-study,blog,0.6769,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.6753,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/post/how-to-self-serve-analytics-1,https://lumenflow.demo/post/self-serve-analytics-checklist-4,blog,blog,0.6742,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,blog,blog,0.673,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+11,https://lumenflow.demo/blog/session-replay-best-practices-0,https://lumenflow.demo/post/how-to-session-replay-1,blog,blog,0.6729,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+27,https://lumenflow.demo/case-study/email-engagement-initech,https://lumenflow.demo/post/email-engagement-checklist-4,case-study,blog,0.6718,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,service,blog,0.6715,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.6713,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/guide/event-schema-design,https://lumenflow.demo/post/how-to-event-schema-design-1,blog,blog,0.6711,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+10,https://lumenflow.demo/blog/event-schema-design-mistakes-to-avoid-3,https://lumenflow.demo/blog/event-schema-design-best-practices-5,blog,blog,0.6709,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/post/how-to-retention-metrics-6,https://lumenflow.demo/case-study/retention-metrics-acme,blog,case-study,0.6707,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+23,https://lumenflow.demo/post/how-to-nps-tracking-1,https://lumenflow.demo/blog/nps-tracking-mistakes-to-avoid-3,blog,blog,0.6693,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-retention-metrics-6,blog,blog,0.6692,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/case-study/user-behavior-tracking-acme,blog,case-study,0.6686,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+13,https://lumenflow.demo/post/data-pipeline-architecture-checklist-4,https://lumenflow.demo/blog/data-pipeline-architecture-best-practices-5,blog,blog,0.6684,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+23,https://lumenflow.demo/post/how-to-nps-tracking-1,https://lumenflow.demo/case-study/nps-tracking-initech,blog,case-study,0.6679,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+24,https://lumenflow.demo/post/how-to-heatmaps-1,https://lumenflow.demo/post/heatmaps-checklist-4,blog,blog,0.6679,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+21,https://lumenflow.demo/post/how-to-customer-journey-mapping-1,https://lumenflow.demo/post/customer-journey-mapping-checklist-4,blog,blog,0.6676,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.6671,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,blog,blog,0.6664,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/post/how-to-retention-metrics-6,blog,blog,0.6662,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/blog/retention-metrics-best-practices-5,https://lumenflow.demo/post/how-to-retention-metrics-6,blog,blog,0.6653,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,blog,blog,0.6647,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/guide/marketing-attribution,https://lumenflow.demo/case-study/marketing-attribution-initech,blog,case-study,0.6643,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,blog,blog,0.6637,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+22,https://lumenflow.demo/case-study/voice-of-customer-initech,https://lumenflow.demo/blog/voice-of-customer-mistakes-to-avoid-3,case-study,blog,0.6636,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.6634,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/case-study/conversion-optimization-initech,https://lumenflow.demo/case-study/conversion-optimization-acme,case-study,case-study,0.6634,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/post/how-to-marketing-attribution-1,https://lumenflow.demo/post/how-to-marketing-attribution-6,blog,blog,0.6632,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/case-study/conversion-optimization-initech,https://lumenflow.demo/post/conversion-optimization-checklist-4,case-study,blog,0.663,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/case-study/funnel-analysis-initech,https://lumenflow.demo/post/funnel-analysis-checklist-4,case-study,blog,0.6619,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/guide/web-analytics,https://lumenflow.demo/post/how-to-web-analytics-1,blog,blog,0.6619,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+13,https://lumenflow.demo/guide/data-pipeline-architecture,https://lumenflow.demo/blog/data-pipeline-architecture-best-practices-5,blog,blog,0.6616,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+29,https://lumenflow.demo/guide/saas-metrics,https://lumenflow.demo/post/saas-metrics-checklist-4,blog,blog,0.6614,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+1,https://lumenflow.demo/blog/product-telemetry-best-practices-5,https://lumenflow.demo/post/how-to-product-telemetry-6,blog,blog,0.6612,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,case-study,blog,0.6607,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+12,https://lumenflow.demo/post/how-to-privacy-compliance-1,https://lumenflow.demo/blog/privacy-compliance-mistakes-to-avoid-3,blog,blog,0.66,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.6595,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/blog/web-analytics-mistakes-to-avoid-3,https://lumenflow.demo/post/web-analytics-checklist-4,blog,blog,0.6585,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.6576,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,https://lumenflow.demo/blog/retention-metrics-best-practices-5,blog,blog,0.6574,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+3,https://lumenflow.demo/guide/funnel-analysis,https://lumenflow.demo/blog/funnel-analysis-best-practices-5,blog,blog,0.6573,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+7,https://lumenflow.demo/guide/feature-adoption,https://lumenflow.demo/blog/feature-adoption-best-practices-5,blog,blog,0.6571,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,blog,blog,0.6567,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,https://lumenflow.demo/case-study/a-b-testing-framework-acme,blog,case-study,0.6567,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+17,https://lumenflow.demo/post/how-to-web-analytics-1,https://lumenflow.demo/post/web-analytics-checklist-4,blog,blog,0.6567,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/guide/marketing-attribution,https://lumenflow.demo/blog/marketing-attribution-mistakes-to-avoid-3,blog,blog,0.6566,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+4,https://lumenflow.demo/case-study/cohort-reporting-initech,https://lumenflow.demo/post/cohort-reporting-checklist-4,case-study,blog,0.6564,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/blog/marketing-attribution-mistakes-to-avoid-3,https://lumenflow.demo/post/marketing-attribution-checklist-4,blog,blog,0.6561,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+28,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,https://lumenflow.demo/case-study/conversion-optimization-acme,blog,case-study,0.655,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+6,https://lumenflow.demo/blog/onboarding-optimization-best-practices-0,https://lumenflow.demo/blog/onboarding-optimization-mistakes-to-avoid-3,blog,blog,0.6548,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+20,https://lumenflow.demo/blog/product-led-growth-best-practices-5,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,blog,blog,0.6547,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,blog,blog,0.6546,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.6545,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/post/how-to-marketing-attribution-1,https://lumenflow.demo/blog/marketing-attribution-mistakes-to-avoid-3,blog,blog,0.6543,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,blog,blog,0.6539,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+29,https://lumenflow.demo/case-study/saas-metrics-initech,https://lumenflow.demo/blog/saas-metrics-mistakes-to-avoid-3,case-study,blog,0.6535,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+15,https://lumenflow.demo/case-study/self-serve-analytics-initech,https://lumenflow.demo/blog/self-serve-analytics-best-practices-5,case-study,blog,0.6524,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/post/how-to-retention-metrics-1,blog,blog,0.6521,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+13,https://lumenflow.demo/post/how-to-data-pipeline-architecture-1,https://lumenflow.demo/blog/data-pipeline-architecture-best-practices-5,blog,blog,0.6521,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+12,https://lumenflow.demo/blog/privacy-compliance-best-practices-0,https://lumenflow.demo/case-study/privacy-compliance-initech,blog,case-study,0.652,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+13,https://lumenflow.demo/post/how-to-data-pipeline-architecture-1,https://lumenflow.demo/post/data-pipeline-architecture-checklist-4,blog,blog,0.6519,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+19,https://lumenflow.demo/case-study/marketing-attribution-initech,https://lumenflow.demo/post/marketing-attribution-checklist-4,case-study,blog,0.6519,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,https://lumenflow.demo/post/retention-metrics-checklist-4,blog,blog,0.6516,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+25,https://lumenflow.demo/post/how-to-personalization-engine-1,https://lumenflow.demo/blog/personalization-engine-mistakes-to-avoid-3,blog,blog,0.651,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+21,https://lumenflow.demo/post/how-to-customer-journey-mapping-1,https://lumenflow.demo/blog/customer-journey-mapping-mistakes-to-avoid-3,blog,blog,0.6506,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+5,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,https://lumenflow.demo/case-study/retention-metrics-acme,blog,case-study,0.6501,False,DIFFERENTIATE: overlap exists — ensure unique intent per page
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-10,blog,blog,0.65,False,OK: sufficiently different content
+12,https://lumenflow.demo/blog/privacy-compliance-best-practices-0,https://lumenflow.demo/blog/privacy-compliance-mistakes-to-avoid-3,blog,blog,0.6495,False,OK: sufficiently different content
+20,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,https://lumenflow.demo/post/product-led-growth-checklist-4,blog,blog,0.6495,False,OK: sufficiently different content
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,case-study,blog,0.6488,False,OK: sufficiently different content
+11,https://lumenflow.demo/post/how-to-session-replay-1,https://lumenflow.demo/case-study/session-replay-initech,blog,case-study,0.6487,False,OK: sufficiently different content
+29,https://lumenflow.demo/guide/saas-metrics,https://lumenflow.demo/post/how-to-saas-metrics-1,blog,blog,0.6485,False,OK: sufficiently different content
+16,https://lumenflow.demo/case-study/mobile-app-analytics-initech,https://lumenflow.demo/blog/mobile-app-analytics-mistakes-to-avoid-3,case-study,blog,0.6482,False,OK: sufficiently different content
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/post/retention-metrics-checklist-4,blog,blog,0.6477,False,OK: sufficiently different content
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/post/how-to-product-led-growth-1,service,blog,0.6466,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/blog/product-led-growth-best-practices-5,blog,blog,0.6466,False,OK: sufficiently different content
+4,https://lumenflow.demo/guide/cohort-reporting,https://lumenflow.demo/blog/cohort-reporting-best-practices-5,blog,blog,0.6464,False,OK: sufficiently different content
+14,https://lumenflow.demo/case-study/dashboard-building-initech,https://lumenflow.demo/post/dashboard-building-checklist-4,case-study,blog,0.6461,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,blog,blog,0.6458,False,OK: sufficiently different content
+0,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.6452,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,blog,blog,0.6444,False,OK: sufficiently different content
+28,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,https://lumenflow.demo/case-study/conversion-optimization-acme,blog,case-study,0.6434,False,OK: sufficiently different content
+13,https://lumenflow.demo/post/how-to-data-pipeline-architecture-1,https://lumenflow.demo/case-study/data-pipeline-architecture-initech,blog,case-study,0.6428,False,OK: sufficiently different content
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,blog,blog,0.6422,False,OK: sufficiently different content
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/case-study/customer-analytics-platform-acme,service,case-study,0.6417,False,OK: sufficiently different content
+28,https://lumenflow.demo/post/conversion-optimization-checklist-4,https://lumenflow.demo/post/how-to-conversion-optimization-6,blog,blog,0.641,False,OK: sufficiently different content
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/post/product-telemetry-checklist-4,blog,blog,0.6407,False,OK: sufficiently different content
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,service,blog,0.6406,False,OK: sufficiently different content
+15,https://lumenflow.demo/blog/self-serve-analytics-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-self-serve-analytics-6,blog,blog,0.6403,False,OK: sufficiently different content
+21,https://lumenflow.demo/blog/customer-journey-mapping-best-practices-0,https://lumenflow.demo/post/customer-journey-mapping-checklist-4,blog,blog,0.6397,False,OK: sufficiently different content
+9,https://lumenflow.demo/case-study/a-b-testing-framework-acme,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,case-study,blog,0.6396,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/product-led-growth-checklist-4,https://lumenflow.demo/case-study/product-led-growth-acme,blog,case-study,0.6395,False,OK: sufficiently different content
+14,https://lumenflow.demo/post/how-to-dashboard-building-1,https://lumenflow.demo/post/dashboard-building-checklist-4,blog,blog,0.6391,False,OK: sufficiently different content
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/post/customer-analytics-platform-checklist-4,service,blog,0.6384,False,OK: sufficiently different content
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-8,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,blog,blog,0.6382,False,OK: sufficiently different content
+24,https://lumenflow.demo/blog/heatmaps-best-practices-0,https://lumenflow.demo/post/how-to-heatmaps-1,blog,blog,0.6371,False,OK: sufficiently different content
+3,https://lumenflow.demo/guide/funnel-analysis,https://lumenflow.demo/post/funnel-analysis-checklist-4,blog,blog,0.637,False,OK: sufficiently different content
+1,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-product-telemetry-6,blog,blog,0.6366,False,OK: sufficiently different content
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/blog/retention-metrics-best-practices-5,blog,blog,0.6366,False,OK: sufficiently different content
+1,https://lumenflow.demo/post/product-telemetry-checklist-4,https://lumenflow.demo/case-study/product-telemetry-acme,blog,case-study,0.6365,False,OK: sufficiently different content
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,service,blog,0.6361,False,OK: sufficiently different content
+13,https://lumenflow.demo/case-study/data-pipeline-architecture-initech,https://lumenflow.demo/post/data-pipeline-architecture-checklist-4,case-study,blog,0.6356,False,OK: sufficiently different content
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.6352,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/product-led-growth-checklist-4,https://lumenflow.demo/post/how-to-product-led-growth-6,blog,blog,0.6352,False,OK: sufficiently different content
+2,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,blog,blog,0.6348,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/case-study/a-b-testing-framework-acme,blog,case-study,0.6347,False,OK: sufficiently different content
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/case-study/conversion-optimization-initech,blog,case-study,0.6342,False,OK: sufficiently different content
+5,https://lumenflow.demo/case-study/retention-metrics-initech,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,case-study,blog,0.634,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,blog,blog,0.6339,False,OK: sufficiently different content
+3,https://lumenflow.demo/case-study/funnel-analysis-initech,https://lumenflow.demo/blog/funnel-analysis-mistakes-to-avoid-3,case-study,blog,0.6338,False,OK: sufficiently different content
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.6337,False,OK: sufficiently different content
+10,https://lumenflow.demo/guide/event-schema-design,https://lumenflow.demo/case-study/event-schema-design-initech,blog,case-study,0.6329,False,OK: sufficiently different content
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/case-study/customer-analytics-platform-acme,blog,case-study,0.6327,False,OK: sufficiently different content
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/post/how-to-dashboard-building-6,service,blog,0.6326,False,OK: sufficiently different content
+0,https://lumenflow.demo/case-study/customer-analytics-platform-acme,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,case-study,blog,0.6316,False,OK: sufficiently different content
+17,https://lumenflow.demo/post/how-to-web-analytics-1,https://lumenflow.demo/case-study/web-analytics-initech,blog,case-study,0.6313,False,OK: sufficiently different content
+14,https://lumenflow.demo/blog/dashboard-building-best-practices-5,https://lumenflow.demo/post/how-to-dashboard-building-6,blog,blog,0.6312,False,OK: sufficiently different content
+11,https://lumenflow.demo/blog/session-replay-best-practices-0,https://lumenflow.demo/case-study/session-replay-initech,blog,case-study,0.631,False,OK: sufficiently different content
+25,https://lumenflow.demo/blog/personalization-engine-best-practices-0,https://lumenflow.demo/case-study/personalization-engine-initech,blog,case-study,0.6308,False,OK: sufficiently different content
+1,https://lumenflow.demo/post/how-to-product-telemetry-1,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,blog,blog,0.6305,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,blog,blog,0.6299,False,OK: sufficiently different content
+9,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,blog,blog,0.6298,False,OK: sufficiently different content
+7,https://lumenflow.demo/blog/feature-adoption-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-feature-adoption-6,blog,blog,0.6292,False,OK: sufficiently different content
+27,https://lumenflow.demo/case-study/email-engagement-initech,https://lumenflow.demo/blog/email-engagement-mistakes-to-avoid-3,case-study,blog,0.6278,False,OK: sufficiently different content
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/case-study/user-behavior-tracking-initech,service,case-study,0.6275,False,OK: sufficiently different content
+19,https://lumenflow.demo/guide/marketing-attribution,https://lumenflow.demo/blog/marketing-attribution-best-practices-5,blog,blog,0.6272,False,OK: sufficiently different content
+14,https://lumenflow.demo/blog/dashboard-building-best-practices-5,https://lumenflow.demo/case-study/dashboard-building-acme,blog,case-study,0.6262,False,OK: sufficiently different content
+5,https://lumenflow.demo/blog/retention-metrics-best-practices-5,https://lumenflow.demo/case-study/retention-metrics-acme,blog,case-study,0.6259,False,OK: sufficiently different content
+29,https://lumenflow.demo/post/how-to-saas-metrics-1,https://lumenflow.demo/blog/saas-metrics-best-practices-5,blog,blog,0.6255,False,OK: sufficiently different content
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/post/customer-analytics-platform-checklist-9,blog,blog,0.6252,False,OK: sufficiently different content
+19,https://lumenflow.demo/guide/marketing-attribution,https://lumenflow.demo/post/how-to-marketing-attribution-6,blog,blog,0.6239,False,OK: sufficiently different content
+1,https://lumenflow.demo/post/how-to-product-telemetry-1,https://lumenflow.demo/case-study/product-telemetry-acme,blog,case-study,0.6232,False,OK: sufficiently different content
+21,https://lumenflow.demo/blog/customer-journey-mapping-best-practices-0,https://lumenflow.demo/blog/customer-journey-mapping-mistakes-to-avoid-3,blog,blog,0.6224,False,OK: sufficiently different content
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,case-study,blog,0.6223,False,OK: sufficiently different content
+19,https://lumenflow.demo/post/marketing-attribution-checklist-4,https://lumenflow.demo/blog/marketing-attribution-best-practices-5,blog,blog,0.6219,False,OK: sufficiently different content
+20,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,https://lumenflow.demo/case-study/product-led-growth-acme,blog,case-study,0.6216,False,OK: sufficiently different content
+14,https://lumenflow.demo/post/how-to-dashboard-building-1,https://lumenflow.demo/case-study/dashboard-building-acme,blog,case-study,0.6215,False,OK: sufficiently different content
+14,https://lumenflow.demo/post/how-to-dashboard-building-1,https://lumenflow.demo/case-study/dashboard-building-initech,blog,case-study,0.6203,False,OK: sufficiently different content
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/case-study/a-b-testing-framework-initech,service,case-study,0.6201,False,OK: sufficiently different content
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,service,blog,0.6199,False,OK: sufficiently different content
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/blog/dashboard-building-best-practices-5,service,blog,0.6199,False,OK: sufficiently different content
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/post/dashboard-building-checklist-4,service,blog,0.6197,False,OK: sufficiently different content
+13,https://lumenflow.demo/guide/data-pipeline-architecture,https://lumenflow.demo/case-study/data-pipeline-architecture-initech,blog,case-study,0.6187,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,blog,blog,0.6186,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,https://lumenflow.demo/case-study/a-b-testing-framework-acme,blog,case-study,0.6181,False,OK: sufficiently different content
+2,https://lumenflow.demo/case-study/user-behavior-tracking-initech,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,case-study,blog,0.6176,False,OK: sufficiently different content
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-1,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,blog,blog,0.617,False,OK: sufficiently different content
+2,https://lumenflow.demo/case-study/user-behavior-tracking-acme,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,case-study,blog,0.6155,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/post/a-b-testing-framework-checklist-4,blog,blog,0.6154,False,OK: sufficiently different content
+1,https://lumenflow.demo/case-study/product-telemetry-initech,https://lumenflow.demo/blog/product-telemetry-best-practices-5,case-study,blog,0.6153,False,OK: sufficiently different content
+11,https://lumenflow.demo/case-study/session-replay-initech,https://lumenflow.demo/post/session-replay-checklist-4,case-study,blog,0.6151,False,OK: sufficiently different content
+5,https://lumenflow.demo/case-study/retention-metrics-acme,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,case-study,blog,0.615,False,OK: sufficiently different content
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,blog,blog,0.6146,False,OK: sufficiently different content
+26,https://lumenflow.demo/post/how-to-push-notification-strategy-1,https://lumenflow.demo/case-study/push-notification-strategy-initech,blog,case-study,0.6138,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,blog,blog,0.6137,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,blog,blog,0.6134,False,OK: sufficiently different content
+3,https://lumenflow.demo/guide/funnel-analysis,https://lumenflow.demo/post/how-to-funnel-analysis-6,blog,blog,0.6126,False,OK: sufficiently different content
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,blog,blog,0.6118,False,OK: sufficiently different content
+19,https://lumenflow.demo/post/how-to-marketing-attribution-1,https://lumenflow.demo/blog/marketing-attribution-best-practices-5,blog,blog,0.6117,False,OK: sufficiently different content
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/blog/product-telemetry-best-practices-5,blog,blog,0.6115,False,OK: sufficiently different content
+22,https://lumenflow.demo/post/how-to-voice-of-customer-1,https://lumenflow.demo/blog/voice-of-customer-mistakes-to-avoid-3,blog,blog,0.6114,False,OK: sufficiently different content
+14,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-dashboard-building-6,blog,blog,0.6098,False,OK: sufficiently different content
+4,https://lumenflow.demo/post/cohort-reporting-checklist-4,https://lumenflow.demo/blog/cohort-reporting-best-practices-5,blog,blog,0.6083,False,OK: sufficiently different content
+9,https://lumenflow.demo/services/a-b-testing-framework,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,service,blog,0.6075,False,OK: sufficiently different content
+20,https://lumenflow.demo/blog/product-led-growth-best-practices-5,https://lumenflow.demo/post/how-to-product-led-growth-6,blog,blog,0.6074,False,OK: sufficiently different content
+27,https://lumenflow.demo/post/how-to-email-engagement-1,https://lumenflow.demo/case-study/email-engagement-initech,blog,case-study,0.6074,False,OK: sufficiently different content
+2,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,blog,blog,0.6071,False,OK: sufficiently different content
+6,https://lumenflow.demo/blog/onboarding-optimization-best-practices-0,https://lumenflow.demo/post/onboarding-optimization-checklist-4,blog,blog,0.6071,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,blog,blog,0.6069,False,OK: sufficiently different content
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/post/conversion-optimization-checklist-4,blog,blog,0.6062,False,OK: sufficiently different content
+29,https://lumenflow.demo/guide/saas-metrics,https://lumenflow.demo/blog/saas-metrics-mistakes-to-avoid-3,blog,blog,0.6061,False,OK: sufficiently different content
+9,https://lumenflow.demo/blog/a-b-testing-framework-best-practices-5,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,blog,blog,0.6058,False,OK: sufficiently different content
+0,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,https://lumenflow.demo/case-study/customer-analytics-platform-acme,blog,case-study,0.6052,False,OK: sufficiently different content
+8,https://lumenflow.demo/blog/churn-prediction-best-practices-0,https://lumenflow.demo/post/how-to-churn-prediction-1,blog,blog,0.6051,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-8,blog,blog,0.6048,False,OK: sufficiently different content
+26,https://lumenflow.demo/blog/push-notification-strategy-best-practices-0,https://lumenflow.demo/case-study/push-notification-strategy-initech,blog,case-study,0.6047,False,OK: sufficiently different content
+20,https://lumenflow.demo/case-study/product-led-growth-initech,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,case-study,blog,0.6042,False,OK: sufficiently different content
+0,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,https://lumenflow.demo/post/how-to-customer-analytics-platform-6,blog,blog,0.6041,False,OK: sufficiently different content
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/post/how-to-dashboard-building-1,service,blog,0.6035,False,OK: sufficiently different content
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/case-study/dashboard-building-initech,service,case-study,0.6028,False,OK: sufficiently different content
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/case-study/product-led-growth-acme,service,case-study,0.6026,False,OK: sufficiently different content
+14,https://lumenflow.demo/services/dashboard-building,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,service,blog,0.6013,False,OK: sufficiently different content
+1,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,https://lumenflow.demo/blog/product-telemetry-best-practices-5,blog,blog,0.6008,False,OK: sufficiently different content
+14,https://lumenflow.demo/post/dashboard-building-checklist-4,https://lumenflow.demo/case-study/dashboard-building-acme,blog,case-study,0.6003,False,OK: sufficiently different content
+27,https://lumenflow.demo/blog/email-engagement-best-practices-0,https://lumenflow.demo/post/email-engagement-checklist-4,blog,blog,0.6001,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-1,https://lumenflow.demo/blog/user-behavior-tracking-mistakes-to-avoid-3,blog,blog,0.5996,False,OK: sufficiently different content
+29,https://lumenflow.demo/post/how-to-saas-metrics-1,https://lumenflow.demo/post/saas-metrics-checklist-4,blog,blog,0.5993,False,OK: sufficiently different content
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,service,blog,0.5982,False,OK: sufficiently different content
+14,https://lumenflow.demo/blog/dashboard-building-mistakes-to-avoid-3,https://lumenflow.demo/case-study/dashboard-building-acme,blog,case-study,0.598,False,OK: sufficiently different content
+9,https://lumenflow.demo/case-study/a-b-testing-framework-initech,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,case-study,blog,0.5976,False,OK: sufficiently different content
+13,https://lumenflow.demo/guide/data-pipeline-architecture,https://lumenflow.demo/blog/data-pipeline-architecture-mistakes-to-avoid-3,blog,blog,0.5976,False,OK: sufficiently different content
+21,https://lumenflow.demo/post/how-to-customer-journey-mapping-1,https://lumenflow.demo/case-study/customer-journey-mapping-initech,blog,case-study,0.5972,False,OK: sufficiently different content
+0,https://lumenflow.demo/case-study/customer-analytics-platform-initech,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,case-study,blog,0.5971,False,OK: sufficiently different content
+7,https://lumenflow.demo/blog/feature-adoption-mistakes-to-avoid-3,https://lumenflow.demo/post/feature-adoption-checklist-4,blog,blog,0.5965,False,OK: sufficiently different content
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-5,service,blog,0.5964,False,OK: sufficiently different content
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-customer-analytics-platform-11,blog,blog,0.5958,False,OK: sufficiently different content
+4,https://lumenflow.demo/case-study/cohort-reporting-initech,https://lumenflow.demo/blog/cohort-reporting-mistakes-to-avoid-3,case-study,blog,0.5953,False,OK: sufficiently different content
+15,https://lumenflow.demo/guide/self-serve-analytics,https://lumenflow.demo/case-study/self-serve-analytics-initech,blog,case-study,0.5946,False,OK: sufficiently different content
+0,https://lumenflow.demo/blog/customer-analytics-platform-mistakes-to-avoid-8,https://lumenflow.demo/blog/customer-analytics-platform-best-practices-10,blog,blog,0.5934,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,blog,blog,0.5931,False,OK: sufficiently different content
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/post/how-to-product-telemetry-1,blog,blog,0.5929,False,OK: sufficiently different content
+24,https://lumenflow.demo/post/how-to-heatmaps-1,https://lumenflow.demo/case-study/heatmaps-initech,blog,case-study,0.5925,False,OK: sufficiently different content
+21,https://lumenflow.demo/blog/customer-journey-mapping-best-practices-0,https://lumenflow.demo/case-study/customer-journey-mapping-initech,blog,case-study,0.5918,False,OK: sufficiently different content
+28,https://lumenflow.demo/post/how-to-conversion-optimization-1,https://lumenflow.demo/post/how-to-conversion-optimization-6,blog,blog,0.5913,False,OK: sufficiently different content
+25,https://lumenflow.demo/post/how-to-personalization-engine-1,https://lumenflow.demo/case-study/personalization-engine-initech,blog,case-study,0.5906,False,OK: sufficiently different content
+20,https://lumenflow.demo/case-study/product-led-growth-initech,https://lumenflow.demo/post/product-led-growth-checklist-4,case-study,blog,0.5899,False,OK: sufficiently different content
+20,https://lumenflow.demo/case-study/product-led-growth-initech,https://lumenflow.demo/post/how-to-product-led-growth-6,case-study,blog,0.5896,False,OK: sufficiently different content
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,blog,blog,0.5875,False,OK: sufficiently different content
+15,https://lumenflow.demo/blog/self-serve-analytics-mistakes-to-avoid-3,https://lumenflow.demo/blog/self-serve-analytics-best-practices-5,blog,blog,0.5869,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,https://lumenflow.demo/post/user-behavior-tracking-checklist-9,blog,blog,0.5861,False,OK: sufficiently different content
+2,https://lumenflow.demo/post/user-behavior-tracking-checklist-4,https://lumenflow.demo/blog/user-behavior-tracking-best-practices-5,blog,blog,0.5858,False,OK: sufficiently different content
+0,https://lumenflow.demo/services/customer-analytics-platform,https://lumenflow.demo/case-study/customer-analytics-platform-initech,service,case-study,0.5851,False,OK: sufficiently different content
+2,https://lumenflow.demo/services/user-behavior-tracking,https://lumenflow.demo/post/how-to-user-behavior-tracking-6,service,blog,0.584,False,OK: sufficiently different content
+4,https://lumenflow.demo/post/how-to-cohort-reporting-1,https://lumenflow.demo/case-study/cohort-reporting-initech,blog,case-study,0.5829,False,OK: sufficiently different content
+9,https://lumenflow.demo/blog/a-b-testing-framework-mistakes-to-avoid-3,https://lumenflow.demo/post/a-b-testing-framework-checklist-9,blog,blog,0.5828,False,OK: sufficiently different content
+3,https://lumenflow.demo/blog/funnel-analysis-mistakes-to-avoid-3,https://lumenflow.demo/blog/funnel-analysis-best-practices-5,blog,blog,0.5818,False,OK: sufficiently different content
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/post/how-to-product-telemetry-6,blog,blog,0.5817,False,OK: sufficiently different content
+3,https://lumenflow.demo/blog/funnel-analysis-best-practices-5,https://lumenflow.demo/post/how-to-funnel-analysis-6,blog,blog,0.5817,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/retention-metrics-checklist-4,https://lumenflow.demo/post/how-to-retention-metrics-6,blog,blog,0.5814,False,OK: sufficiently different content
+29,https://lumenflow.demo/case-study/saas-metrics-initech,https://lumenflow.demo/post/saas-metrics-checklist-4,case-study,blog,0.5811,False,OK: sufficiently different content
+9,https://lumenflow.demo/post/how-to-a-b-testing-framework-1,https://lumenflow.demo/post/how-to-a-b-testing-framework-6,blog,blog,0.5809,False,OK: sufficiently different content
+12,https://lumenflow.demo/case-study/privacy-compliance-initech,https://lumenflow.demo/blog/privacy-compliance-mistakes-to-avoid-3,case-study,blog,0.5809,False,OK: sufficiently different content
+17,https://lumenflow.demo/guide/web-analytics,https://lumenflow.demo/blog/web-analytics-best-practices-5,blog,blog,0.5806,False,OK: sufficiently different content
+14,https://lumenflow.demo/case-study/dashboard-building-initech,https://lumenflow.demo/blog/dashboard-building-best-practices-5,case-study,blog,0.5805,False,OK: sufficiently different content
+1,https://lumenflow.demo/guide/product-telemetry,https://lumenflow.demo/case-study/product-telemetry-acme,blog,case-study,0.5802,False,OK: sufficiently different content
+24,https://lumenflow.demo/case-study/heatmaps-initech,https://lumenflow.demo/post/heatmaps-checklist-4,case-study,blog,0.5802,False,OK: sufficiently different content
+28,https://lumenflow.demo/case-study/conversion-optimization-initech,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,case-study,blog,0.5797,False,OK: sufficiently different content
+18,https://lumenflow.demo/post/how-to-e-commerce-tracking-1,https://lumenflow.demo/case-study/e-commerce-tracking-initech,blog,case-study,0.5793,False,OK: sufficiently different content
+1,https://lumenflow.demo/case-study/product-telemetry-initech,https://lumenflow.demo/case-study/product-telemetry-acme,case-study,case-study,0.5792,False,OK: sufficiently different content
+10,https://lumenflow.demo/case-study/event-schema-design-initech,https://lumenflow.demo/blog/event-schema-design-best-practices-5,case-study,blog,0.577,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/post/how-to-product-led-growth-6,blog,blog,0.577,False,OK: sufficiently different content
+16,https://lumenflow.demo/blog/mobile-app-analytics-best-practices-0,https://lumenflow.demo/case-study/mobile-app-analytics-initech,blog,case-study,0.5762,False,OK: sufficiently different content
+4,https://lumenflow.demo/blog/cohort-reporting-mistakes-to-avoid-3,https://lumenflow.demo/post/cohort-reporting-checklist-4,blog,blog,0.5752,False,OK: sufficiently different content
+24,https://lumenflow.demo/blog/heatmaps-best-practices-0,https://lumenflow.demo/post/heatmaps-checklist-4,blog,blog,0.5739,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/retention-metrics-checklist-4,https://lumenflow.demo/case-study/retention-metrics-acme,blog,case-study,0.5726,False,OK: sufficiently different content
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/post/how-to-conversion-optimization-1,blog,blog,0.5723,False,OK: sufficiently different content
+16,https://lumenflow.demo/post/how-to-mobile-app-analytics-1,https://lumenflow.demo/case-study/mobile-app-analytics-initech,blog,case-study,0.5719,False,OK: sufficiently different content
+19,https://lumenflow.demo/blog/marketing-attribution-mistakes-to-avoid-3,https://lumenflow.demo/blog/marketing-attribution-best-practices-5,blog,blog,0.5716,False,OK: sufficiently different content
+28,https://lumenflow.demo/guide/conversion-optimization,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,blog,blog,0.5716,False,OK: sufficiently different content
+1,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,https://lumenflow.demo/post/product-telemetry-checklist-4,blog,blog,0.5711,False,OK: sufficiently different content
+8,https://lumenflow.demo/blog/churn-prediction-best-practices-0,https://lumenflow.demo/blog/churn-prediction-mistakes-to-avoid-3,blog,blog,0.5707,False,OK: sufficiently different content
+13,https://lumenflow.demo/guide/data-pipeline-architecture,https://lumenflow.demo/post/how-to-data-pipeline-architecture-1,blog,blog,0.5703,False,OK: sufficiently different content
+17,https://lumenflow.demo/case-study/web-analytics-initech,https://lumenflow.demo/blog/web-analytics-mistakes-to-avoid-3,case-study,blog,0.5701,False,OK: sufficiently different content
+4,https://lumenflow.demo/post/how-to-cohort-reporting-1,https://lumenflow.demo/blog/cohort-reporting-mistakes-to-avoid-3,blog,blog,0.5692,False,OK: sufficiently different content
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,blog,blog,0.5685,False,OK: sufficiently different content
+11,https://lumenflow.demo/blog/session-replay-best-practices-0,https://lumenflow.demo/post/session-replay-checklist-4,blog,blog,0.5663,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-6,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,blog,blog,0.5654,False,OK: sufficiently different content
+10,https://lumenflow.demo/post/how-to-event-schema-design-1,https://lumenflow.demo/post/event-schema-design-checklist-4,blog,blog,0.5642,False,OK: sufficiently different content
+17,https://lumenflow.demo/case-study/web-analytics-initech,https://lumenflow.demo/post/web-analytics-checklist-4,case-study,blog,0.564,False,OK: sufficiently different content
+15,https://lumenflow.demo/blog/self-serve-analytics-mistakes-to-avoid-3,https://lumenflow.demo/post/self-serve-analytics-checklist-4,blog,blog,0.5637,False,OK: sufficiently different content
+7,https://lumenflow.demo/post/how-to-feature-adoption-1,https://lumenflow.demo/blog/feature-adoption-mistakes-to-avoid-3,blog,blog,0.563,False,OK: sufficiently different content
+29,https://lumenflow.demo/post/how-to-saas-metrics-1,https://lumenflow.demo/blog/saas-metrics-mistakes-to-avoid-3,blog,blog,0.5621,False,OK: sufficiently different content
+4,https://lumenflow.demo/post/how-to-cohort-reporting-1,https://lumenflow.demo/post/cohort-reporting-checklist-4,blog,blog,0.5611,False,OK: sufficiently different content
+19,https://lumenflow.demo/case-study/marketing-attribution-initech,https://lumenflow.demo/post/how-to-marketing-attribution-6,case-study,blog,0.5603,False,OK: sufficiently different content
+28,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,https://lumenflow.demo/post/how-to-conversion-optimization-6,blog,blog,0.5601,False,OK: sufficiently different content
+1,https://lumenflow.demo/case-study/product-telemetry-initech,https://lumenflow.demo/post/how-to-product-telemetry-6,case-study,blog,0.5597,False,OK: sufficiently different content
+10,https://lumenflow.demo/post/how-to-event-schema-design-1,https://lumenflow.demo/case-study/event-schema-design-initech,blog,case-study,0.5594,False,OK: sufficiently different content
+22,https://lumenflow.demo/blog/voice-of-customer-best-practices-0,https://lumenflow.demo/post/how-to-voice-of-customer-1,blog,blog,0.559,False,OK: sufficiently different content
+19,https://lumenflow.demo/post/how-to-marketing-attribution-1,https://lumenflow.demo/post/marketing-attribution-checklist-4,blog,blog,0.5581,False,OK: sufficiently different content
+10,https://lumenflow.demo/guide/event-schema-design,https://lumenflow.demo/blog/event-schema-design-mistakes-to-avoid-3,blog,blog,0.558,False,OK: sufficiently different content
+7,https://lumenflow.demo/guide/feature-adoption,https://lumenflow.demo/post/how-to-feature-adoption-6,blog,blog,0.5573,False,OK: sufficiently different content
+7,https://lumenflow.demo/case-study/feature-adoption-initech,https://lumenflow.demo/blog/feature-adoption-mistakes-to-avoid-3,case-study,blog,0.5561,False,OK: sufficiently different content
+29,https://lumenflow.demo/guide/saas-metrics,https://lumenflow.demo/blog/saas-metrics-best-practices-5,blog,blog,0.5535,False,OK: sufficiently different content
+19,https://lumenflow.demo/guide/marketing-attribution,https://lumenflow.demo/post/how-to-marketing-attribution-1,blog,blog,0.5511,False,OK: sufficiently different content
+15,https://lumenflow.demo/post/how-to-self-serve-analytics-1,https://lumenflow.demo/blog/self-serve-analytics-mistakes-to-avoid-3,blog,blog,0.5507,False,OK: sufficiently different content
+7,https://lumenflow.demo/post/how-to-feature-adoption-1,https://lumenflow.demo/blog/feature-adoption-best-practices-5,blog,blog,0.5491,False,OK: sufficiently different content
+4,https://lumenflow.demo/guide/cohort-reporting,https://lumenflow.demo/blog/cohort-reporting-mistakes-to-avoid-3,blog,blog,0.5486,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/product-led-growth-checklist-4,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,blog,blog,0.5483,False,OK: sufficiently different content
+13,https://lumenflow.demo/post/how-to-data-pipeline-architecture-1,https://lumenflow.demo/blog/data-pipeline-architecture-mistakes-to-avoid-3,blog,blog,0.5473,False,OK: sufficiently different content
+28,https://lumenflow.demo/case-study/conversion-optimization-initech,https://lumenflow.demo/post/how-to-conversion-optimization-6,case-study,blog,0.5467,False,OK: sufficiently different content
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/post/how-to-retention-metrics-6,blog,blog,0.5466,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,blog,blog,0.5466,False,OK: sufficiently different content
+8,https://lumenflow.demo/post/how-to-churn-prediction-1,https://lumenflow.demo/case-study/churn-prediction-initech,blog,case-study,0.5465,False,OK: sufficiently different content
+15,https://lumenflow.demo/guide/self-serve-analytics,https://lumenflow.demo/post/how-to-self-serve-analytics-1,blog,blog,0.5458,False,OK: sufficiently different content
+7,https://lumenflow.demo/case-study/feature-adoption-initech,https://lumenflow.demo/blog/feature-adoption-best-practices-5,case-study,blog,0.5453,False,OK: sufficiently different content
+22,https://lumenflow.demo/post/how-to-voice-of-customer-1,https://lumenflow.demo/case-study/voice-of-customer-initech,blog,case-study,0.5447,False,OK: sufficiently different content
+15,https://lumenflow.demo/guide/self-serve-analytics,https://lumenflow.demo/post/how-to-self-serve-analytics-6,blog,blog,0.5443,False,OK: sufficiently different content
+28,https://lumenflow.demo/post/conversion-optimization-checklist-4,https://lumenflow.demo/case-study/conversion-optimization-acme,blog,case-study,0.5443,False,OK: sufficiently different content
+1,https://lumenflow.demo/case-study/product-telemetry-initech,https://lumenflow.demo/post/product-telemetry-checklist-4,case-study,blog,0.543,False,OK: sufficiently different content
+29,https://lumenflow.demo/blog/saas-metrics-mistakes-to-avoid-3,https://lumenflow.demo/blog/saas-metrics-best-practices-5,blog,blog,0.5429,False,OK: sufficiently different content
+1,https://lumenflow.demo/post/product-telemetry-checklist-4,https://lumenflow.demo/blog/product-telemetry-best-practices-5,blog,blog,0.5399,False,OK: sufficiently different content
+28,https://lumenflow.demo/post/how-to-conversion-optimization-1,https://lumenflow.demo/blog/conversion-optimization-mistakes-to-avoid-3,blog,blog,0.5393,False,OK: sufficiently different content
+16,https://lumenflow.demo/blog/mobile-app-analytics-best-practices-0,https://lumenflow.demo/post/mobile-app-analytics-checklist-4,blog,blog,0.5388,False,OK: sufficiently different content
+13,https://lumenflow.demo/case-study/data-pipeline-architecture-initech,https://lumenflow.demo/blog/data-pipeline-architecture-mistakes-to-avoid-3,case-study,blog,0.5383,False,OK: sufficiently different content
+18,https://lumenflow.demo/case-study/e-commerce-tracking-initech,https://lumenflow.demo/blog/e-commerce-tracking-mistakes-to-avoid-3,case-study,blog,0.5359,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/how-to-retention-metrics-1,https://lumenflow.demo/blog/retention-metrics-best-practices-5,blog,blog,0.5357,False,OK: sufficiently different content
+7,https://lumenflow.demo/case-study/feature-adoption-initech,https://lumenflow.demo/post/feature-adoption-checklist-4,case-study,blog,0.5356,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/retention-metrics-checklist-4,https://lumenflow.demo/blog/retention-metrics-best-practices-5,blog,blog,0.5352,False,OK: sufficiently different content
+7,https://lumenflow.demo/guide/feature-adoption,https://lumenflow.demo/post/how-to-feature-adoption-1,blog,blog,0.535,False,OK: sufficiently different content
+11,https://lumenflow.demo/case-study/session-replay-initech,https://lumenflow.demo/blog/session-replay-mistakes-to-avoid-3,case-study,blog,0.5342,False,OK: sufficiently different content
+4,https://lumenflow.demo/guide/cohort-reporting,https://lumenflow.demo/post/how-to-cohort-reporting-1,blog,blog,0.5332,False,OK: sufficiently different content
+4,https://lumenflow.demo/post/how-to-cohort-reporting-1,https://lumenflow.demo/blog/cohort-reporting-best-practices-5,blog,blog,0.5331,False,OK: sufficiently different content
+19,https://lumenflow.demo/case-study/marketing-attribution-initech,https://lumenflow.demo/blog/marketing-attribution-best-practices-5,case-study,blog,0.5321,False,OK: sufficiently different content
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,service,blog,0.5299,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/case-study/product-led-growth-acme,blog,case-study,0.5281,False,OK: sufficiently different content
+10,https://lumenflow.demo/blog/event-schema-design-mistakes-to-avoid-3,https://lumenflow.demo/post/event-schema-design-checklist-4,blog,blog,0.5262,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/post/product-led-growth-checklist-4,blog,blog,0.5246,False,OK: sufficiently different content
+21,https://lumenflow.demo/blog/customer-journey-mapping-best-practices-0,https://lumenflow.demo/post/how-to-customer-journey-mapping-1,blog,blog,0.5246,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/how-to-retention-metrics-6,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,blog,blog,0.5245,False,OK: sufficiently different content
+21,https://lumenflow.demo/blog/customer-journey-mapping-mistakes-to-avoid-3,https://lumenflow.demo/post/customer-journey-mapping-checklist-4,blog,blog,0.5243,False,OK: sufficiently different content
+20,https://lumenflow.demo/blog/product-led-growth-best-practices-5,https://lumenflow.demo/case-study/product-led-growth-acme,blog,case-study,0.52,False,OK: sufficiently different content
+28,https://lumenflow.demo/post/conversion-optimization-checklist-4,https://lumenflow.demo/blog/conversion-optimization-best-practices-5,blog,blog,0.5183,False,OK: sufficiently different content
+5,https://lumenflow.demo/blog/retention-metrics-best-practices-5,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,blog,blog,0.5151,False,OK: sufficiently different content
+10,https://lumenflow.demo/post/how-to-event-schema-design-1,https://lumenflow.demo/blog/event-schema-design-best-practices-5,blog,blog,0.5146,False,OK: sufficiently different content
+24,https://lumenflow.demo/blog/heatmaps-best-practices-0,https://lumenflow.demo/case-study/heatmaps-initech,blog,case-study,0.5144,False,OK: sufficiently different content
+7,https://lumenflow.demo/guide/feature-adoption,https://lumenflow.demo/post/feature-adoption-checklist-4,blog,blog,0.5131,False,OK: sufficiently different content
+16,https://lumenflow.demo/blog/mobile-app-analytics-best-practices-0,https://lumenflow.demo/post/how-to-mobile-app-analytics-1,blog,blog,0.513,False,OK: sufficiently different content
+17,https://lumenflow.demo/post/how-to-web-analytics-1,https://lumenflow.demo/blog/web-analytics-best-practices-5,blog,blog,0.5126,False,OK: sufficiently different content
+6,https://lumenflow.demo/case-study/onboarding-optimization-initech,https://lumenflow.demo/blog/onboarding-optimization-mistakes-to-avoid-3,case-study,blog,0.5125,False,OK: sufficiently different content
+27,https://lumenflow.demo/post/how-to-email-engagement-1,https://lumenflow.demo/post/email-engagement-checklist-4,blog,blog,0.5114,False,OK: sufficiently different content
+15,https://lumenflow.demo/guide/self-serve-analytics,https://lumenflow.demo/post/self-serve-analytics-checklist-4,blog,blog,0.5107,False,OK: sufficiently different content
+15,https://lumenflow.demo/case-study/self-serve-analytics-initech,https://lumenflow.demo/post/how-to-self-serve-analytics-6,case-study,blog,0.5094,False,OK: sufficiently different content
+11,https://lumenflow.demo/blog/session-replay-best-practices-0,https://lumenflow.demo/blog/session-replay-mistakes-to-avoid-3,blog,blog,0.509,False,OK: sufficiently different content
+23,https://lumenflow.demo/blog/nps-tracking-best-practices-0,https://lumenflow.demo/case-study/nps-tracking-initech,blog,case-study,0.5076,False,OK: sufficiently different content
+17,https://lumenflow.demo/guide/web-analytics,https://lumenflow.demo/post/web-analytics-checklist-4,blog,blog,0.5062,False,OK: sufficiently different content
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/case-study/product-led-growth-initech,service,case-study,0.5055,False,OK: sufficiently different content
+13,https://lumenflow.demo/guide/data-pipeline-architecture,https://lumenflow.demo/post/data-pipeline-architecture-checklist-4,blog,blog,0.5044,False,OK: sufficiently different content
+5,https://lumenflow.demo/case-study/retention-metrics-initech,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-3,case-study,blog,0.5035,False,OK: sufficiently different content
+1,https://lumenflow.demo/post/how-to-product-telemetry-1,https://lumenflow.demo/case-study/product-telemetry-initech,blog,case-study,0.503,False,OK: sufficiently different content
+1,https://lumenflow.demo/post/product-telemetry-checklist-4,https://lumenflow.demo/post/how-to-product-telemetry-6,blog,blog,0.5017,False,OK: sufficiently different content
+23,https://lumenflow.demo/blog/nps-tracking-best-practices-0,https://lumenflow.demo/blog/nps-tracking-mistakes-to-avoid-3,blog,blog,0.5007,False,OK: sufficiently different content
+13,https://lumenflow.demo/case-study/data-pipeline-architecture-initech,https://lumenflow.demo/blog/data-pipeline-architecture-best-practices-5,case-study,blog,0.4998,False,OK: sufficiently different content
+26,https://lumenflow.demo/blog/push-notification-strategy-best-practices-0,https://lumenflow.demo/post/how-to-push-notification-strategy-1,blog,blog,0.499,False,OK: sufficiently different content
+28,https://lumenflow.demo/post/how-to-conversion-optimization-1,https://lumenflow.demo/case-study/conversion-optimization-acme,blog,case-study,0.4987,False,OK: sufficiently different content
+10,https://lumenflow.demo/post/event-schema-design-checklist-4,https://lumenflow.demo/blog/event-schema-design-best-practices-5,blog,blog,0.498,False,OK: sufficiently different content
+18,https://lumenflow.demo/blog/e-commerce-tracking-best-practices-0,https://lumenflow.demo/post/how-to-e-commerce-tracking-1,blog,blog,0.4979,False,OK: sufficiently different content
+27,https://lumenflow.demo/blog/email-engagement-mistakes-to-avoid-3,https://lumenflow.demo/post/email-engagement-checklist-4,blog,blog,0.4972,False,OK: sufficiently different content
+6,https://lumenflow.demo/blog/onboarding-optimization-mistakes-to-avoid-3,https://lumenflow.demo/post/onboarding-optimization-checklist-4,blog,blog,0.4971,False,OK: sufficiently different content
+20,https://lumenflow.demo/case-study/product-led-growth-initech,https://lumenflow.demo/case-study/product-led-growth-acme,case-study,case-study,0.4944,False,OK: sufficiently different content
+29,https://lumenflow.demo/post/how-to-saas-metrics-1,https://lumenflow.demo/case-study/saas-metrics-initech,blog,case-study,0.4935,False,OK: sufficiently different content
+21,https://lumenflow.demo/case-study/customer-journey-mapping-initech,https://lumenflow.demo/blog/customer-journey-mapping-mistakes-to-avoid-3,case-study,blog,0.4931,False,OK: sufficiently different content
+16,https://lumenflow.demo/blog/mobile-app-analytics-mistakes-to-avoid-3,https://lumenflow.demo/post/mobile-app-analytics-checklist-4,blog,blog,0.4928,False,OK: sufficiently different content
+18,https://lumenflow.demo/blog/e-commerce-tracking-best-practices-0,https://lumenflow.demo/blog/e-commerce-tracking-mistakes-to-avoid-3,blog,blog,0.4928,False,OK: sufficiently different content
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/case-study/retention-metrics-acme,blog,case-study,0.4914,False,OK: sufficiently different content
+24,https://lumenflow.demo/case-study/heatmaps-initech,https://lumenflow.demo/blog/heatmaps-mistakes-to-avoid-3,case-study,blog,0.4913,False,OK: sufficiently different content
+23,https://lumenflow.demo/case-study/nps-tracking-initech,https://lumenflow.demo/blog/nps-tracking-mistakes-to-avoid-3,case-study,blog,0.491,False,OK: sufficiently different content
+13,https://lumenflow.demo/blog/data-pipeline-architecture-mistakes-to-avoid-3,https://lumenflow.demo/blog/data-pipeline-architecture-best-practices-5,blog,blog,0.4904,False,OK: sufficiently different content
+20,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,https://lumenflow.demo/blog/product-led-growth-best-practices-5,blog,blog,0.4898,False,OK: sufficiently different content
+4,https://lumenflow.demo/blog/cohort-reporting-mistakes-to-avoid-3,https://lumenflow.demo/blog/cohort-reporting-best-practices-5,blog,blog,0.4897,False,OK: sufficiently different content
+1,https://lumenflow.demo/case-study/product-telemetry-initech,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,case-study,blog,0.4893,False,OK: sufficiently different content
+15,https://lumenflow.demo/guide/self-serve-analytics,https://lumenflow.demo/blog/self-serve-analytics-mistakes-to-avoid-3,blog,blog,0.4889,False,OK: sufficiently different content
+6,https://lumenflow.demo/case-study/onboarding-optimization-initech,https://lumenflow.demo/post/onboarding-optimization-checklist-4,case-study,blog,0.4883,False,OK: sufficiently different content
+19,https://lumenflow.demo/case-study/marketing-attribution-initech,https://lumenflow.demo/blog/marketing-attribution-mistakes-to-avoid-3,case-study,blog,0.4876,False,OK: sufficiently different content
+15,https://lumenflow.demo/post/how-to-self-serve-analytics-1,https://lumenflow.demo/blog/self-serve-analytics-best-practices-5,blog,blog,0.4875,False,OK: sufficiently different content
+15,https://lumenflow.demo/post/self-serve-analytics-checklist-4,https://lumenflow.demo/post/how-to-self-serve-analytics-6,blog,blog,0.487,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/product-led-growth-checklist-4,https://lumenflow.demo/blog/product-led-growth-best-practices-5,blog,blog,0.4864,False,OK: sufficiently different content
+7,https://lumenflow.demo/post/how-to-feature-adoption-1,https://lumenflow.demo/case-study/feature-adoption-initech,blog,case-study,0.4859,False,OK: sufficiently different content
+20,https://lumenflow.demo/services/product-led-growth,https://lumenflow.demo/post/how-to-product-led-growth-6,service,blog,0.4817,False,OK: sufficiently different content
+7,https://lumenflow.demo/post/feature-adoption-checklist-4,https://lumenflow.demo/post/how-to-feature-adoption-6,blog,blog,0.4807,False,OK: sufficiently different content
+5,https://lumenflow.demo/guide/retention-metrics,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,blog,blog,0.4785,False,OK: sufficiently different content
+17,https://lumenflow.demo/guide/web-analytics,https://lumenflow.demo/case-study/web-analytics-initech,blog,case-study,0.477,False,OK: sufficiently different content
+19,https://lumenflow.demo/blog/marketing-attribution-best-practices-5,https://lumenflow.demo/post/how-to-marketing-attribution-6,blog,blog,0.4758,False,OK: sufficiently different content
+8,https://lumenflow.demo/post/how-to-churn-prediction-1,https://lumenflow.demo/blog/churn-prediction-mistakes-to-avoid-3,blog,blog,0.4757,False,OK: sufficiently different content
+20,https://lumenflow.demo/case-study/product-led-growth-acme,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,case-study,blog,0.4757,False,OK: sufficiently different content
+20,https://lumenflow.demo/post/how-to-product-led-growth-1,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,blog,blog,0.4746,False,OK: sufficiently different content
+11,https://lumenflow.demo/blog/session-replay-mistakes-to-avoid-3,https://lumenflow.demo/post/session-replay-checklist-4,blog,blog,0.4741,False,OK: sufficiently different content
+27,https://lumenflow.demo/blog/email-engagement-best-practices-0,https://lumenflow.demo/post/how-to-email-engagement-1,blog,blog,0.4741,False,OK: sufficiently different content
+15,https://lumenflow.demo/case-study/self-serve-analytics-initech,https://lumenflow.demo/blog/self-serve-analytics-mistakes-to-avoid-3,case-study,blog,0.4733,False,OK: sufficiently different content
+18,https://lumenflow.demo/post/how-to-e-commerce-tracking-1,https://lumenflow.demo/blog/e-commerce-tracking-mistakes-to-avoid-3,blog,blog,0.4733,False,OK: sufficiently different content
+23,https://lumenflow.demo/blog/nps-tracking-best-practices-0,https://lumenflow.demo/post/how-to-nps-tracking-1,blog,blog,0.4733,False,OK: sufficiently different content
+15,https://lumenflow.demo/guide/self-serve-analytics,https://lumenflow.demo/blog/self-serve-analytics-best-practices-5,blog,blog,0.4714,False,OK: sufficiently different content
+1,https://lumenflow.demo/blog/product-telemetry-best-practices-5,https://lumenflow.demo/case-study/product-telemetry-acme,blog,case-study,0.4712,False,OK: sufficiently different content
+1,https://lumenflow.demo/blog/product-telemetry-mistakes-to-avoid-3,https://lumenflow.demo/case-study/product-telemetry-acme,blog,case-study,0.4709,False,OK: sufficiently different content
+11,https://lumenflow.demo/post/how-to-session-replay-1,https://lumenflow.demo/blog/session-replay-mistakes-to-avoid-3,blog,blog,0.4708,False,OK: sufficiently different content
+5,https://lumenflow.demo/post/retention-metrics-checklist-4,https://lumenflow.demo/blog/retention-metrics-mistakes-to-avoid-8,blog,blog,0.4702,False,OK: sufficiently different content
+17,https://lumenflow.demo/case-study/web-analytics-initech,https://lumenflow.demo/blog/web-analytics-best-practices-5,case-study,blog,0.4684,False,OK: sufficiently different content
+12,https://lumenflow.demo/post/how-to-privacy-compliance-1,https://lumenflow.demo/case-study/privacy-compliance-initech,blog,case-study,0.4657,False,OK: sufficiently different content
+20,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-3,https://lumenflow.demo/blog/product-led-growth-mistakes-to-avoid-8,blog,blog,0.46,False,OK: sufficiently different content

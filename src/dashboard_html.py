@@ -686,12 +686,13 @@ registerLazy('overlap',()=>{
   if(!C.length){ document.getElementById('overlap-body').innerHTML=emptyState('No similarity data','similarity_scores.csv is missing or empty for this run.'); return; }
   const thr=Math.round(VIS.overlap.threshold*100);
   const pts=C.filter(c=>c.avg_sim!=null);
-  // Label only the top flagged topics, alternating above/below so neighbours don't collide.
-  const topList=pts.filter(c=>c.flagged).slice(0,4).map(c=>c.cid), top=new Set(topList);
-  Plotly.newPlot('ov-scatter',[{type:'scatter', mode:'markers+text',
+  // Label only the 3 most-flagged topics as offset callouts (rest on hover); callouts on the right half point left so they stay in frame.
+  const xmax=Math.max(...pts.map(c=>c.url_count),1);
+  const labels=pts.filter(c=>c.flagged).sort((a,b)=>b.flagged-a.flagged).slice(0,3).map((c,i)=>{ const right=c.url_count>xmax*0.6;
+    return {x:c.url_count, y:Math.round(c.avg_sim*1000)/10, text:esc(shortSlug(c.name,26)), showarrow:true, arrowhead:0, arrowwidth:1, arrowcolor:'#5a6275',
+      ax:right?-40:40, ay:[-34,34,-58][i], xanchor:right?'right':'left', font:{size:11,color:'#c9cedb',family:'Inter'}, bgcolor:'rgba(10,12,17,0.8)'}; });
+  Plotly.newPlot('ov-scatter',[{type:'scatter', mode:'markers',
       x:pts.map(c=>c.url_count), y:pts.map(c=>Math.round(c.avg_sim*1000)/10),
-      text:pts.map(c=>top.has(c.cid)?shortSlug(c.name,24):''),
-      textposition:pts.map(c=>topList.indexOf(c.cid)%2?'bottom center':'top center'), textfont:{size:11,color:'#c9cedb',family:'Inter'},
       customdata:pts.map(c=>[c.name,c.flagged,c.risk,c.n_pairs,c.cid]),
       hovertemplate:'<b>%{customdata[0]}</b><br>%{x} pages · avg similarity %{y}%<br>%{customdata[1]} pairs '+thr+'%+ alike · %{customdata[2]} touch a money page<extra></extra>',
       marker:{size:pts.map(c=>12+Math.sqrt(c.flagged)*8), color:pts.map(c=>c.flagged?STATUS_COLOR.fix:STATUS_COLOR.ok),
@@ -700,7 +701,7 @@ registerLazy('overlap',()=>{
       xaxis:{title:{text:'Pages in topic',font:{size:12}}, gridcolor:'#1c2231', zeroline:false, rangemode:'tozero'},
       yaxis:{title:{text:'Average similarity between its pages (%)',font:{size:12}}, gridcolor:'#1c2231', zeroline:false},
       shapes:[{type:'line', xref:'paper', x0:0, x1:1, y0:thr, y1:thr, line:{color:'rgba(240,68,56,0.5)', dash:'dot', width:1}}],
-      annotations:[{xref:'paper', x:1, y:thr, xanchor:'right', yanchor:'bottom', text:thr+'% = pages read alike', showarrow:false, font:{size:11,color:'#f8877e'}}]},
+      annotations:[{xref:'paper', x:1, y:thr, xanchor:'right', yanchor:'bottom', text:thr+'% = pages read alike', showarrow:false, font:{size:11,color:'#f8877e'}}, ...labels]},
     {responsive:true, displayModeBar:false});
   document.getElementById('ov-scatter').on('plotly_click',ev=>{ const pt=ev.points&&ev.points[0]; if(pt) selectOverlapCluster(pt.customdata[4]); });
   const sel=document.getElementById('ov-cluster');

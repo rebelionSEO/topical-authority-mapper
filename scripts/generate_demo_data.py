@@ -12,6 +12,7 @@ Usage:
 """
 
 import csv
+import dataclasses
 import json
 import os
 import random
@@ -627,7 +628,8 @@ def write_demo_dataset(output_dir=None, cache_dir=None):
         competitors=COMPETITORS,
         output_dir=DEMO_OUTPUT,
     )
-    save_site_config(cfg)
+    # Persist output_dir relative to the repo root so the committed config has no local absolute path.
+    save_site_config(dataclasses.replace(cfg, output_dir=os.path.relpath(DEMO_OUTPUT, ROOT)))
     with open(os.path.join(DEMO_CACHE, "brand_profile.json"), "w") as f:
         json.dump(gen_brand_profile(), f, indent=2)
 

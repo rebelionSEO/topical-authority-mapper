@@ -34,3 +34,7 @@ artifacts/
 
 # Local claude-flow session state
 .claude-flow/
+
+# Local scratch space and alternate virtualenv
+.scratch/
+.venv312/

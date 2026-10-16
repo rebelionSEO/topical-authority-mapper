@@ -9,7 +9,7 @@
     "PulseGrid",
     "Insightspark"
   ],
-  "output_dir": "/Users/gmejia/topical-authority-mapper/output-demo",
+  "output_dir": "output-demo",
   "industry": "b2b-saas",
   "skip_patterns": [],
   "listing_patterns": []
